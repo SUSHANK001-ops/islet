@@ -55,11 +55,19 @@ pub fn set_click_through(window: &WebviewWindow, click_through: bool) -> tauri::
     window.set_ignore_cursor_events(click_through)
 }
 
-/// Apply the full closed-state setup: small, top-center, click-through, on top.
+/// Apply the full closed-state setup: small, top-center, on top.
+///
+/// Spike finding: a click-through window (`ignore_cursor_events(true)`) cannot
+/// receive the mouse-enter that opens the panel, so hover-to-open and full
+/// click-through are mutually exclusive on one window. For the spike we keep
+/// the closed pill INTERACTIVE so hover works and can be verified. Making the
+/// idle pill truly click-through (option 1 in docs/windows-notes.md: a thin
+/// always-on hover strip over an otherwise pass-through window) is the next
+/// refinement in Spec 1, once hover is confirmed on real hardware.
 pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
     position_top_center(window, false)?;
-    set_click_through(window, true)?;
+    set_click_through(window, false)?;
     Ok(())
 }
 

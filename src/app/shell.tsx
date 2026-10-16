@@ -54,16 +54,17 @@ export function Shell() {
     };
   }, []);
 
-  // Spike demo: queue a sample permission request once, so the notch surface
-  // is exercised. Real triggers come from each feature in later specs.
-  useEffect(() => {
+  // Spike demo: the notch permission surface is triggered on demand from a
+  // button in the panel (below), not auto-popped, so the pill can be tested
+  // on its own first. Real triggers come from each feature in later specs.
+  function triggerDemoPermission() {
     requestPermission({
       id: "demo-notifications",
       capability: "notifications",
       title: "Allow notifications?",
       body: `${APP_NAME} can tell you when a focus round ends. You can change this later in Settings.`,
     });
-  }, []);
+  }
 
   function handleEnter() {
     setOpen(true);
@@ -114,6 +115,9 @@ export function Shell() {
                 <span>Fullscreen app</span>
                 <b>{report.fullscreenAppActive ? "yes" : "no"}</b>
               </div>
+              <button class="islet-btn" onClick={triggerDemoPermission}>
+                Test permission prompt
+              </button>
             </>
           ) : (
             <div class="islet-row">

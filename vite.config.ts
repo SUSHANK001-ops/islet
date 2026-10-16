@@ -9,6 +9,8 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
+    // Do NOT open a browser tab; the app runs in the Tauri window, not a browser.
+    open: false,
   },
   build: {
     target: "es2022",

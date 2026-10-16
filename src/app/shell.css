@@ -1,0 +1,160 @@
+/* The window itself is transparent (set in tauri.conf.json). The body must not
+   paint a background or the "notch" illusion breaks. */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--islet-font);
+  color: var(--islet-fg);
+  /* Prevent text selection / native drag feel on the overlay. */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Column that holds the pill and (when open) the panel below it. */
+.islet-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--islet-gap);
+}
+
+/* The black pill / notch. */
+.islet-pill {
+  margin-top: var(--islet-pad);
+  height: 10px;
+  width: 120px;
+  background: var(--islet-bg);
+  border-radius: var(--islet-radius-pill);
+  box-shadow: var(--islet-shadow);
+  transition: width 120ms ease, height 120ms ease, background 120ms ease;
+  cursor: pointer;
+}
+
+.islet-pill.has-alert {
+  background: var(--islet-warn);
+}
+
+.islet-pill.open {
+  width: 160px;
+  height: 14px;
+}
+
+/* The panel that opens below the pill. */
+.islet-panel {
+  width: 360px;
+  background: var(--islet-bg-panel);
+  border-radius: var(--islet-radius);
+  box-shadow: var(--islet-shadow);
+  padding: var(--islet-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--islet-gap);
+}
+
+.islet-panel h1 {
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+
+.islet-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+}
+
+.islet-row b {
+  color: var(--islet-fg);
+  font-weight: 600;
+}
+
+/* Permission prompt shown right on/under the notch. */
+.islet-perm {
+  background: var(--islet-bg);
+  border: 1px solid var(--islet-warn);
+  border-radius: var(--islet-radius);
+  padding: var(--islet-pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--islet-gap);
+  width: 300px;
+}
+
+.islet-perm p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.islet-perm .islet-perm-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.islet-perm-actions {
+  display: flex;
+  gap: var(--islet-gap);
+  justify-content: flex-end;
+}
+
+.islet-btn {
+  font: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: #2a2a2a;
+  color: var(--islet-fg);
+}
+
+.islet-btn.primary {
+  background: var(--islet-accent);
+  color: #06142e;
+}
+
+.islet-btn.danger {
+  background: transparent;
+  border-color: var(--islet-danger);
+  color: var(--islet-danger);
+}
+
+/* A pulsing dot to indicate a pending permission request on the notch. */
+.islet-alert-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--islet-warn);
+  animation: islet-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes islet-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Honor the OS "reduce motion" setting (ties into battery-saver rule later). */
+@media (prefers-reduced-motion: reduce) {
+  .islet-pill {
+    transition: none;
+  }
+  .islet-alert-dot {
+    animation: none;
+  }
+}

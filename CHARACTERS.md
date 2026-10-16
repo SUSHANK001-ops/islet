@@ -1,0 +1,176 @@
+# Character packs - format and workflow
+
+A character is a folder of images and one JSON file. It is DATA ONLY. It never contains code. The app owns all logic (moods, growth). The pack only describes how things look.
+
+## Folder layout
+
+```
+packs/characters/<id>/
+  manifest.json        required
+  sheet.png            required: the main sprite sheet
+  stages/              optional: one sheet per growth stage
+  outfits/             optional: one transparent layer sheet per outfit
+  preview.png          optional: shown in the picker (max 128x128)
+  LICENSE.txt          required: who made it and how others may use it
+```
+
+## manifest.json
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "sample-cat",
+  "name": "Sample Cat",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "license": "CC-BY-4.0",
+
+  "sheet": {
+    "file": "sheet.png",
+    "frameWidth": 32,
+    "frameHeight": 32,
+    "columns": 8,
+    "scale": 4,
+    "pixelArt": true
+  },
+
+  "states": {
+    "idle":        { "frames": [0, 1, 2, 3],       "fps": 6,  "loop": true },
+    "working":     { "frames": [8, 9, 10, 11],     "fps": 8,  "loop": true },
+    "celebrating": { "frames": [16, 17, 18, 19],   "fps": 10, "loop": false },
+    "sleeping":    { "frames": [24, 25],           "fps": 2,  "loop": true },
+    "sad":         { "frames": [32, 33, 34],       "fps": 4,  "loop": true }
+  },
+
+  "moods": {
+    "happy": "idle",
+    "tired": "sleeping",
+    "bored": "idle",
+    "proud": "celebrating"
+  },
+
+  "stages": [
+    { "id": "baby",  "minFocusMinutes": 0,    "sheet": "stages/baby.png" },
+    { "id": "teen",  "minFocusMinutes": 600,  "sheet": "stages/teen.png" },
+    { "id": "adult", "minFocusMinutes": 3000, "sheet": "stages/adult.png" }
+  ],
+
+  "personality": { "energy": 0.5, "chatty": 0.3, "lazy": 0.4 },
+
+  "outfits": [
+    {
+      "id": "wizard-hat",
+      "name": "Wizard Hat",
+      "layer": "outfits/wizard-hat.png",
+      "unlock": { "type": "focusMinutes", "value": 300 }
+    }
+  ]
+}
+```
+
+### Required states
+`idle`, `working`, `celebrating`, `sleeping`, `sad`. These five must exist.
+
+### Optional states
+`waking`, `stretching`, `curious`, `eating`. If an optional state is missing, the app uses `idle`.
+
+### Moods
+The APP decides the mood from the user's real habits (finished rounds, skipped breaks, idle time, late hours). The pack only says which state to show for each mood: `happy`, `tired`, `bored`, `proud`. A pack cannot change how a mood is calculated.
+
+### Stages
+The APP decides the stage from total focus minutes. If `stages` is missing, the main sheet is used for life.
+If a stage sheet is missing, the previous stage is used.
+
+### Personality
+Three numbers from 0 to 1: `energy`, `chatty`, `lazy`. The app uses them only to change small timings (how often the character fidgets, how often it peeks out). Values outside 0 to 1 are clamped.
+
+## Limits (these protect performance and safety)
+
+| Item | Limit |
+|---|---|
+| File type | PNG only (images), JSON (manifest) |
+| One sheet | 1024 x 1024 pixels or smaller, 1 MB or smaller |
+| One frame | 128 x 128 pixels or smaller |
+| Whole pack | 3 MB or smaller |
+| Frames per state | 64 or fewer |
+| Frame rate | 1 to 24 fps |
+| Stages | 4 or fewer |
+| Outfits | 30 or fewer |
+| Manifest | 64 KB or smaller |
+
+## Safety rules (validated in Rust, never trusted)
+
+- No scripts, no executables, no HTML, no SVG.
+- Every path is relative to the pack folder. Reject `..`, absolute paths, drive letters, URLs and symlinks.
+- `id` is lowercase letters, numbers and hyphens only, 3 to 40 characters.
+- Frame numbers must exist inside the sheet.
+- A bad pack shows a clear error (which file, which field, what is wrong). It never crashes the app.
+- Import copies the pack into the app data folder using a temp folder, then renames. Delete removes the whole folder.
+
+## How the app draws a character (rules for the renderer)
+
+- Decode each sheet once into an `ImageBitmap`. Keep only the active character loaded.
+- Use integer scaling. For `pixelArt: true`, turn image smoothing off.
+- Redraw only when the frame changes. Stop drawing when the panel is closed.
+- Idle animation is capped at 8 fps even if the pack asks for more. Active states respect the pack's fps up to 24.
+- Outfit layers use the same frame grid as the main sheet and are drawn over it in order.
+
+## Sharing
+
+- **Export:** one `.islet-char` file (a zip of the folder). The app re-validates on import.
+- **Import:** drag the file onto the island or use Settings > Characters > Import.
+
+## Brief template (the user fills this in, then gives it to Kiro)
+
+```
+CHARACTER BRIEF
+Name:
+Id (lowercase-with-hyphens):
+Author:
+License:
+Animal or type:
+Look and colors (palette, 6 to 16 colors):
+Frame size (for example 32x32):
+Scale:
+Pixel art? (yes/no):
+
+STATES (frames per state, fps, loop):
+- idle:
+- working:
+- celebrating:
+- sleeping:
+- sad:
+- optional states:
+
+MOOD MAP (which state for happy, tired, bored, proud):
+
+STAGES (names and minimum focus minutes):
+
+PERSONALITY (energy, chatty, lazy from 0 to 1):
+
+OUTFITS (name, unlock rule):
+
+FILES PROVIDED (sheet.png, stages/*.png, outfits/*.png):
+```
+
+## Workflow: adding a character
+
+When the user gives you a character brief or files, do exactly this:
+
+1. Read this file. Do not change any app code. If the brief needs something the format cannot do, STOP and tell the user. Do not extend the format on your own.
+2. Create `packs/characters/<id>/`. Put the provided images in place. Never invent or redraw art. If an image is missing, list it and stop.
+3. Write `manifest.json` from the brief. Match frame numbers to the sheet grid.
+4. Run `npm run validate-character -- <id>`. Fix every error and warning in the manifest.
+5. Check the limits table. If an image is over a limit, report it. Do not silently shrink art.
+6. Render a preview of every state at the final scale (`npm run character-preview -- <id>`) and look at the images.
+7. Add the id to the built-in list only if it ships with the app. User packs are not added to code.
+8. Run `scripts/perf-check` with the character active. It must stay within the budgets in `AGENTS.md`.
+9. Report: what was added, the pack size, any warnings, and the perf result.
+
+## Tests every character pack must pass
+
+- Manifest matches the JSON Schema in `shared/schemas/character.schema.json`.
+- All five required states exist and use valid frames.
+- All limits above are respected.
+- Safety rules above are respected.
+- The pack loads, draws one frame of every state, and unloads with no memory left behind (the memory test loads and unloads it 20 times).

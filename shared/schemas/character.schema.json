@@ -1,0 +1,92 @@
+{
+  "$id": "islet.character.schema.json",
+  "title": "Islet character manifest",
+  "type": "object",
+  "required": ["schemaVersion", "id", "name", "version", "author", "license", "sheet", "states"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]{3,40}$" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "version": { "type": "string" },
+    "author": { "type": "string", "minLength": 1 },
+    "license": { "type": "string", "minLength": 1 },
+    "sheet": {
+      "type": "object",
+      "required": ["file", "frameWidth", "frameHeight", "columns"],
+      "additionalProperties": false,
+      "properties": {
+        "file": { "type": "string" },
+        "frameWidth": { "type": "integer", "minimum": 1, "maximum": 128 },
+        "frameHeight": { "type": "integer", "minimum": 1, "maximum": 128 },
+        "columns": { "type": "integer", "minimum": 1 },
+        "scale": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "pixelArt": { "type": "boolean" }
+      }
+    },
+    "states": {
+      "type": "object",
+      "required": ["idle", "working", "celebrating", "sleeping", "sad"],
+      "additionalProperties": { "$ref": "#/$defs/state" }
+    },
+    "moods": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "stages": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["id", "minFocusMinutes", "sheet"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "minFocusMinutes": { "type": "integer", "minimum": 0 },
+          "sheet": { "type": "string" }
+        }
+      }
+    },
+    "personality": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+        "chatty": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lazy": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "outfits": {
+      "type": "array",
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "layer"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "layer": { "type": "string" },
+          "unlock": { "type": "object" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "state": {
+      "type": "object",
+      "required": ["frames", "fps"],
+      "additionalProperties": false,
+      "properties": {
+        "frames": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "fps": { "type": "integer", "minimum": 1, "maximum": 24 },
+        "loop": { "type": "boolean" }
+      }
+    }
+  }
+}

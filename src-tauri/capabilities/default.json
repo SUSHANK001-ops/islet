@@ -1,0 +1,10 @@
+{
+  "identifier": "default",
+  "description": "Minimal permissions for the Spec 0 spike: the island window may listen to events and call the explicitly allowed commands only.",
+  "windows": ["island"],
+  "permissions": [
+    "core:default",
+    "core:event:allow-listen",
+    "core:event:allow-unlisten"
+  ]
+}

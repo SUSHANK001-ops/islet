@@ -10,7 +10,6 @@ mod shortcut;
 mod tray;
 mod window;
 
-use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

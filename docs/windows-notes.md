@@ -70,3 +70,46 @@ in the Tauri window, never a browser.
 ## CPU / memory
 
 See `docs/perf-results.md` for measured numbers.
+
+## Spec 1 (Shell) notes
+
+### Click-through is whole-window only in Tauri
+
+`WebviewWindow::set_ignore_cursor_events` applies to the ENTIRE window; there is
+no built-in per-region (hit-test) click-through. So a "thin always-interactive
+hover strip over an otherwise pass-through window" cannot be done with one
+simple call. Options for a future refinement, in order of preference:
+
+1. Keep the closed window physically small (just the pill) and interactive.
+   Because it is a few px tall at the very top edge, it rarely intercepts a
+   click the user wanted elsewhere. This is what Spec 1 ships.
+2. Win32 `WM_NCHITTEST` / layered-window region to make only the pill rectangle
+   hit-testable while the rest passes through. Needs raw Win32 and a measured
+   cost; defer until there is evidence option 1 is not good enough.
+
+Decision for Spec 1: option 1. Revisit with real usage feedback. (No guessing:
+this is a measured API limitation, not an assumption.)
+
+### Tray left-click vs menu
+
+`show_menu_on_left_click(false)` so a left click toggles the island and the menu
+only opens on right click. Verify on Windows that left-click still fires
+`TrayIconEvent::Click` (it should; recorded here to confirm during manual test).
+
+### Runtime generics
+
+The tray and global-shortcut builders require the concrete `Wry` runtime bound.
+Rather than thread `<R: Runtime>` everywhere, `tray.rs` and `shortcut.rs` take
+`&AppHandle` (defaults to `Wry`). Islet only ever uses `Wry`.
+
+### To verify on hardware (Spec 1 manual checklist)
+
+- Tray icon appears; left-click toggles; right-click shows Show/Hide, Settings,
+  Quit; each menu item works.
+- Global hotkey Ctrl+Shift+Space toggles the island from another focused app.
+  If another app owns it, the friendly conflict notice shows (no crash).
+- Settings: theme switches light/dark; monitor dropdown lists monitors and the
+  pill re-centers; "Launch at startup" toggles the real Windows startup entry
+  (check Task Manager > Startup) and is OFF by default.
+- Tabs: switch with click and arrow keys; disabling a tab hides it; reordering
+  changes the tab bar order; each tab shows the "Coming soon" empty state.

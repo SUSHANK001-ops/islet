@@ -1,7 +1,7 @@
 //! Global hotkey to toggle the island from anywhere (even when unfocused).
 //! Default: Ctrl+Shift+Space. Conflicts fail gracefully (no crash).
 
-use tauri::{AppHandle, Runtime};
+use tauri::AppHandle;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 use crate::window;
@@ -13,8 +13,8 @@ pub fn default_shortcut() -> Shortcut {
 
 /// Register the toggle hotkey. Returns Ok(false) if the combo is already taken
 /// by another app (so the caller can surface a friendly message) instead of
-/// treating a conflict as a fatal error.
-pub fn register<R: Runtime>(app: &AppHandle<R>) -> Result<bool, String> {
+/// treating a conflict as a fatal error. Concrete `Wry` runtime (see tray.rs).
+pub fn register(app: &AppHandle) -> Result<bool, String> {
     let shortcut = default_shortcut();
     let gs = app.global_shortcut();
 

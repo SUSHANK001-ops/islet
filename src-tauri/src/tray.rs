@@ -4,13 +4,15 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, Runtime,
+    AppHandle, Emitter,
 };
 
 use crate::window;
 
 /// Build the tray and attach its menu + click handlers. Called once at setup.
-pub fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+/// Uses the concrete `Wry` runtime (the only one Islet uses) to satisfy the
+/// tray/menu trait bounds without threading a generic runtime everywhere.
+pub fn build(app: &AppHandle) -> tauri::Result<()> {
     // Menu items. Labels are English here; the tray is OS-native chrome, so the
     // frontend i18n map does not reach it. Kept short and clear.
     let show = MenuItem::with_id(app, "show", "Show / Hide", true, None::<&str>)?;

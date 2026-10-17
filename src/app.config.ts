@@ -3,10 +3,14 @@
 // The Rust side mirrors this in src-tauri/src/app_config.rs. If you rename, change both.
 export const APP_NAME = "Islet" as const;
 
-// Pill geometry (logical pixels). Kept small per the performance budgets.
+// Pill geometry (logical pixels), INFORMATIONAL for the frontend only.
+// The Rust side (src-tauri/src/app_config.rs) is the source of truth for the
+// actual OS window footprint; keep these values in sync with it. The visible
+// black pill in CSS can be smaller than the closed window (the extra height is
+// transparent and used to catch hover).
 export const PILL = {
-  closedWidth: 120,
-  closedHeight: 10,
+  closedWidth: 160,
+  closedHeight: 24,
   openWidth: 360,
   openHeight: 240,
   // Gap from the very top of the active monitor's work area.

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "sponge-pal",
+  "name": "Sponge Pal",
+  "version": "1.0.0",
+  "author": "Islet",
+  "license": "CC-BY-4.0",
+
+  "sheet": {
+    "file": "sheet.png",
+    "frameWidth": 48,
+    "frameHeight": 48,
+    "columns": 8,
+    "scale": 3,
+    "pixelArt": true
+  },
+
+  "states": {
+    "idle":        { "frames": [0, 1, 2, 3],     "fps": 6,  "loop": true },
+    "working":     { "frames": [8, 9, 10, 11],   "fps": 8,  "loop": true },
+    "celebrating": { "frames": [16, 17, 18, 19], "fps": 12, "loop": false },
+    "sleeping":    { "frames": [24, 25],         "fps": 2,  "loop": true },
+    "sad":         { "frames": [32, 33, 34],     "fps": 4,  "loop": true },
+    "curious":     { "frames": [40, 41, 42],     "fps": 6,  "loop": true }
+  },
+
+  "moods": {
+    "happy": "idle",
+    "tired": "sleeping",
+    "bored": "curious",
+    "proud": "celebrating"
+  },
+
+  "stages": [
+    { "id": "spore",  "minFocusMinutes": 0,    "sheet": "sheet.png" },
+    { "id": "bubbly", "minFocusMinutes": 600,  "sheet": "stages/bubbly.png" },
+    { "id": "mighty", "minFocusMinutes": 3000, "sheet": "stages/mighty.png" }
+  ],
+
+  "personality": { "energy": 0.8, "chatty": 0.6, "lazy": 0.2 },
+
+  "outfits": [
+    {
+      "id": "hard-hat",
+      "name": "Hard Hat",
+      "layer": "outfits/hard-hat.png",
+      "unlock": { "type": "focusMinutes", "value": 300 }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ use serde::Serialize;
 use tauri::{AppHandle, WebviewWindow};
 
 use crate::app_config::APP_NAME;
+use crate::characters::{self, ActiveCharacter, CharacterSummary, LoadedCharacter};
 use crate::modules::focus::engine::FocusState;
 use crate::modules::focus::FocusHandle;
 use crate::modules::hub::{Hub, HubSnapshot};
@@ -278,4 +279,85 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
     app.opener()
         .open_url("https://music.youtube.com", None::<&str>)
         .map_err(|e| format!("could not open YouTube Music: {e}"))
+}
+
+// ---- Spec 6: characters ----
+
+/// List every pack in the library with a validity flag (for the picker UI).
+#[tauri::command]
+pub fn characters_list(app: AppHandle) -> Result<Vec<CharacterSummary>, String> {
+    characters::list(&app).map_err(|e| e.to_string())
+}
+
+/// The active-character record: which pack is chosen + notch visibility.
+#[tauri::command]
+pub fn character_get_active(app: AppHandle) -> ActiveCharacter {
+    characters::active(&app)
+}
+
+/// Load the active character fully validated, ready for the renderer. Returns
+/// null when no character is chosen; an Err only on an unexpected store fault.
+/// A chosen-but-invalid/missing pack resolves to null so the UI degrades
+/// gracefully (AGENTS.md: a bad pack never crashes the app).
+#[tauri::command]
+pub fn character_load_active(app: AppHandle) -> Option<LoadedCharacter> {
+    let active = characters::active(&app);
+    let id = active.id?;
+    characters::load(&app, &id).ok()
+}
+
+/// Choose the active character by id (or null for none) and whether it shows in
+/// the notch. Re-validates the id exists if non-null.
+#[tauri::command]
+pub fn character_set_active(
+    app: AppHandle,
+    id: Option<String>,
+    show_in_notch: bool,
+) -> Result<ActiveCharacter, String> {
+    // A null id (no character) is always allowed; a non-null id must load.
+    if let Some(ref chosen) = id {
+        characters::load(&app, chosen).map_err(|e| e.to_string())?;
+    }
+    let record = ActiveCharacter {
+        schema_version: 1,
+        id,
+        show_in_notch,
+    };
+    characters::set_active(&app, &record).map_err(|e| e.to_string())?;
+    Ok(record)
+}
+
+/// Import a character pack from a user-picked FOLDER. The native folder picker
+/// is the user's consent; Rust validates the pack before it ever lands in the
+/// library (a bad pack is rejected, never copied).
+#[tauri::command]
+pub async fn character_import(app: AppHandle) -> Result<Option<CharacterSummary>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    // Blocking pick on the dialog's own thread; None when the user cancels.
+    let picked = app
+        .dialog()
+        .file()
+        .set_title("Choose a character pack folder")
+        .blocking_pick_folder();
+    let Some(folder) = picked else {
+        return Ok(None);
+    };
+    let path = folder
+        .into_path()
+        .map_err(|e| format!("could not resolve the chosen folder: {e}"))?;
+    let summary = characters::import_dir(&app, &path).map_err(|e| e.to_string())?;
+    Ok(Some(summary))
+}
+
+/// Delete a pack from the library. If it was the active character, the active
+/// record is cleared to "no character" so nothing points at a deleted folder.
+#[tauri::command]
+pub fn character_delete(app: AppHandle, id: String) -> Result<(), String> {
+    characters::delete(&app, &id).map_err(|e| e.to_string())?;
+    let mut active = characters::active(&app);
+    if active.id.as_deref() == Some(id.as_str()) {
+        active.id = None;
+        characters::set_active(&app, &active).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }

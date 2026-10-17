@@ -14,12 +14,53 @@ pub mod validate;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use serde::Serialize;
-use tauri::AppHandle;
+use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Manager};
 
-use crate::store::{data_root, StoreError};
+use crate::store::{data_root, read_json, write_json_atomic, StoreError};
 use manifest::Manifest;
 use validate::{validate, ValidationError};
+
+/// The id of the built-in default pack that ships with the app.
+pub const BUILTIN_ID: &str = "sponge-pal";
+
+/// Small persisted record of which character is active and whether it is shown
+/// in the notch. Versioned like every other saved file (data rule).
+const ACTIVE_FILE: &str = "character-active.json";
+const ACTIVE_VERSION: u32 = 1;
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct ActiveCharacter {
+    pub schema_version: u32,
+    /// Chosen pack id, or None to show no character.
+    pub id: Option<String>,
+    /// Whether the character animates inside the closed notch.
+    pub show_in_notch: bool,
+}
+
+impl Default for ActiveCharacter {
+    fn default() -> Self {
+        ActiveCharacter {
+            schema_version: ACTIVE_VERSION,
+            id: Some(BUILTIN_ID.to_string()),
+            show_in_notch: true,
+        }
+    }
+}
+
+/// Read the active-character record (defaults to the built-in, shown in notch).
+pub fn active(app: &AppHandle) -> ActiveCharacter {
+    match read_json::<ActiveCharacter>(app, ACTIVE_FILE) {
+        Ok(Some(v)) => v,
+        _ => ActiveCharacter::default(),
+    }
+}
+
+/// Persist the active-character record (atomic; this is rare, so not debounced).
+pub fn set_active(app: &AppHandle, value: &ActiveCharacter) -> Result<(), CharError> {
+    write_json_atomic(app, ACTIVE_FILE, value).map_err(CharError::from)
+}
 
 /// Per-pack byte limits from CHARACTERS.md.
 const MAX_SHEET_BYTES: u64 = 1024 * 1024; // 1 MB per sheet
@@ -285,6 +326,38 @@ fn copy_dir(src: &Path, dest: &Path) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// Copy the bundled built-in pack(s) into app data on first run so the user
+/// always has a default character. Built-ins ship read-only under the app's
+/// resource dir (`packs/characters/<id>`); user packs live only in app data.
+///
+/// We copy rather than read in place so import/delete/switch all work uniformly
+/// against one directory, and so a future pack update can refresh the copy. A
+/// pack is re-copied only if it is missing in app data (never clobbers a user's
+/// customised copy, and costs nothing on later launches).
+pub fn ensure_builtin(app: &AppHandle) {
+    let Ok(dest_root) = characters_dir(app) else {
+        return;
+    };
+    // Resolve the bundled packs dir from Tauri resources. In dev this resolves
+    // under the resource dir; `tauri.conf.json` bundles `packs/` as a resource.
+    let Ok(res_dir) = app.path().resource_dir() else {
+        return;
+    };
+    let src_root = res_dir.join("packs").join("characters");
+    if !src_root.exists() {
+        return;
+    }
+    for id in [BUILTIN_ID] {
+        let src = src_root.join(id);
+        let dest = dest_root.join(id);
+        if src.exists() && !dest.exists() {
+            if let Err(e) = copy_dir(&src, &dest) {
+                eprintln!("islet: failed to seed built-in character '{id}': {e}");
+            }
+        }
+    }
 }
 
 #[cfg(test)]

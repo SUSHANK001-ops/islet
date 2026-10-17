@@ -5,6 +5,7 @@
 //! frontend command allow-list. Rust owns all state and storage.
 
 mod app_config;
+mod characters;
 mod commands;
 mod modules;
 mod platform;
@@ -43,6 +44,8 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         // opener: launch YouTube Music in the default browser (Media tab).
         .plugin(tauri_plugin_opener::init())
+        // dialog: native file/folder picker for importing a character pack.
+        .plugin(tauri_plugin_dialog::init())
         // App state: monitor choice, write debouncer, hub, registry, scheduler.
         .manage(window::MonitorChoice::default())
         .manage(window::NotchPositionState::default())
@@ -79,13 +82,23 @@ pub fn run() {
             commands::notes_delete,
             commands::media_now_playing,
             commands::media_control,
-            commands::open_youtube_music
+            commands::open_youtube_music,
+            commands::characters_list,
+            commands::character_get_active,
+            commands::character_load_active,
+            commands::character_set_active,
+            commands::character_import,
+            commands::character_delete
         ])
         .setup(|app| {
             let handle = app.handle();
 
             // Load settings first; everything else keys off them.
             let settings = store::settings::load(handle);
+
+            // Seed the built-in character into app data on first run so there
+            // is always a default. Non-fatal: the UI degrades to no character.
+            characters::ensure_builtin(handle);
 
             // Apply saved monitor choice + notch position before showing the pill.
             if let Some(win) = window::island(handle) {

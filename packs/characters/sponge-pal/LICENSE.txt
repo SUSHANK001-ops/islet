@@ -1,0 +1,17 @@
+Sponge Pal - Islet built-in character pack
+===========================================
+
+Author: Islet
+License: CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/)
+
+The artwork in this pack (sheet.png and any files under stages/ and outfits/)
+must be ORIGINAL work created for Islet, or art the author has the right to
+license under CC-BY-4.0.
+
+"SpongeBob-style" describes the cheerful, blocky cartoon VIBE only. This pack
+must NOT contain, copy, or trace any assets from the SpongeBob SquarePants
+television show or any other copyrighted character. Ship only art you own or
+are licensed to distribute.
+
+Attribution: if you reuse or adapt this pack, credit "Islet" and keep this
+license notice.

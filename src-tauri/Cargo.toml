@@ -14,7 +14,9 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 # tray-icon: built-in tray menu (Show/Hide, Settings, Quit). No extra crate.
-tauri = { version = "2", features = ["tray-icon"] }
+# protocol-asset: lets the frontend read the active character's sheet PNG from
+# app data via the asset: protocol (scoped to $APPDATA/characters in the conf).
+tauri = { version = "2", features = ["tray-icon", "protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # time: correct local-date filenames for the daily activity log. Date math by
@@ -32,6 +34,10 @@ tauri-plugin-notification = "2"
 # opener: launch an external URL (YouTube Music) in the user's default browser.
 # Official + small; avoids shelling out and handles the OS launch correctly.
 tauri-plugin-opener = "2"
+# dialog: native file picker for importing a character pack (.islet-char) and,
+# in Spec 9, adding a launcher app. The picker IS the user's consent; reusing
+# the OS dialog is safer and smaller than a custom file browser.
+tauri-plugin-dialog = "2"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]

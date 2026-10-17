@@ -1,129 +1,137 @@
 import { useEffect, useState } from "preact/hooks";
 import { listen } from "@tauri-apps/api/event";
 import { APP_NAME } from "../app.config";
-import {
-  openPanel,
-  closePanel,
-  getSpikeReport,
-  type SpikeReport,
-} from "./window-bridge";
-import {
-  pendingPermissions,
-  requestPermission,
-} from "./permission-store";
+import { t } from "../ui/i18n";
+import { openPanel, closePanel } from "./window-bridge";
+import { settings } from "./settings-store";
+import { pendingPermissions } from "./permission-store";
 import { PermissionPrompt } from "./permission-prompt";
+import { TabBar } from "./tab-bar";
+import { LazyPanel } from "./lazy-panel";
+import type { TabId } from "./tabs";
 
 /**
- * Spec 0 spike shell.
- * - Pill at top-center (window itself is positioned by Rust).
- * - Hover opens the panel, mouse-leave closes it. Rust flips click-through so
- *   the closed pill never eats clicks and never steals focus.
- * - Shows the live spike report so we can eyeball monitor / DPI / fullscreen.
- * - Hosts the on-notch permission prompt surface.
+ * Spec 1 shell.
+ * - Closed = pill. Hover opens a preview; click pins it open.
+ * - Esc or click-away closes (unless pinned stays until toggled again).
+ * - Tray / hotkey toggle via backend events.
+ * - Closed means asleep: when closed we render only the pill (no tab code,
+ *   no panel work). Panels are lazy-loaded only once a tab is opened.
  */
 export function Shell() {
   const [open, setOpen] = useState(false);
-  const [report, setReport] = useState<SpikeReport | null>(null);
+  const [pinned, setPinned] = useState(false);
+  const [active, setActive] = useState<TabId>("focus");
+  const [hotkeyMsg, setHotkeyMsg] = useState<string | null>(null);
   const pending = pendingPermissions.value;
+  const theme = settings.value.theme;
 
-  // Refresh the spike report whenever the panel opens so numbers are current.
+  // Apply the theme to <html> so the design tokens switch.
   useEffect(() => {
-    if (!open) return;
-    let alive = true;
-    getSpikeReport()
-      .then((r) => alive && setReport(r))
-      .catch(() => {
-        /* spike: surface errors as empty state rather than crashing */
-      });
-    return () => {
-      alive = false;
-    };
-  }, [open]);
+    document.documentElement.classList.toggle("theme-light", theme === "light");
+  }, [theme]);
 
-  // Rust tells us when a fullscreen app appears so the panel can auto-close.
-  // Event-driven, not polling (AGENTS.md hard rule #2).
+  // Backend-driven toggle (tray icon, global hotkey). Payload = new open state.
   useEffect(() => {
-    const unlisten = listen("islet://fullscreen-changed", (e) => {
-      if (e.payload === true) {
-        setOpen(false);
-        void closePanel();
-      }
+    const un = listen<boolean>("islet://toggle-open", (e) => {
+      const next = e.payload;
+      setOpen(next);
+      setPinned(next); // a deliberate toggle pins/unpins
     });
-    return () => {
-      void unlisten.then((f) => f());
-    };
+    return () => void un.then((f) => f());
   }, []);
 
-  // Spike demo: the notch permission surface is triggered on demand from a
-  // button in the panel (below), not auto-popped, so the pill can be tested
-  // on its own first. Real triggers come from each feature in later specs.
-  function triggerDemoPermission() {
-    requestPermission({
-      id: "demo-notifications",
-      capability: "notifications",
-      title: "Allow notifications?",
-      body: `${APP_NAME} can tell you when a focus round ends. You can change this later in Settings.`,
+  // Tray "Settings" opens the panel on the Settings tab.
+  useEffect(() => {
+    const un = listen("islet://open-settings", () => {
+      setActive("settings");
+      setOpen(true);
+      setPinned(true);
     });
-  }
+    return () => void un.then((f) => f());
+  }, []);
+
+  // Hotkey conflict: show a friendly, dismissible message (no crash).
+  useEffect(() => {
+    const un = listen<string>("islet://hotkey-conflict", (e) => {
+      setHotkeyMsg(t("hotkey.conflict", { combo: e.payload }));
+    });
+    return () => void un.then((f) => f());
+  }, []);
+
+  // Fullscreen app appeared: hide the panel (event-driven, not polling).
+  useEffect(() => {
+    const un = listen<boolean>("islet://fullscreen-changed", (e) => {
+      if (e.payload === true) {
+        setOpen(false);
+        setPinned(false);
+      }
+    });
+    return () => void un.then((f) => f());
+  }, []);
+
+  // Esc closes the panel (unless a permission is pending).
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && pending.length === 0) {
+        setOpen(false);
+        setPinned(false);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, pending.length]);
+
+  // Keep the OS window footprint in sync with open/closed (size + focus).
+  useEffect(() => {
+    if (open) void openPanel();
+    else void closePanel();
+  }, [open]);
 
   function handleEnter() {
-    setOpen(true);
-    void openPanel();
+    if (!open) setOpen(true);
   }
 
   function handleLeave() {
-    // Keep the panel open while a permission is pending so it is not missed.
-    if (pending.length > 0) return;
+    // Pinned or a pending permission keeps it open; otherwise close.
+    if (pinned || pending.length > 0) return;
     setOpen(false);
-    void closePanel();
+  }
+
+  function handlePillClick() {
+    setPinned((p) => !p || !open);
+    setOpen(true);
   }
 
   const hasAlert = pending.length > 0;
 
   return (
     <div class="islet-stack" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <div class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}`}>
+      <div
+        class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}`}
+        onClick={handlePillClick}
+        title={`${APP_NAME} · ${t("app.tagline")}`}
+      >
         {hasAlert && !open ? <span class="islet-alert-dot" /> : null}
       </div>
 
       {hasAlert ? <PermissionPrompt /> : null}
 
       {open ? (
-        <div class="islet-panel">
-          <h1>{APP_NAME} · spike</h1>
-          {report ? (
-            <>
-              <div class="islet-row">
-                <span>Monitors</span>
-                <b>{report.monitorCount}</b>
-              </div>
-              <div class="islet-row">
-                <span>Active monitor</span>
-                <b>{report.activeMonitorName || "unknown"}</b>
-              </div>
-              <div class="islet-row">
-                <span>DPI scale</span>
-                <b>{report.scaleFactor.toFixed(2)}x</b>
-              </div>
-              <div class="islet-row">
-                <span>Work area</span>
-                <b>
-                  {report.workAreaWidth}×{report.workAreaHeight}
-                </b>
-              </div>
-              <div class="islet-row">
-                <span>Fullscreen app</span>
-                <b>{report.fullscreenAppActive ? "yes" : "no"}</b>
-              </div>
-              <button class="islet-btn" onClick={triggerDemoPermission}>
-                Test permission prompt
+        <div class="islet-panel" role="dialog" aria-label={APP_NAME}>
+          {hotkeyMsg ? (
+            <div class="islet-notice" role="status">
+              <span>{hotkeyMsg}</span>
+              <button class="islet-btn" onClick={() => setHotkeyMsg(null)}>
+                OK
               </button>
-            </>
-          ) : (
-            <div class="islet-row">
-              <span>Loading spike report…</span>
             </div>
-          )}
+          ) : null}
+          <TabBar active={active} onSelect={setActive} />
+          <div class="islet-panel-body">
+            <LazyPanel id={active} />
+          </div>
         </div>
       ) : null}
     </div>

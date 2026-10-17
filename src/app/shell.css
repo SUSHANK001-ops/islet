@@ -158,3 +158,159 @@ body {
     animation: none;
   }
 }
+
+/* ---- Spec 1 shell: tabs, panel body, settings, toggles ---- */
+
+.islet-panel-body {
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+.islet-tabbar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.islet-tab {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+}
+
+.islet-tab.active {
+  background: #2a2a2a;
+  color: var(--islet-fg);
+}
+
+.islet-tab:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
+}
+
+/* Empty / loading / error placeholder shared by panels. */
+.islet-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--islet-fg-dim);
+  font-size: 12px;
+  min-height: 120px;
+}
+
+.islet-empty-icon {
+  font-size: 18px;
+  opacity: 0.5;
+}
+
+/* Hotkey-conflict notice. */
+.islet-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--islet-bg);
+  border: 1px solid var(--islet-warn);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* Settings. */
+.islet-settings h1 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.islet-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.islet-field select {
+  font: inherit;
+  font-size: 12px;
+  background: #2a2a2a;
+  color: var(--islet-fg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 3px 6px;
+  max-width: 180px;
+}
+
+.islet-toggle {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--islet-fg-dim);
+  background: transparent;
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+}
+
+.islet-toggle.on {
+  background: var(--islet-ok);
+  border-color: var(--islet-ok);
+  color: #05230f;
+}
+
+.islet-toggle.small {
+  padding: 2px 8px;
+}
+
+.islet-kbd {
+  font-size: 11px;
+  background: #2a2a2a;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.islet-tabs-editor {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.islet-tabs-editor ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.islet-tabs-editor li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.islet-reorder button {
+  font: inherit;
+  background: transparent;
+  border: none;
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.islet-reorder button:hover {
+  color: var(--islet-fg);
+}

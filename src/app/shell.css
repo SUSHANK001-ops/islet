@@ -511,3 +511,67 @@ body {
   color: var(--islet-danger);
   background: var(--islet-control-hover);
 }
+
+/* ---- Media panel (Spec 5) ---- */
+
+.islet-media {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.islet-media-meta {
+  text-align: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.islet-media-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--islet-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.islet-media-artist {
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.islet-media-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.islet-media-btn {
+  font-size: 18px;
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  border: 1px solid var(--islet-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.islet-media-btn:hover {
+  background: var(--islet-control-hover);
+}
+
+.islet-media-btn.big {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+}

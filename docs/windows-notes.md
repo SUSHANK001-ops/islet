@@ -150,3 +150,42 @@ the date rolls over correctly on the target machine.
 - Delete `settings.json` while closed: next launch recreates defaults, no crash.
 - Corrupt `settings.json` (write garbage): next launch backs it up as
   `settings.corrupt.*.json` and resets to defaults, no crash.
+
+## Spec 3 (Focus timer) notes
+
+### Single timer engine
+
+All timing runs through one `scheduler/` thread that ticks once per second and
+calls subscribers. The focus module is a subscriber; it does NOT spawn its own
+timer (performance budget: one timer engine in Rust). The tick thread only runs
+while at least one subscriber exists, so an idle app has no ticking thread.
+
+### windows crate pinned to 0.62
+
+The notification plugin pulls `windows-core 0.62` into the tree. Keeping our
+direct `windows` dep at 0.58 caused trait-version clashes (two `windows_core`
+versions). Fix: pin our dep to `0.62` so there is one consistent API. If a
+future Tauri bump moves this again, re-align the version here.
+
+### Session lock / sleep pause (Win32)
+
+There is no Tauri event for "workstation locked". We create a message-only
+window on a dedicated thread and register:
+- `WTSRegisterSessionNotification` -> `WM_WTSSESSION_CHANGE`
+  (`WTS_SESSION_LOCK`/`UNLOCK`) for lock/unlock.
+- `RegisterSuspendResumeNotification` -> `WM_POWERBROADCAST`
+  (`PBT_APMSUSPEND`/`PBT_APMRESUMEAUTOMATIC`) for sleep/resume.
+Each maps to Pause/Resume on the focus engine, forwarded over a channel. This
+is event-driven (no polling). If registration fails, we log and the timer
+simply does not auto-pause (graceful degrade), rather than crashing.
+
+### To verify on hardware (Spec 3)
+
+- Start a 5-min round; the clock counts down; pause/resume/reset work.
+- Let a (short, for testing) round finish: a Windows notification appears.
+  First time, the on-notch "Allow notifications?" prompt should be honored by
+  Windows' own notification permission.
+- Lock the PC (Win+L) mid-round, wait, unlock: the timer paused while locked
+  and resumed on unlock. Repeat with sleep/wake if practical.
+- Complete a work round: `activity/YYYY-MM-DD.json` gains a `focus.completed`
+  event; the panel's "done today" count increments.

@@ -32,7 +32,9 @@ tauri-plugin-notification = "2"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.58", features = [
+# Pinned to 0.62 to match the version Tauri's dependency tree already compiles,
+# so there is a single consistent windows-core (avoids trait-version clashes).
+windows = { version = "0.62", features = [
   "Win32_Foundation",
   "Win32_UI_WindowsAndMessaging",
   "Win32_Graphics_Gdi",

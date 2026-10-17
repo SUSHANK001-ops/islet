@@ -93,6 +93,9 @@ impl FocusEngine {
 
     /// Replace config (e.g. settings changed). Does not disturb a running timer
     /// beyond the current phase; new durations apply to the next phase.
+    /// Wired when focus settings become editable (next spec); kept now so the
+    /// engine is a complete unit.
+    #[allow(dead_code)]
     pub fn set_config(&mut self, config: FocusConfig) {
         self.config = config;
     }
@@ -114,7 +117,9 @@ impl FocusEngine {
         self.enter(Phase::Work);
     }
 
-    /// Start with the current config's work length.
+    /// Start with the current config's work length. Used by tests and by a
+    /// future "resume default round" path; the command layer uses `start_work`.
+    #[allow(dead_code)]
     pub fn start(&mut self) {
         self.enter(Phase::Work);
     }
@@ -139,7 +144,9 @@ impl FocusEngine {
         self.completed_rounds = 0;
     }
 
-    /// Reset the daily tally (call on date rollover).
+    /// Reset the daily tally (call on date rollover). Wired when the scheduler
+    /// gains a midnight signal (Spec 9 progress); kept now for completeness.
+    #[allow(dead_code)]
     pub fn reset_daily(&mut self) {
         self.rounds_today = 0;
     }
@@ -212,7 +219,7 @@ mod tests {
 
     #[test]
     fn starts_idle() {
-        let e = FocusEngine::new(cfg());
+        let mut e = FocusEngine::new(cfg());
         assert_eq!(e.state().phase, Phase::Idle);
         assert_eq!(e.tick(10), None, "idle does not tick down");
     }

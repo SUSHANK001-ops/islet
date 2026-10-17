@@ -25,19 +25,18 @@ pub enum SessionEvent {
 mod imp {
     use super::{SessionEvent, Sender};
     use std::cell::RefCell;
-    use windows::core::{w, PCWSTR};
-    use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+    use windows::core::w;
+    use windows::Win32::Foundation::{HANDLE, HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
-    use windows::Win32::System::Power::{
-        RegisterSuspendResumeNotification, DEVICE_NOTIFY_WINDOW_HANDLE,
-    };
+    use windows::Win32::System::Power::RegisterSuspendResumeNotification;
     use windows::Win32::System::RemoteDesktop::{
         WTSRegisterSessionNotification, NOTIFY_FOR_THIS_SESSION,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, RegisterClassW,
-        HWND_MESSAGE, MSG, PBT_APMRESUMEAUTOMATIC, PBT_APMSUSPEND, WINDOW_EX_STYLE, WINDOW_STYLE,
-        WM_POWERBROADCAST, WM_WTSSESSION_CHANGE, WNDCLASSW, WTS_SESSION_LOCK, WTS_SESSION_UNLOCK,
+        DEVICE_NOTIFY_WINDOW_HANDLE, HWND_MESSAGE, MSG, PBT_APMRESUMEAUTOMATIC, PBT_APMSUSPEND,
+        WINDOW_EX_STYLE, WINDOW_STYLE, WM_POWERBROADCAST, WM_WTSSESSION_CHANGE, WNDCLASSW,
+        WTS_SESSION_LOCK, WTS_SESSION_UNLOCK,
     };
 
     // Each message-only window stashes its Sender in thread-local storage so
@@ -93,18 +92,21 @@ mod imp {
         unsafe {
             SENDER.with(|s| *s.borrow_mut() = Some(tx));
 
-            let hinstance = match GetModuleHandleW(None) {
+            let hmodule = match GetModuleHandleW(None) {
                 Ok(h) => h,
                 Err(e) => {
                     eprintln!("islet: session listener GetModuleHandle failed: {e}");
                     return;
                 }
             };
+            // HINSTANCE and HMODULE share the same handle value.
+            let hinstance: windows::Win32::Foundation::HINSTANCE =
+                windows::Win32::Foundation::HINSTANCE(hmodule.0);
 
             let class_name = w!("IsletSessionListener");
             let wc = WNDCLASSW {
                 lpfnWndProc: Some(wndproc),
-                hInstance: hinstance.into(),
+                hInstance: hinstance,
                 lpszClassName: class_name,
                 ..Default::default()
             };
@@ -125,7 +127,7 @@ mod imp {
                 0,
                 Some(HWND_MESSAGE),
                 None,
-                Some(hinstance.into()),
+                Some(hinstance),
                 None,
             ) {
                 Ok(h) => h,
@@ -139,12 +141,10 @@ mod imp {
             if WTSRegisterSessionNotification(hwnd, NOTIFY_FOR_THIS_SESSION).is_err() {
                 eprintln!("islet: WTSRegisterSessionNotification failed (lock pause disabled)");
             }
-            // Suspend/resume notifications.
-            if RegisterSuspendResumeNotification(
-                windows::Win32::Foundation::HANDLE(hwnd.0),
-                DEVICE_NOTIFY_WINDOW_HANDLE,
-            )
-            .is_err()
+            // Suspend/resume notifications. The window handle doubles as the
+            // recipient HANDLE when the flag is DEVICE_NOTIFY_WINDOW_HANDLE.
+            if RegisterSuspendResumeNotification(HANDLE(hwnd.0), DEVICE_NOTIFY_WINDOW_HANDLE)
+                .is_err()
             {
                 eprintln!("islet: RegisterSuspendResumeNotification failed (sleep pause disabled)");
             }
@@ -154,7 +154,6 @@ mod imp {
             while GetMessageW(&mut msg, Some(hwnd), 0, 0).as_bool() {
                 DispatchMessageW(&msg);
             }
-            let _ = PCWSTR::null();
         }
     }
 }

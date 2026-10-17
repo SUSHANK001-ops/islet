@@ -39,10 +39,6 @@ impl FocusModule {
         }
     }
 
-    pub fn engine(&self) -> Arc<Mutex<FocusEngine>> {
-        Arc::clone(&self.engine)
-    }
-
     /// Current state snapshot (for the get_state command).
     pub fn state(&self) -> FocusState {
         self.engine

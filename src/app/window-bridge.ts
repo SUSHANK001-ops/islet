@@ -58,3 +58,8 @@ export function loadSettings(): Promise<PersistedSettings> {
 export function saveSettings(value: PersistedSettings): Promise<boolean> {
   return invoke("save_settings", { value });
 }
+
+/** Force-write settings now (call on unload so no pending change is lost). */
+export function flushSettings(value: PersistedSettings): Promise<void> {
+  return invoke("flush_settings", { value });
+}

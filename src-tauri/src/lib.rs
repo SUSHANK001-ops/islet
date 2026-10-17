@@ -45,6 +45,7 @@ pub fn run() {
             commands::set_monitor,
             commands::load_settings,
             commands::save_settings,
+            commands::flush_settings,
             commands::append_activity,
             commands::read_activity_day,
             commands::list_modules,

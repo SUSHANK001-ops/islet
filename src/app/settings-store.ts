@@ -1,5 +1,5 @@
 import { signal, effect } from "@preact/signals";
-import { loadSettings, saveSettings } from "./window-bridge";
+import { loadSettings, saveSettings, flushSettings } from "./window-bridge";
 
 // Settings store. Spec 2: the backing is now versioned JSON on disk (Rust owns
 // the file). The public API (`settings` signal, `updateSettings`, tab helpers)
@@ -84,7 +84,25 @@ let loaded = false;
  * Load persisted settings once at startup. Safe to call outside Tauri (tests,
  * browser preview): on failure it keeps the in-memory defaults.
  */
+function toPersisted() {
+  const v = settings.value;
+  return {
+    schemaVersion: v.schemaVersion,
+    theme: v.theme,
+    monitorName: v.monitorName,
+    launchAtStartup: v.launchAtStartup,
+    tabs: v.tabs.map((t) => ({ id: t.id, enabled: t.enabled })),
+  };
+}
+
 export async function initSettings(): Promise<void> {
+  // Flush the latest settings on unload so a change inside the debounce window
+  // is never lost (pairs with the debounced save below).
+  if (typeof window !== "undefined") {
+    window.addEventListener("beforeunload", () => {
+      void flushSettings(toPersisted()).catch(() => {});
+    });
+  }
   try {
     const disk = await loadSettings();
     // Trust the Rust-validated shape; coerce tabs to our union-typed ids.
@@ -109,15 +127,10 @@ export async function initSettings(): Promise<void> {
 // Persist on any change after the initial load. Rust debounces the disk write,
 // so firing on every change is fine and never exceeds the disk budget.
 effect(() => {
-  const value = settings.value;
+  // Touch the signal so the effect subscribes, then guard on `loaded`.
+  const _ = settings.value;
   if (!loaded) return;
-  void saveSettings({
-    schemaVersion: value.schemaVersion,
-    theme: value.theme,
-    monitorName: value.monitorName,
-    launchAtStartup: value.launchAtStartup,
-    tabs: value.tabs.map((t) => ({ id: t.id, enabled: t.enabled })),
-  }).catch(() => {
+  void saveSettings(toPersisted()).catch(() => {
     /* non-fatal: keep working from memory */
   });
 });

@@ -34,6 +34,10 @@ impl Hub {
     }
 
     /// Update the snapshot via a closure. Returns the new snapshot.
+    /// Not called yet: this is the hub's write contract for feature modules
+    /// (focus/tasks/...) that arrive in later specs. Kept here so the hub is a
+    /// complete, tested unit now.
+    #[allow(dead_code)]
     pub fn update(&self, f: impl FnOnce(&mut HubSnapshot)) -> HubSnapshot {
         match self.0.lock() {
             Ok(mut g) => {

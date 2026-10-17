@@ -93,6 +93,13 @@ pub fn save_settings(app: AppHandle, value: Settings) -> Result<bool, String> {
     settings::save(&app, &value).map_err(|e| e.to_string())
 }
 
+/// Force-write settings now, bypassing debounce. The frontend calls this on
+/// window unload so the last change within the debounce window is never lost.
+#[tauri::command]
+pub fn flush_settings(app: AppHandle, value: Settings) -> Result<(), String> {
+    settings::save_now(&app, &value).map_err(|e| e.to_string())
+}
+
 /// Append one event to today's activity log.
 #[tauri::command]
 pub fn append_activity(

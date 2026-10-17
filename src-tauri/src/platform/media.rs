@@ -40,15 +40,15 @@ mod imp {
 
     /// Resolve the current session, if any app owns media right now.
     fn current_session() -> Option<Session> {
-        // RequestAsync -> IAsyncOperation; block for the manager, then the
-        // current session. Any failure (no manager, no session) -> None.
-        let manager = Manager::RequestAsync().ok()?.get().ok()?;
+        // RequestAsync -> IAsyncOperation; `join()` blocks for the result (we
+        // are off the UI thread). Any failure (no manager, no session) -> None.
+        let manager = Manager::RequestAsync().ok()?.join().ok()?;
         manager.GetCurrentSession().ok()
     }
 
     pub fn now_playing() -> Option<NowPlaying> {
         let session = current_session()?;
-        let props = session.TryGetMediaPropertiesAsync().ok()?.get().ok()?;
+        let props = session.TryGetMediaPropertiesAsync().ok()?.join().ok()?;
         let title = props.Title().map(|s| s.to_string()).unwrap_or_default();
         let artist = props.Artist().map(|s| s.to_string()).unwrap_or_default();
 
@@ -74,9 +74,9 @@ mod imp {
             return false;
         };
         let result = match action {
-            MediaAction::PlayPause => session.TryTogglePlayPauseAsync().and_then(|op| op.get()),
-            MediaAction::Next => session.TrySkipNextAsync().and_then(|op| op.get()),
-            MediaAction::Previous => session.TrySkipPreviousAsync().and_then(|op| op.get()),
+            MediaAction::PlayPause => session.TryTogglePlayPauseAsync().and_then(|op| op.join()),
+            MediaAction::Next => session.TrySkipNextAsync().and_then(|op| op.join()),
+            MediaAction::Previous => session.TrySkipPreviousAsync().and_then(|op| op.join()),
         };
         result.unwrap_or(false)
     }

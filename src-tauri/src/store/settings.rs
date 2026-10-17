@@ -26,6 +26,9 @@ pub struct Settings {
     pub monitor_name: Option<String>,
     pub launch_at_startup: bool,
     pub tabs: Vec<TabConfig>,
+    /// Active character pack id; None = use the built-in default.
+    #[serde(default)]
+    pub active_character: Option<String>,
 }
 
 impl Default for Settings {
@@ -42,6 +45,7 @@ impl Default for Settings {
                     enabled: true,
                 })
                 .collect(),
+            active_character: None,
         }
     }
 }

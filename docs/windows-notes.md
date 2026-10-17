@@ -189,3 +189,35 @@ simply does not auto-pause (graceful degrade), rather than crashing.
   and resumed on unlock. Repeat with sleep/wake if practical.
 - Complete a work round: `activity/YYYY-MM-DD.json` gains a `focus.completed`
   event; the panel's "done today" count increments.
+
+## Spec 5 (Media / SMTC) notes
+
+### API
+
+Now-playing + transport control use the WinRT
+`GlobalSystemMediaTransportControlsSessionManager` (Windows.Media.Control):
+`RequestAsync()` -> `GetCurrentSession()` ->
+`TryGetMediaPropertiesAsync()` (title/artist) + `GetPlaybackInfo()` (status),
+and `TryTogglePlayPauseAsync` / `TrySkipNextAsync` / `TrySkipPreviousAsync`.
+
+### `.join()` not `.get()`
+
+In the `windows`/`windows-future` version we build against, the blocking
+resolver on `IAsyncOperation` is `.join()` (the older `.get()` was removed).
+If a future bump breaks media.rs, this is the likely culprit.
+
+### Polling exception (documented)
+
+Subscribing to SMTC change events from Rust is awkward; instead the Media panel
+polls `media_now_playing` every 2s **only while the panel is open** (closed ==
+asleep, so no polling at rest). This is the sanctioned exception to the
+no-polling rule (AGENTS.md: poll at the slowest safe rate, only while needed,
+and write why). A control action also triggers an immediate refresh.
+
+### To verify on hardware (Spec 5)
+
+- Play something in Spotify / a browser; open Media: title + artist show and
+  the play/pause icon reflects state.
+- Prev / play-pause / next control the real app.
+- Close all media; Media shows "Nothing playing".
+- Artwork is intentionally NOT shown in v1 (thumbnail stream reading deferred).

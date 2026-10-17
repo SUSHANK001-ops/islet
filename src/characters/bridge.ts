@@ -104,3 +104,24 @@ export function assetUrl(absPath: string): string {
     return absPath;
   }
 }
+
+/**
+ * Given the absolute path to the main sheet and a pack-relative sheet path
+ * (e.g. "stages/bubbly.png"), build the absolute path to that sibling file.
+ * Used for growth-stage sheets, which live inside the same pack folder. The
+ * relative path is already validated in Rust (no traversal), so this only has
+ * to join it onto the pack directory.
+ */
+export function packFilePath(mainSheetAbsPath: string, relPath: string): string {
+  // Split on either separator; the pack dir is everything up to the last one.
+  const idx = Math.max(
+    mainSheetAbsPath.lastIndexOf("/"),
+    mainSheetAbsPath.lastIndexOf("\\")
+  );
+  if (idx < 0) return relPath;
+  const dir = mainSheetAbsPath.slice(0, idx);
+  const sep = mainSheetAbsPath[idx];
+  // Normalize the relative path's separators to the sheet path's separator.
+  const rel = relPath.replace(/[/\\]+/g, sep);
+  return `${dir}${sep}${rel}`;
+}

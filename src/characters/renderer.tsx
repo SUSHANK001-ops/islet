@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "preact/hooks";
-import { assetUrl, type LoadedCharacter } from "./bridge";
+import { assetUrl, packFilePath, type LoadedCharacter } from "./bridge";
 import {
   SpriteEngine,
   decodeSheet,
@@ -10,8 +10,10 @@ import {
   activeCharacter,
   animationAllowed,
   gateVersion,
+  totalFocusMinutes,
 } from "./character-store";
 import { notchState, resolveState, type CharacterSignals } from "./state-machine";
+import { resolveStage } from "./mood";
 
 // Shared rendering hook. Decodes the active character's sheet ONCE and keeps a
 // SpriteEngine bound to a canvas. The notch and panel each call this with their
@@ -20,25 +22,46 @@ import { notchState, resolveState, type CharacterSignals } from "./state-machine
 //
 // A module-level cache keyed by character id holds the one ImageBitmap so the
 // notch and the panel share it. It is freed when the character changes.
-let cachedId: string | null = null;
+// Cache key = character id + the resolved stage sheet, so reaching a new growth
+// stage swaps the sheet (and frees the old bitmap), while the notch and panel
+// at the same stage still share ONE decoded bitmap.
+let cachedKey: string | null = null;
 let cachedBitmap: ImageBitmap | null = null;
 let cachedPromise: Promise<ImageBitmap> | null = null;
 
-async function bitmapFor(char: LoadedCharacter): Promise<ImageBitmap> {
-  if (cachedId === char.manifest.id && cachedBitmap) return cachedBitmap;
-  // Character changed: free the old bitmap before decoding the new one.
-  if (cachedId !== char.manifest.id) {
-    freeBitmap(cachedBitmap);
-    cachedBitmap = null;
-    cachedPromise = null;
-  }
-  if (!cachedPromise) {
-    cachedPromise = decodeSheet(assetUrl(char.sheetPath)).then((bm) => {
+/** Absolute path to the sheet for the character's current growth stage. */
+function stageSheetPath(char: LoadedCharacter, minutes: number): string {
+  const stage = resolveStage(char.manifest, minutes);
+  // No stages, or the stage points at the main sheet file name -> main sheet.
+  if (!stage) return char.sheetPath;
+  if (stage.sheet === char.manifest.sheet.file) return char.sheetPath;
+  return packFilePath(char.sheetPath, stage.sheet);
+}
+
+async function bitmapFor(char: LoadedCharacter, minutes: number): Promise<ImageBitmap> {
+  const sheetPath = stageSheetPath(char, minutes);
+  const key = `${char.manifest.id}::${sheetPath}`;
+  if (cachedKey === key && cachedBitmap) return cachedBitmap;
+  // Key changed (character or stage): free the old bitmap before decoding.
+  freeBitmap(cachedBitmap);
+  cachedBitmap = null;
+  cachedPromise = decodeSheet(assetUrl(sheetPath))
+    .then((bm) => {
       cachedBitmap = bm;
-      cachedId = char.manifest.id;
+      cachedKey = key;
       return bm;
+    })
+    .catch((e) => {
+      // A missing stage sheet falls back to the main sheet (CHARACTERS.md).
+      if (sheetPath !== char.sheetPath) {
+        return decodeSheet(assetUrl(char.sheetPath)).then((bm) => {
+          cachedBitmap = bm;
+          cachedKey = `${char.manifest.id}::${char.sheetPath}`;
+          return bm;
+        });
+      }
+      throw e;
     });
-  }
   return cachedPromise;
 }
 
@@ -60,6 +83,9 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
   const engineRef = useRef<SpriteEngine | null>(null);
   const char = activeCharacter.value;
   const gate = gateVersion.value; // subscribe to gate changes
+  const minutes = totalFocusMinutes.value; // subscribe to growth changes
+  // The resolved stage id keys the engine rebuild so a new stage reloads art.
+  const stageId = char ? resolveStage(char.manifest, minutes)?.id ?? "" : "";
 
   // Pick the state name for this surface from the current signals.
   const stateName = char
@@ -76,7 +102,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
     engineRef.current = null;
     if (!char || !canvas) return;
 
-    bitmapFor(char)
+    bitmapFor(char, minutes)
       .then((bitmap) => {
         if (!alive) return;
         const engine = new SpriteEngine(canvas, char, bitmap, surface);
@@ -94,7 +120,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
       engineRef.current?.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [char?.manifest.id, surface]);
+  }, [char?.manifest.id, surface, stageId]);
 
   // React to state changes and the animate/static gate without rebuilding.
   useEffect(() => {
@@ -117,6 +143,6 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
 export function disposeCharacterBitmap() {
   freeBitmap(cachedBitmap);
   cachedBitmap = null;
-  cachedId = null;
+  cachedKey = null;
   cachedPromise = null;
 }

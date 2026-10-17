@@ -24,6 +24,10 @@ export const activeRecord = signal<ActiveCharacter>({
   showInNotch: true,
 });
 
+/** Lifetime focus minutes, drives the growth stage. Fed from progress later;
+ *  starts at 0 so a brand-new user is at the first stage. */
+export const totalFocusMinutes = signal(0);
+
 /** True while the character load is in flight (loading state in the UI). */
 export const characterLoading = signal(false);
 

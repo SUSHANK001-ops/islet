@@ -43,12 +43,18 @@ describe("resolveState (panel)", () => {
     expect(resolveState(m, signals({ focusing: true }))).toBe("working");
   });
 
-  it("sleeps in the small hours when idle", () => {
-    expect(resolveState(m, signals({ hour: 3 }))).toBe("sleeping");
+  it("rests via the mood map when not focusing (idle with no mood map)", () => {
+    // This manifest defines no mood map, so the mood-driven resting state
+    // falls back to idle regardless of the computed mood.
+    expect(resolveState(m, signals({ hour: 3 }))).toBe("idle");
+    expect(resolveState(m, signals({ hour: 14 }))).toBe("idle");
   });
 
-  it("is idle during the day when nothing is happening", () => {
-    expect(resolveState(m, signals({ hour: 14 }))).toBe("idle");
+  it("maps the tired mood to sleeping when the pack defines it", () => {
+    const withMoods = manifest(ALL);
+    withMoods.moods = { tired: "sleeping", proud: "celebrating" };
+    // Small hours -> tired -> sleeping via the mood map.
+    expect(resolveState(withMoods, signals({ hour: 3 }))).toBe("sleeping");
   });
 
   it("falls back to idle when a preferred state is missing", () => {

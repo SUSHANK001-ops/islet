@@ -127,10 +127,16 @@ export async function initSettings(): Promise<void> {
 // Persist on any change after the initial load. Rust debounces the disk write,
 // so firing on every change is fine and never exceeds the disk budget.
 effect(() => {
-  // Touch the signal so the effect subscribes, then guard on `loaded`.
-  const _ = settings.value;
+  // Read the signal so the effect subscribes to changes, then guard on load.
+  const snapshot = settings.value;
   if (!loaded) return;
-  void saveSettings(toPersisted()).catch(() => {
+  void saveSettings({
+    schemaVersion: snapshot.schemaVersion,
+    theme: snapshot.theme,
+    monitorName: snapshot.monitorName,
+    launchAtStartup: snapshot.launchAtStartup,
+    tabs: snapshot.tabs.map((tb) => ({ id: tb.id, enabled: tb.enabled })),
+  }).catch(() => {
     /* non-fatal: keep working from memory */
   });
 });

@@ -113,3 +113,40 @@ Rather than thread `<R: Runtime>` everywhere, `tray.rs` and `shortcut.rs` take
   (check Task Manager > Startup) and is OFF by default.
 - Tabs: switch with click and arrow keys; disabling a tab hides it; reordering
   changes the tab bar order; each tab shows the "Coming soon" empty state.
+
+## Spec 2 (Storage) notes
+
+### Data location
+
+All data lives under Tauri's `app_data_dir()`, which on Windows resolves to
+`%APPDATA%\dev.islet.app\` (the bundle identifier). Never a hardcoded path.
+Files so far: `settings.json`, `activity/YYYY-MM-DD.json`, and, if a settings
+file is ever unreadable, a timestamped `settings.corrupt.*.json` backup.
+
+### Atomic writes
+
+Writes go to a `.tmp` sibling, `sync_all()` (fsync), then `fs::rename` over the
+target. The temp file is in the same directory so the rename stays on one
+volume (cross-volume rename is a copy and not atomic). A crash mid-write leaves
+the previous good file intact.
+
+### Debounce + shutdown flush
+
+Saves are debounced to at most one disk write per 5 s per file (disk budget).
+Because a change inside the window would otherwise wait, the frontend calls
+`flush_settings` on `beforeunload`, which bypasses the debounce. To verify on
+hardware: change a setting, immediately quit, relaunch -> the change persists.
+
+### Local date caveat
+
+`time::OffsetDateTime::now_local()` can fail to read the local UTC offset on
+some systems; we fall back to UTC for the activity filename/date in that case.
+If daily files ever appear a few hours off near midnight, this is why. Verify
+the date rolls over correctly on the target machine.
+
+### To verify on hardware (Spec 2)
+
+- Change theme / toggle a tab / pick a monitor, quit, relaunch: settings stick.
+- Delete `settings.json` while closed: next launch recreates defaults, no crash.
+- Corrupt `settings.json` (write garbage): next launch backs it up as
+  `settings.corrupt.*.json` and resets to defaults, no crash.

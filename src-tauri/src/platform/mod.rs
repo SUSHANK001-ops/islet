@@ -1,12 +1,14 @@
-//! Windows-only platform helpers. For the spike this is fullscreen-app
-//! detection, which the shell uses to hide the island.
+//! Windows-only platform helpers.
+//! - `is_fullscreen_app_active`: foreground-window fullscreen check (spike).
+//! - `session`: lock/unlock + sleep/resume notifications (Spec 3 focus pause).
 //!
 //! AGENTS.md prefers events over polling. True fullscreen "enter/exit" is not a
 //! single Windows event; the common, documented approach is to inspect the
-//! foreground window's rect against its monitor. The spike exposes a one-shot
-//! check (`is_fullscreen_app_active`) that the Rust side can later call from a
-//! low-rate, display-change-driven timer. The reason it is not a tight poll is
-//! recorded in docs/windows-notes.md.
+//! foreground window's rect against its monitor. The `is_fullscreen_app_active`
+//! one-shot check can later be called from a low-rate, display-change-driven
+//! timer. The reason it is not a tight poll is recorded in docs/windows-notes.md.
+
+pub mod session;
 
 #[cfg(windows)]
 pub fn is_fullscreen_app_active() -> bool {

@@ -7,7 +7,7 @@
 //! no-op example; real modules arrive in later specs.
 
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
 
@@ -31,7 +31,7 @@ pub struct ModuleInfo {
 }
 
 struct Entry {
-    module: Box<dyn Module>,
+    module: Arc<dyn Module>,
     enabled: bool,
     running: bool,
 }
@@ -42,7 +42,7 @@ pub struct Registry(Mutex<HashMap<String, Entry>>);
 
 impl Registry {
     /// Add a module, with its initial enabled state (from settings).
-    pub fn register(&self, module: Box<dyn Module>, enabled: bool) {
+    pub fn register(&self, module: Arc<dyn Module>, enabled: bool) {
         if let Ok(mut map) = self.0.lock() {
             let id = module.id().to_string();
             map.insert(

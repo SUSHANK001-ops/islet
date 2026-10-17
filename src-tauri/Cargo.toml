@@ -26,6 +26,9 @@ tauri-plugin-global-shortcut = "2"
 # autostart: writes the Windows "run at login" entry correctly across install
 # types. Rolling our own risks registry mistakes; official + small.
 tauri-plugin-autostart = "2"
+# notification: Windows toast on focus round end. Hand-rolling WinRT toast XML
+# is far more than 100 lines and fragile; official + small.
+tauri-plugin-notification = "2"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]
@@ -33,6 +36,9 @@ windows = { version = "0.58", features = [
   "Win32_Foundation",
   "Win32_UI_WindowsAndMessaging",
   "Win32_Graphics_Gdi",
+  "Win32_System_RemoteDesktop",
+  "Win32_System_Power",
+  "Win32_System_LibraryLoader",
 ] }
 
 [profile.release]

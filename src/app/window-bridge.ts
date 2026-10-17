@@ -38,3 +38,23 @@ export function listMonitors(): Promise<string[]> {
 export function setMonitor(name: string | null): Promise<void> {
   return invoke("set_monitor", { name });
 }
+
+// ---- Spec 2: persisted settings (Rust owns the file) ----
+
+export interface PersistedSettings {
+  schemaVersion: number;
+  theme: "light" | "dark";
+  monitorName: string | null;
+  launchAtStartup: boolean;
+  tabs: { id: string; enabled: boolean }[];
+}
+
+/** Load settings from disk (defaults on first run). */
+export function loadSettings(): Promise<PersistedSettings> {
+  return invoke("load_settings");
+}
+
+/** Save settings (debounced in Rust). Resolves to whether it hit disk. */
+export function saveSettings(value: PersistedSettings): Promise<boolean> {
+  return invoke("save_settings", { value });
+}

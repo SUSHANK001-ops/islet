@@ -2,9 +2,13 @@
 //! Keep this list small and auditable. No raw shell, no raw file access.
 
 use serde::Serialize;
-use tauri::WebviewWindow;
+use tauri::{AppHandle, WebviewWindow};
 
 use crate::app_config::APP_NAME;
+use crate::modules::hub::{Hub, HubSnapshot};
+use crate::modules::registry::{ModuleInfo, Registry};
+use crate::store::activity::{self, ActivityDay};
+use crate::store::settings::{self, Settings};
 use crate::{platform, window};
 
 /// Snapshot the spike cares about: monitor/DPI/fullscreen state.
@@ -73,4 +77,56 @@ pub fn list_monitors(window: WebviewWindow) -> Vec<String> {
 pub fn set_monitor(window: WebviewWindow, name: Option<String>) -> Result<(), String> {
     let choice = name.filter(|n| !n.is_empty());
     window::set_monitor_choice(&window, choice).map_err(|e| format!("set_monitor failed: {e}"))
+}
+
+// ---- Spec 2: storage, settings, modules ----
+
+/// Load persisted settings (or defaults on first run / recovery).
+#[tauri::command]
+pub fn load_settings(app: AppHandle) -> Settings {
+    settings::load(&app)
+}
+
+/// Save settings (debounced). Returns true if it actually hit disk this call.
+#[tauri::command]
+pub fn save_settings(app: AppHandle, value: Settings) -> Result<bool, String> {
+    settings::save(&app, &value).map_err(|e| e.to_string())
+}
+
+/// Append one event to today's activity log.
+#[tauri::command]
+pub fn append_activity(
+    app: AppHandle,
+    kind: String,
+    data: Option<serde_json::Value>,
+) -> Result<(), String> {
+    activity::append(&app, &kind, data).map_err(|e| e.to_string())
+}
+
+/// Read a day's activity. `date` must be YYYY-MM-DD.
+#[tauri::command]
+pub fn read_activity_day(app: AppHandle, date: String) -> Result<ActivityDay, String> {
+    activity::read_day(&app, &date).map_err(|e| e.to_string())
+}
+
+/// List modules and their enabled/running state.
+#[tauri::command]
+pub fn list_modules(registry: tauri::State<'_, Registry>) -> Vec<ModuleInfo> {
+    registry.list()
+}
+
+/// Turn a module on/off (starts/stops it). Returns the new state, if it exists.
+#[tauri::command]
+pub fn set_module_enabled(
+    registry: tauri::State<'_, Registry>,
+    id: String,
+    enabled: bool,
+) -> Option<ModuleInfo> {
+    registry.set_enabled(&id, enabled)
+}
+
+/// Read the shared hub snapshot (task count, focus clock, tally, ...).
+#[tauri::command]
+pub fn get_hub(hub: tauri::State<'_, Hub>) -> HubSnapshot {
+    hub.snapshot()
 }

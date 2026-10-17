@@ -29,12 +29,13 @@ body {
   gap: var(--islet-gap);
 }
 
-/* The black pill / notch. */
+/* The black pill / notch. Stays dark in BOTH themes: it mimics a hardware
+   notch at the top of the screen, so it should not turn light in light mode. */
 .islet-pill {
   margin-top: var(--islet-pad);
   height: 10px;
   width: 120px;
-  background: var(--islet-bg);
+  background: #0a0a0a;
   border-radius: var(--islet-radius-pill);
   box-shadow: var(--islet-shadow);
   transition: width 120ms ease, height 120ms ease, background 120ms ease;
@@ -52,11 +53,13 @@ body {
 
 /* The panel that opens below the pill. */
 .islet-panel {
-  width: 360px;
+  width: 340px;
+  box-sizing: border-box;
   background: var(--islet-bg-panel);
+  border: 1px solid var(--islet-border);
   border-radius: var(--islet-radius);
   box-shadow: var(--islet-shadow);
-  padding: var(--islet-pad);
+  padding: var(--islet-pad) calc(var(--islet-pad) + 2px) calc(var(--islet-pad) + 2px);
   display: flex;
   flex-direction: column;
   gap: var(--islet-gap);
@@ -115,8 +118,12 @@ body {
   border-radius: 8px;
   border: 1px solid transparent;
   cursor: pointer;
-  background: #2a2a2a;
+  background: var(--islet-control);
   color: var(--islet-fg);
+}
+
+.islet-btn:hover {
+  background: var(--islet-control-hover);
 }
 
 .islet-btn.primary {
@@ -162,17 +169,18 @@ body {
 /* ---- Spec 1 shell: tabs, panel body, settings, toggles ---- */
 
 .islet-panel-body {
-  min-height: 140px;
+  min-height: 150px;
   display: flex;
   flex-direction: column;
+  padding-top: 2px;
 }
 
 .islet-tabbar {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 6px;
-  margin-bottom: 6px;
+  border-bottom: 1px solid var(--islet-divider);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
@@ -187,8 +195,12 @@ body {
   cursor: pointer;
 }
 
+.islet-tab:hover {
+  color: var(--islet-fg);
+}
+
 .islet-tab.active {
-  background: #2a2a2a;
+  background: var(--islet-control);
   color: var(--islet-fg);
 }
 
@@ -219,39 +231,54 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  background: var(--islet-bg);
+  gap: 10px;
+  background: var(--islet-bg-panel);
   border: 1px solid var(--islet-warn);
   border-radius: 8px;
-  padding: 8px;
+  padding: 10px;
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  color: var(--islet-fg);
+}
+
+/* Last settings row sits directly above the tabs editor; drop its divider to
+   avoid a doubled line. */
+.islet-field:last-of-type {
+  border-bottom: none;
 }
 
 /* Settings. */
+.islet-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .islet-settings h1 {
   font-size: 14px;
-  margin: 0 0 8px;
+  margin: 2px 0 10px;
 }
 
 .islet-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
   font-size: 12px;
-  padding: 4px 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--islet-divider);
 }
 
 .islet-field select {
   font: inherit;
   font-size: 12px;
-  background: #2a2a2a;
+  background: var(--islet-control);
   color: var(--islet-fg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--islet-border);
   border-radius: 6px;
-  padding: 3px 6px;
+  padding: 4px 8px;
   max-width: 180px;
+  cursor: pointer;
 }
 
 .islet-toggle {
@@ -277,29 +304,37 @@ body {
 
 .islet-kbd {
   font-size: 11px;
-  background: #2a2a2a;
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: var(--islet-control);
+  border: 1px solid var(--islet-border);
+  color: var(--islet-fg);
+  padding: 3px 7px;
+  border-radius: 5px;
 }
 
 .islet-tabs-editor {
   font-size: 12px;
-  margin-top: 8px;
+  margin-top: 10px;
+  padding-top: 2px;
+}
+
+.islet-tabs-editor > span {
+  color: var(--islet-fg-dim);
 }
 
 .islet-tabs-editor ul {
   list-style: none;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .islet-tabs-editor li {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 
 .islet-reorder button {

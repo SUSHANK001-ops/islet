@@ -1,9 +1,10 @@
-import { signal } from "@preact/signals";
+import { signal, effect } from "@preact/signals";
+import { loadSettings, saveSettings } from "./window-bridge";
 
-// In-memory settings for Spec 1. This is the SEAM for Spec 2: the shape and the
-// `settings` signal + `updateSettings()` API stay the same; only the backing
-// (currently memory) gets swapped for versioned JSON on disk with atomic
-// writes and migrations. Callers must not reach around this module.
+// Settings store. Spec 2: the backing is now versioned JSON on disk (Rust owns
+// the file). The public API (`settings` signal, `updateSettings`, tab helpers)
+// is unchanged from Spec 1, so callers did not change. Load happens once at
+// startup; changes are saved (debounced in Rust).
 
 export type ThemeName = "light" | "dark";
 
@@ -73,3 +74,50 @@ export function toggleTab(id: TabConfig["id"]): void {
 export function enabledTabs(): TabConfig[] {
   return settings.value.tabs.filter((t) => t.enabled);
 }
+
+// ---- persistence (Spec 2) ----
+
+// While loading from disk we must not echo the value straight back as a save.
+let loaded = false;
+
+/**
+ * Load persisted settings once at startup. Safe to call outside Tauri (tests,
+ * browser preview): on failure it keeps the in-memory defaults.
+ */
+export async function initSettings(): Promise<void> {
+  try {
+    const disk = await loadSettings();
+    // Trust the Rust-validated shape; coerce tabs to our union-typed ids.
+    settings.value = {
+      schemaVersion: 1,
+      theme: disk.theme === "light" ? "light" : "dark",
+      monitorName: disk.monitorName ?? null,
+      launchAtStartup: !!disk.launchAtStartup,
+      tabs: disk.tabs
+        .filter((t): t is { id: TabConfig["id"]; enabled: boolean } =>
+          ["focus", "tasks", "notes", "media"].includes(t.id)
+        )
+        .map((t) => ({ id: t.id, enabled: !!t.enabled })),
+    };
+  } catch {
+    // Not in Tauri or load failed: keep defaults.
+  } finally {
+    loaded = true;
+  }
+}
+
+// Persist on any change after the initial load. Rust debounces the disk write,
+// so firing on every change is fine and never exceeds the disk budget.
+effect(() => {
+  const value = settings.value;
+  if (!loaded) return;
+  void saveSettings({
+    schemaVersion: value.schemaVersion,
+    theme: value.theme,
+    monitorName: value.monitorName,
+    launchAtStartup: value.launchAtStartup,
+    tabs: value.tabs.map((t) => ({ id: t.id, enabled: t.enabled })),
+  }).catch(() => {
+    /* non-fatal: keep working from memory */
+  });
+});

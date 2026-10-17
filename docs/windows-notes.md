@@ -237,6 +237,27 @@ UNVERIFIED; fill in after testing.
   reload); closing demotes to the notch loop. Switching characters frees the old
   bitmap (memory does not grow across 20 switches).
 
+#### FINDING (Spec 6 impl): hard-stop signals available so far
+
+The renderer gates animation on four conditions (`src/characters/character-store.ts`):
+- **Page hidden** (`visibilitychange`) - covers minimize / occlusion and, in
+  practice, most lock scenarios in WebView2. Event-driven.
+- **prefers-reduced-motion** - media query, event-driven.
+- **Battery** (`navigator.getBattery` chargingchange) - best-effort; not all
+  Windows/WebView2 builds expose it. Verify on hardware whether it fires.
+- **Fullscreen app** (`islet://fullscreen-changed`) - the renderer SUBSCRIBES,
+  but the backend does not EMIT this event yet (deferred to the Windows-extras
+  spec). Until then, notch animation does not auto-stop purely for a fullscreen
+  app; page-visibility usually covers the common case. Wire the emit in Spec 10
+  and re-verify. This is a known, documented gap, not an assumption.
+
+#### Art dependency
+
+`sponge-pal` ships wired but WITHOUT `sheet.png` (see
+`packs/characters/sponge-pal/ART-TODO.md`). Until the PNG is dropped in, the
+loader returns the pack as invalid/unavailable and the UI shows a gentle hint
+("artwork isn't ready") and no character - verified to not crash.
+
 ### Spec 8 - place anywhere
 
 - Dragging the notch to any point persists the position and restores it on

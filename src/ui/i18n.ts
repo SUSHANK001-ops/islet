@@ -39,6 +39,20 @@ const en: Strings = {
   "settings.notchPosition.right": "Right",
   "settings.notchOpacity": "Notch transparency",
 
+  "settings.character": "Character",
+  "settings.character.inNotch": "Show in notch",
+  "settings.character.none": "None",
+  "settings.character.import": "Import…",
+  "settings.character.delete": "Delete",
+  "settings.character.active": "Active",
+  "settings.character.invalid": "Needs attention",
+  "settings.character.empty": "No characters yet. Import one to get started.",
+  "settings.character.imported": "Imported “{name}”.",
+  "settings.character.importFailed": "That folder is not a valid character pack.",
+
+  "character.unavailable":
+    "Your character’s artwork isn’t ready yet. Drop sheet.png into its pack folder.",
+
   "hotkey.conflict":
     "The shortcut {combo} is in use by another app. Open the tray icon to toggle Islet instead.",
 

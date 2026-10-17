@@ -9,6 +9,18 @@ import { PermissionPrompt } from "./permission-prompt";
 import { TabBar } from "./tab-bar";
 import { LazyPanel } from "./lazy-panel";
 import type { TabId } from "./tabs";
+import { CharacterCanvas } from "../characters/renderer";
+import {
+  activeCharacter,
+  activeRecord,
+  characterProblem,
+  initCharacterGate,
+  loadActiveCharacter,
+} from "../characters/character-store";
+import {
+  characterSignals,
+  initCharacterSignals,
+} from "../characters/signals-store";
 
 /**
  * Spec 1 shell.
@@ -25,6 +37,18 @@ export function Shell() {
   const [hotkeyMsg, setHotkeyMsg] = useState<string | null>(null);
   const pending = pendingPermissions.value;
   const theme = settings.value.theme;
+
+  const character = activeCharacter.value;
+  const showInNotch = activeRecord.value.showInNotch;
+  const charProblem = characterProblem.value;
+
+  // Bring the character system up once: wire the animate/stop gate, the focus
+  // signals, and load the active (default) character.
+  useEffect(() => {
+    initCharacterGate();
+    initCharacterSignals();
+    void loadActiveCharacter();
+  }, []);
 
   // Apply the theme to <html> so the design tokens switch.
   useEffect(() => {
@@ -118,17 +142,40 @@ export function Shell() {
   return (
     <div class="islet-stack" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       <div
-        class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}`}
+        class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
+          character && showInNotch && !open ? " has-character" : ""
+        }`}
         onClick={handlePillClick}
         title={`${APP_NAME} · ${t("app.tagline")}`}
       >
         {hasAlert && !open ? <span class="islet-alert-dot" /> : null}
+        {/* Living notch: the character draws inside the closed pill at a low
+            rate. Hidden while open (the panel shows the full-size character). */}
+        {character && showInNotch && !open ? (
+          <CharacterCanvas
+            surface="notch"
+            signals={characterSignals(true)}
+            class="islet-notch-canvas"
+          />
+        ) : null}
       </div>
 
       {hasAlert ? <PermissionPrompt /> : null}
 
       {open ? (
         <div class="islet-panel" role="dialog" aria-label={APP_NAME}>
+          {character ? (
+            <div class="islet-panel-character">
+              <CharacterCanvas
+                surface="panel"
+                signals={characterSignals(false)}
+                class="islet-panel-canvas"
+              />
+              <span class="islet-panel-character-name">
+                {character.manifest.name}
+              </span>
+            </div>
+          ) : null}
           <TabBar active={active} onSelect={setActive} />
           <div class="islet-panel-body">
             {hotkeyMsg ? (
@@ -137,6 +184,11 @@ export function Shell() {
                 <button class="islet-btn" onClick={() => setHotkeyMsg(null)}>
                   OK
                 </button>
+              </div>
+            ) : null}
+            {!character && charProblem === "character-unavailable" ? (
+              <div class="islet-notice" role="status">
+                <span>{t("character.unavailable")}</span>
               </div>
             ) : null}
             <LazyPanel id={active} />

@@ -13,6 +13,7 @@ import {
 } from "../../app/window-bridge";
 import { getAutostart, setAutostart } from "../../app/autostart-bridge";
 import type { NotchPosition } from "../../app/settings-store";
+import { CharacterSettings } from "./character-settings";
 
 // Settings tab. Covers Spec 1: theme, monitor choice, launch-at-startup,
 // tabs on/off + reorder, and the (fixed for now) toggle shortcut.
@@ -137,6 +138,8 @@ export default function SettingsPanel() {
         <span>{t("settings.hotkey")}</span>
         <code class="islet-kbd">Ctrl + Shift + Space</code>
       </div>
+
+      <CharacterSettings />
 
       <div class="islet-tabs-editor">
         <span>{t("settings.tabs")}</span>

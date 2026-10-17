@@ -317,6 +317,15 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("could not open YouTube Music: {e}"))
 }
 
+// ---- Spec 11: progress ----
+
+/// Per-day focus summary for the last `days` days (oldest first), for the
+/// streak + heatmap. Missing days are zero-filled. `days` is clamped in Rust.
+#[tauri::command]
+pub fn progress_summary(app: AppHandle, days: u32) -> Vec<activity::DaySummary> {
+    activity::summary_range(&app, days)
+}
+
 // ---- Spec 10: Windows extras ----
 
 /// Hide or show the island in screen capture / recordings. A per-window toggle
@@ -477,6 +486,49 @@ pub async fn character_import(app: AppHandle) -> Result<Option<CharacterSummary>
         .into_path()
         .map_err(|e| format!("could not resolve the chosen folder: {e}"))?;
     let summary = characters::import_dir(&app, &path).map_err(|e| e.to_string())?;
+    Ok(Some(summary))
+}
+
+/// Export a pack to a single `.islet-char` file via a save dialog. Returns
+/// false if the user cancels.
+#[tauri::command]
+pub async fn character_export(app: AppHandle, id: String) -> Result<bool, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked = app
+        .dialog()
+        .file()
+        .set_title("Export character")
+        .set_file_name(&format!("{id}.islet-char"))
+        .add_filter("Islet character", &["islet-char"])
+        .blocking_save_file();
+    let Some(dest) = picked else {
+        return Ok(false);
+    };
+    let path = dest
+        .into_path()
+        .map_err(|e| format!("could not resolve the chosen file: {e}"))?;
+    characters::export(&app, &id, &path).map_err(|e| e.to_string())?;
+    Ok(true)
+}
+
+/// Import a character from a picked `.islet-char` file. Returns null if the user
+/// cancels. The archive is extracted, validated, and committed in Rust.
+#[tauri::command]
+pub async fn character_import_file(app: AppHandle) -> Result<Option<CharacterSummary>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked = app
+        .dialog()
+        .file()
+        .set_title("Import a character file")
+        .add_filter("Islet character", &["islet-char"])
+        .blocking_pick_file();
+    let Some(file) = picked else {
+        return Ok(None);
+    };
+    let path = file
+        .into_path()
+        .map_err(|e| format!("could not resolve the chosen file: {e}"))?;
+    let summary = characters::import_file(&app, &path).map_err(|e| e.to_string())?;
     Ok(Some(summary))
 }
 

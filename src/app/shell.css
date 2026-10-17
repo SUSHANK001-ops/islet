@@ -974,3 +974,69 @@ body {
   white-space: nowrap;
   max-width: 100%;
 }
+
+/* ---- Progress (streaks + heatmap) ---- */
+.islet-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 0;
+}
+.islet-progress-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+.islet-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.islet-stat-num {
+  font-size: 26px;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  color: var(--islet-fg);
+}
+.islet-stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--islet-fg-dim);
+}
+.islet-heatmap {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.islet-heat-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.islet-heat-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--islet-control);
+}
+.islet-heat-cell.lvl-1 {
+  background: color-mix(in srgb, var(--islet-accent) 35%, var(--islet-control));
+}
+.islet-heat-cell.lvl-2 {
+  background: color-mix(in srgb, var(--islet-accent) 60%, var(--islet-control));
+}
+.islet-heat-cell.lvl-3 {
+  background: color-mix(in srgb, var(--islet-accent) 82%, transparent);
+}
+.islet-heat-cell.lvl-4 {
+  background: var(--islet-grad);
+}
+
+/* ---- Character settings actions ---- */
+.islet-char-actions {
+  display: flex;
+  gap: 6px;
+}

@@ -328,6 +328,129 @@ fn copy_dir(src: &Path, dest: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// Export a pack to a single `.islet-char` file (a ZIP of the pack folder).
+/// `dest` is the file path the user picked in the save dialog.
+pub fn export(app: &AppHandle, id: &str, dest: &Path) -> Result<(), CharError> {
+    use std::io::{Read, Write};
+    use zip::write::SimpleFileOptions;
+
+    let dir = pack_dir(app, id)?;
+    if !dir.exists() {
+        return Err(CharError::NotFound(id.to_string()));
+    }
+
+    let file = fs::File::create(dest).map_err(|e| CharError::Io(e.to_string()))?;
+    let mut zip = zip::ZipWriter::new(file);
+    let opts = SimpleFileOptions::default()
+        .compression_method(zip::CompressionMethod::Deflated);
+
+    // Walk the pack folder and add each file under its relative path.
+    fn add_dir(
+        zip: &mut zip::ZipWriter<fs::File>,
+        base: &Path,
+        dir: &Path,
+        opts: SimpleFileOptions,
+    ) -> Result<(), CharError> {
+        for entry in fs::read_dir(dir).map_err(|e| CharError::Io(e.to_string()))? {
+            let entry = entry.map_err(|e| CharError::Io(e.to_string()))?;
+            let path = entry.path();
+            // Never follow symlinks (safety rule).
+            let meta = fs::symlink_metadata(&path).map_err(|e| CharError::Io(e.to_string()))?;
+            if meta.file_type().is_symlink() {
+                continue;
+            }
+            let rel = path
+                .strip_prefix(base)
+                .map_err(|e| CharError::Io(e.to_string()))?
+                .to_string_lossy()
+                .replace('\\', "/");
+            if path.is_dir() {
+                add_dir(zip, base, &path, opts)?;
+            } else {
+                zip.start_file(rel, opts).map_err(|e| CharError::Io(e.to_string()))?;
+                let mut f = fs::File::open(&path).map_err(|e| CharError::Io(e.to_string()))?;
+                let mut buf = Vec::new();
+                f.read_to_end(&mut buf).map_err(|e| CharError::Io(e.to_string()))?;
+                zip.write_all(&buf).map_err(|e| CharError::Io(e.to_string()))?;
+            }
+        }
+        Ok(())
+    }
+
+    add_dir(&mut zip, &dir, &dir, opts)?;
+    zip.finish().map_err(|e| CharError::Io(e.to_string()))?;
+    Ok(())
+}
+
+/// Import a `.islet-char` file: extract to a temp folder (with zip-slip
+/// protection), then validate + commit via `import_dir`. A bad or unsafe
+/// archive is rejected and nothing lands in the library.
+pub fn import_file(app: &AppHandle, archive: &Path) -> Result<CharacterSummary, CharError> {
+    use std::io::copy;
+
+    let file = fs::File::open(archive).map_err(|e| CharError::Io(e.to_string()))?;
+    let mut zip = zip::ZipArchive::new(file).map_err(|e| CharError::Io(e.to_string()))?;
+
+    // Extract into a unique temp folder under the characters dir.
+    let tmp = characters_dir(app)?.join(format!(".unzip-{}", unique_suffix()));
+    let _ = fs::remove_dir_all(&tmp);
+    fs::create_dir_all(&tmp).map_err(|e| CharError::Io(e.to_string()))?;
+
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i).map_err(|e| CharError::Io(e.to_string()))?;
+        // Zip-slip protection: use the sanitized name and reject traversal.
+        let Some(safe) = entry.enclosed_name() else {
+            let _ = fs::remove_dir_all(&tmp);
+            return Err(CharError::Invalid(vec![ValidationError(
+                "archive contains an unsafe path".into(),
+            )]));
+        };
+        let out = tmp.join(&safe);
+        if entry.is_dir() {
+            fs::create_dir_all(&out).map_err(|e| CharError::Io(e.to_string()))?;
+        } else {
+            if let Some(parent) = out.parent() {
+                fs::create_dir_all(parent).map_err(|e| CharError::Io(e.to_string()))?;
+            }
+            let mut f = fs::File::create(&out).map_err(|e| CharError::Io(e.to_string()))?;
+            copy(&mut entry, &mut f).map_err(|e| CharError::Io(e.to_string()))?;
+        }
+    }
+
+    // Some archives nest the pack one folder deep; if the temp root has no
+    // manifest but a single subdir does, import that subdir.
+    let src = if tmp.join("manifest.json").exists() {
+        tmp.clone()
+    } else {
+        single_subdir_with_manifest(&tmp).unwrap_or_else(|| tmp.clone())
+    };
+
+    let result = import_dir(app, &src);
+    let _ = fs::remove_dir_all(&tmp);
+    result
+}
+
+/// If `dir` has exactly one subdirectory and it contains a manifest, return it.
+fn single_subdir_with_manifest(dir: &Path) -> Option<PathBuf> {
+    let mut subdirs = fs::read_dir(dir)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.is_dir());
+    let first = subdirs.next()?;
+    if subdirs.next().is_some() {
+        return None; // more than one subdir: ambiguous
+    }
+    first.join("manifest.json").exists().then_some(first)
+}
+
+fn unique_suffix() -> String {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| format!("{:x}", d.as_nanos()))
+        .unwrap_or_else(|_| "tmp".into())
+}
+
 /// Copy the bundled built-in pack(s) into app data on first run so the user
 /// always has a default character. Built-ins ship read-only under the app's
 /// resource dir (`packs/characters/<id>`); user packs live only in app data.

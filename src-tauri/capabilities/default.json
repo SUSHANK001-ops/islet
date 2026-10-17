@@ -19,6 +19,7 @@
       "allow": [{ "url": "https://music.youtube.com/*" }]
     },
     "opener:allow-open-path",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "dialog:allow-save"
   ]
 }

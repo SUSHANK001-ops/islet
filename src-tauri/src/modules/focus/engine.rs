@@ -48,8 +48,9 @@ impl Default for FocusConfig {
 /// A transition the engine reports so the module can react (notify, log).
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Transition {
-    /// A work round finished; value = completed work-rounds this cycle.
-    WorkCompleted,
+    /// A work round finished; value = the completed round's length in minutes
+    /// (so the activity log can total real focus minutes for growth/progress).
+    WorkCompleted { minutes: u32 },
     /// A break finished.
     BreakCompleted,
 }
@@ -182,6 +183,9 @@ impl FocusEngine {
         self.remaining = 0;
         match self.phase {
             Phase::Work => {
+                // The length of the round that just finished (before we enter
+                // the break, which overwrites total). Used for activity totals.
+                let minutes = self.total / 60;
                 self.completed_rounds += 1;
                 self.rounds_today += 1;
                 // Choose the break type based on completed rounds.
@@ -191,7 +195,7 @@ impl FocusEngine {
                 } else {
                     self.enter(Phase::ShortBreak);
                 }
-                Some(Transition::WorkCompleted)
+                Some(Transition::WorkCompleted { minutes })
             }
             Phase::ShortBreak | Phase::LongBreak => {
                 self.enter(Phase::Work);
@@ -233,7 +237,7 @@ mod tests {
         assert_eq!(e.tick(59), None);
         assert_eq!(e.state().remaining_secs, 1);
         let t = e.tick(1);
-        assert_eq!(t, Some(Transition::WorkCompleted));
+        assert_eq!(t, Some(Transition::WorkCompleted { minutes: 1 }));
         assert_eq!(e.state().phase, Phase::ShortBreak);
         assert_eq!(e.state().rounds_today, 1);
     }
@@ -257,13 +261,13 @@ mod tests {
         let mut e = FocusEngine::new(cfg()); // long break after 2 rounds
         // Round 1 work -> short break.
         e.start();
-        assert_eq!(e.tick(60), Some(Transition::WorkCompleted));
+        assert_eq!(e.tick(60), Some(Transition::WorkCompleted { minutes: 1 }));
         assert_eq!(e.state().phase, Phase::ShortBreak);
         // Break -> back to work.
         assert_eq!(e.tick(60), Some(Transition::BreakCompleted));
         assert_eq!(e.state().phase, Phase::Work);
         // Round 2 work -> LONG break (2 rounds reached).
-        assert_eq!(e.tick(60), Some(Transition::WorkCompleted));
+        assert_eq!(e.tick(60), Some(Transition::WorkCompleted { minutes: 1 }));
         assert_eq!(e.state().phase, Phase::LongBreak);
         assert_eq!(e.state().rounds_today, 2);
     }

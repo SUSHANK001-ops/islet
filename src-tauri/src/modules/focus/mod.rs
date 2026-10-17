@@ -77,8 +77,9 @@ impl FocusModule {
     /// React to a completed phase: notify + write to the activity log.
     fn on_transition(&self, t: Transition) {
         match t {
-            Transition::WorkCompleted => {
-                let _ = activity::append(&self.app, "focus.completed", None);
+            Transition::WorkCompleted { minutes } => {
+                let data = serde_json::json!({ "minutes": minutes });
+                let _ = activity::append(&self.app, "focus.completed", Some(data));
                 self.notify("Focus round done", "Time for a break.");
             }
             Transition::BreakCompleted => {

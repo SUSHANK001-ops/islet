@@ -4,6 +4,8 @@ import {
   charactersList,
   characterSetActive,
   characterImport,
+  characterImportFile,
+  characterExport,
   characterDelete,
   type CharacterSummary,
 } from "../../characters/bridge";
@@ -75,6 +77,35 @@ export function CharacterSettings() {
     }
   }
 
+  async function doImportFile() {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const imported = await characterImportFile();
+      if (imported) {
+        setNotice(t("settings.character.imported", { name: imported.name }));
+        await refresh();
+      }
+    } catch {
+      setNotice(t("settings.character.importFailed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doExport(id: string, name: string) {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const ok = await characterExport(id);
+      if (ok) setNotice(t("settings.character.exported", { name }));
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function doDelete(id: string) {
     setBusy(true);
     try {
@@ -91,13 +122,14 @@ export function CharacterSettings() {
     <div class="islet-char-settings">
       <div class="islet-field">
         <span>{t("settings.character")}</span>
-        <button
-          class="islet-btn"
-          onClick={doImport}
-          disabled={busy}
-        >
-          {t("settings.character.import")}
-        </button>
+        <span class="islet-char-actions">
+          <button class="islet-btn" onClick={doImportFile} disabled={busy}>
+            {t("settings.character.importFile")}
+          </button>
+          <button class="islet-btn" onClick={doImport} disabled={busy}>
+            {t("settings.character.import")}
+          </button>
+        </span>
       </div>
 
       <label class="islet-field">
@@ -155,6 +187,15 @@ export function CharacterSettings() {
                     {t("settings.character.active")}
                   </span>
                 ) : null}
+              </button>
+              <button
+                class="islet-icon-btn"
+                aria-label={t("settings.character.export")}
+                title={t("settings.character.export")}
+                onClick={() => doExport(c.id, c.name || c.id)}
+                disabled={busy}
+              >
+                ⤓
               </button>
               <button
                 class="islet-icon-btn"

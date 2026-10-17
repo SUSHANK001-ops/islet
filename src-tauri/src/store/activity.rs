@@ -88,6 +88,53 @@ pub fn read_day(app: &AppHandle, date: &str) -> Result<ActivityDay, StoreError> 
         .unwrap_or_else(|| ActivityDay::empty(date.to_string())))
 }
 
+/// One day's progress summary: finished focus rounds and total focus minutes.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct DaySummary {
+    pub date: String,
+    pub focus_count: u32,
+    pub focus_minutes: u32,
+}
+
+/// Summarize the last `days` days (including today), oldest first. Reads each
+/// day's file; missing days are zero-filled so the heatmap has a full grid.
+/// `days` is clamped to a year so this can never read an unbounded range.
+pub fn summary_range(app: &AppHandle, days: u32) -> Vec<DaySummary> {
+    let days = days.clamp(1, 366);
+    let today = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+    let mut out = Vec::with_capacity(days as usize);
+    for i in (0..days).rev() {
+        let day = today.saturating_sub(time::Duration::days(i as i64));
+        let date = format!("{:04}-{:02}-{:02}", day.year(), day.month() as u8, day.day());
+        let (count, minutes) = match read_day(app, &date) {
+            Ok(d) => {
+                let count = d.events.iter().filter(|e| e.kind == "focus.completed").count() as u32;
+                let minutes: u32 = d
+                    .events
+                    .iter()
+                    .filter(|e| e.kind == "focus.completed")
+                    .map(|e| {
+                        e.data
+                            .as_ref()
+                            .and_then(|v| v.get("minutes"))
+                            .and_then(|m| m.as_u64())
+                            .unwrap_or(0) as u32
+                    })
+                    .sum();
+                (count, minutes)
+            }
+            Err(_) => (0, 0),
+        };
+        out.push(DaySummary {
+            date,
+            focus_count: count,
+            focus_minutes: minutes,
+        });
+    }
+    out
+}
+
 /// Minimal YYYY-MM-DD shape check (defensive; the value reaches a file path).
 fn is_valid_date(s: &str) -> bool {
     let b = s.as_bytes();

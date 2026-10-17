@@ -101,7 +101,10 @@ pub fn run() {
             commands::launcher_rename,
             commands::launcher_launch,
             commands::set_hidden_from_capture,
-            commands::set_taskbar_progress
+            commands::set_taskbar_progress,
+            commands::progress_summary,
+            commands::character_export,
+            commands::character_import_file
         ])
         .setup(|app| {
             let handle = app.handle();

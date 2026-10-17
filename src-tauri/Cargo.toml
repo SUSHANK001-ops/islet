@@ -38,6 +38,11 @@ tauri-plugin-opener = "2"
 # in Spec 9, adding a launcher app. The picker IS the user's consent; reusing
 # the OS dialog is safer and smaller than a custom file browser.
 tauri-plugin-dialog = "2"
+# zip: pack a character folder into one shareable .islet-char file and unpack it
+# on import. Reading/writing the ZIP container correctly (local headers, central
+# directory, CRCs) is well over 100 lines and error-prone by hand; `zip` is the
+# standard, widely-used crate. No compression needed, but it handles the format.
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]

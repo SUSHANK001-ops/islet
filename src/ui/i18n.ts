@@ -15,6 +15,7 @@ const en: Strings = {
   "tab.notes": "Notes",
   "tab.media": "Media",
   "tab.launcher": "Apps",
+  "tab.progress": "Progress",
   "tab.settings": "Settings",
 
   "common.comingSoon": "Coming soon",
@@ -101,6 +102,17 @@ const en: Strings = {
   "launcher.add": "Add an app…",
   "launcher.remove": "Remove app",
   "launcher.empty": "No apps yet. Add one to launch it from here.",
+
+  "progress.streak": "Day streak",
+  "progress.best": "Best streak",
+  "progress.hours": "Focus hours",
+  "progress.heatmap": "Focus heatmap",
+  "progress.empty": "Finish a focus round to start your streak.",
+
+  "settings.character.export": "Export…",
+  "settings.character.exportFile": "Export a character",
+  "settings.character.importFile": "Import file…",
+  "settings.character.exported": "Exported “{name}”.",
 };
 
 const locales: Record<Locale, Strings> = { en };

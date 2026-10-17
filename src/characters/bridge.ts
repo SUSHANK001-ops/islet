@@ -87,6 +87,16 @@ export function characterImport(): Promise<CharacterSummary | null> {
   return invoke("character_import");
 }
 
+/** Open a file picker and import a .islet-char archive. Null if cancelled. */
+export function characterImportFile(): Promise<CharacterSummary | null> {
+  return invoke("character_import_file");
+}
+
+/** Export a pack to a .islet-char file via a save dialog. False if cancelled. */
+export function characterExport(id: string): Promise<boolean> {
+  return invoke("character_export", { id });
+}
+
 /** Delete a pack by id. If it was active, the backend clears the active id. */
 export function characterDelete(id: string): Promise<void> {
   return invoke("character_delete", { id });

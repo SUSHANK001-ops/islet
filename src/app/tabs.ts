@@ -15,5 +15,6 @@ export const TAB_LOADERS: Record<TabId, Loader> = {
   notes: () => import("../modules/notes/panel"),
   media: () => import("../modules/media/panel"),
   launcher: () => import("../modules/launcher/panel"),
+  progress: () => import("../modules/progress/panel"),
   settings: () => import("../modules/settings/panel"),
 };

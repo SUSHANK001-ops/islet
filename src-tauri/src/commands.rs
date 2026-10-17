@@ -60,3 +60,17 @@ pub fn get_spike_report(window: WebviewWindow) -> Result<SpikeReport, String> {
         fullscreen_app_active: platform::is_fullscreen_app_active(),
     })
 }
+
+/// List connected monitors by name, for the monitor-choice setting.
+#[tauri::command]
+pub fn list_monitors(window: WebviewWindow) -> Vec<String> {
+    window::monitor_names(&window)
+}
+
+/// Choose which monitor the pill lives on. `None`/empty means "primary".
+/// Re-places the pill immediately. Missing monitor falls back to primary.
+#[tauri::command]
+pub fn set_monitor(window: WebviewWindow, name: Option<String>) -> Result<(), String> {
+    let choice = name.filter(|n| !n.is_empty());
+    window::set_monitor_choice(&window, choice).map_err(|e| format!("set_monitor failed: {e}"))
+}

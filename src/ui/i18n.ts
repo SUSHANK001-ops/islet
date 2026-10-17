@@ -1,0 +1,64 @@
+// Tiny translation layer. All user-facing text goes through `t()` so nothing
+// is hardcoded (AGENTS.md Definition of Done). This is intentionally minimal:
+// a flat key -> string map per locale, English only for now. Spec 2+ can load
+// locale files; the call sites never change.
+
+export type Locale = "en";
+
+type Strings = Record<string, string>;
+
+const en: Strings = {
+  "app.tagline": "focus companion",
+
+  "tab.focus": "Focus",
+  "tab.tasks": "Tasks",
+  "tab.notes": "Notes",
+  "tab.media": "Media",
+  "tab.settings": "Settings",
+
+  "common.comingSoon": "Coming soon",
+  "common.loading": "Loading…",
+  "common.error": "Something went wrong",
+  "common.on": "On",
+  "common.off": "Off",
+  "common.allow": "Allow",
+  "common.notNow": "Not now",
+
+  "settings.title": "Settings",
+  "settings.theme": "Theme",
+  "settings.theme.light": "Light",
+  "settings.theme.dark": "Dark",
+  "settings.monitor": "Monitor",
+  "settings.monitor.primary": "Primary",
+  "settings.startup": "Launch at startup",
+  "settings.hotkey": "Toggle shortcut",
+  "settings.tabs": "Tabs",
+
+  "hotkey.conflict":
+    "The shortcut {combo} is in use by another app. Open the tray icon to toggle Islet instead.",
+
+  "perm.notifications.title": "Allow notifications?",
+  "perm.notifications.body":
+    "Islet can tell you when a focus round ends. You can change this later in Settings.",
+};
+
+const locales: Record<Locale, Strings> = { en };
+
+let current: Locale = "en";
+
+export function setLocale(locale: Locale): void {
+  current = locale;
+}
+
+/**
+ * Look up a translation. Supports {name} placeholders filled from `vars`.
+ * Falls back to the key itself if missing, so a missing string is visible in
+ * dev rather than crashing.
+ */
+export function t(key: string, vars?: Record<string, string | number>): string {
+  const raw = locales[current][key] ?? key;
+  if (!vars) return raw;
+  return raw.replace(/\{(\w+)\}/g, (_, name) =>
+    name in vars ? String(vars[name]) : `{${name}}`
+  );
+}

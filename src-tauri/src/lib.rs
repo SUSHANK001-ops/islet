@@ -49,6 +49,7 @@ pub fn run() {
         // App state: monitor choice, write debouncer, hub, registry, scheduler.
         .manage(window::MonitorChoice::default())
         .manage(window::NotchPositionState::default())
+        .manage(window::FreePositionState::default())
         .manage(WriteDebouncer::default())
         .manage(Hub::default())
         .manage(Registry::default())
@@ -59,6 +60,10 @@ pub fn run() {
             commands::list_monitors,
             commands::set_monitor,
             commands::set_notch_position,
+            commands::start_notch_drag,
+            commands::get_notch_offset,
+            commands::set_notch_free_position,
+            commands::clear_notch_free_position,
             commands::load_settings,
             commands::save_settings,
             commands::flush_settings,
@@ -109,6 +114,14 @@ pub fn run() {
                 if let Some(state) = win.try_state::<window::NotchPositionState>() {
                     if let Ok(mut guard) = state.0.lock() {
                         *guard = window::NotchPosition::parse(&settings.notch_position);
+                    }
+                }
+                // Seed the free-dragged position (place-anywhere) from settings.
+                if let Some(state) = win.try_state::<window::FreePositionState>() {
+                    if let Ok(mut guard) = state.0.lock() {
+                        *guard = settings
+                            .notch_free
+                            .map(|f| window::FreePosition { x: f.x, y: f.y });
                     }
                 }
                 if let Err(e) = window::apply_closed_state(&win) {

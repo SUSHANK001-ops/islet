@@ -862,3 +862,54 @@ body {
     background: none;
   }
 }
+
+/* ---- Notch drag grip (place-anywhere) ---- */
+.islet-notch-grip {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--islet-fg-dim);
+  opacity: 0;
+  cursor: grab;
+  padding: 2px 3px;
+  border-radius: 4px;
+  transition: opacity var(--islet-transition);
+  /* Let this element receive its own pointer events even inside the pill. */
+  pointer-events: auto;
+}
+.islet-pill:hover .islet-notch-grip {
+  opacity: 0.55;
+}
+.islet-notch-grip:hover {
+  opacity: 1;
+  background: var(--islet-control);
+}
+.islet-notch-grip:active {
+  cursor: grabbing;
+}
+
+/* ---- On-notch character control row (open panel) ---- */
+.islet-panel-character-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---- Horizontal stretch: panel grows with content up to a cap ---- */
+/* The panel has a fixed base width but may grow for long content (e.g. a long
+   now-playing title or the launcher list). width:max-content with a max keeps
+   centering intact and never overruns the monitor. */
+.islet-panel.stretch {
+  width: max-content;
+  min-width: 348px;
+  max-width: 560px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-notch-grip {
+    transition: none;
+  }
+}

@@ -39,11 +39,32 @@ export function setMonitor(name: string | null): Promise<void> {
   return invoke("set_monitor", { name });
 }
 
-/** Set the notch horizontal position and re-place the pill immediately. */
+/** Set the notch horizontal position preset and re-place (clears free pos). */
 export function setNotchPosition(
   position: "left" | "center" | "right"
 ): Promise<void> {
   return invoke("set_notch_position", { position });
+}
+
+/** Begin a native window drag (smooth, DPI-correct). Call on pointer-down of
+ *  the drag handle; the OS moves the window until the button is released. */
+export function startNotchDrag(): Promise<void> {
+  return invoke("start_notch_drag");
+}
+
+/** Read the current pill offset (logical px from the active monitor origin). */
+export function getNotchOffset(): Promise<[number, number]> {
+  return invoke("get_notch_offset");
+}
+
+/** Persist a free-dragged position (logical px from the monitor origin). */
+export function setNotchFreePosition(x: number, y: number): Promise<void> {
+  return invoke("set_notch_free_position", { x, y });
+}
+
+/** Clear the free position, returning the pill to its preset. */
+export function clearNotchFreePosition(): Promise<void> {
+  return invoke("clear_notch_free_position");
 }
 
 // ---- Spec 2: persisted settings (Rust owns the file) ----
@@ -56,6 +77,7 @@ export interface PersistedSettings {
   tabs: { id: string; enabled: boolean }[];
   notchPosition: "left" | "center" | "right";
   notchOpacity: number;
+  notchFree: { x: number; y: number } | null;
 }
 
 /** Load settings from disk (defaults on first run). */

@@ -1,9 +1,15 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { listen } from "@tauri-apps/api/event";
 import { APP_NAME } from "../app.config";
 import { t } from "../ui/i18n";
-import { openPanel, closePanel } from "./window-bridge";
-import { settings } from "./settings-store";
+import {
+  openPanel,
+  closePanel,
+  startNotchDrag,
+  getNotchOffset,
+  setNotchFreePosition,
+} from "./window-bridge";
+import { settings, updateSettings } from "./settings-store";
 import { pendingPermissions } from "./permission-store";
 import { PermissionPrompt } from "./permission-prompt";
 import { TabBar } from "./tab-bar";
@@ -21,6 +27,7 @@ import {
   characterSignals,
   initCharacterSignals,
 } from "../characters/signals-store";
+import { characterSetActive } from "../characters/bridge";
 
 /**
  * Spec 1 shell.
@@ -133,9 +140,59 @@ export function Shell() {
   }
 
   function handlePillClick() {
+    // A drag just happened: swallow the click so it does not toggle the panel.
+    if (draggedRef.current) {
+      draggedRef.current = false;
+      return;
+    }
     setPinned((p) => !p || !open);
     setOpen(true);
   }
+
+  // On-notch quick toggle for showing the character in the closed pill. Writes
+  // through the backend, then refreshes the active-character store so the notch
+  // updates live. The persisted active record is the source of truth.
+  function toggleCharacterInNotch() {
+    const next = !activeRecord.value.showInNotch;
+    void characterSetActive(activeRecord.value.id, next)
+      .then(() => loadActiveCharacter())
+      .catch(() => {});
+  }
+
+  // ---- Place anywhere: drag the notch, persist where it lands ----
+  const draggedRef = useRef(false);
+
+  function handleDragStart(e: PointerEvent) {
+    // Left button only; never start a drag from the character canvas itself.
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    draggedRef.current = true;
+    void startNotchDrag().catch(() => {
+      draggedRef.current = false;
+    });
+  }
+
+  // When a native drag ends (pointerup anywhere), read + persist the new spot.
+  useEffect(() => {
+    function onUp() {
+      if (!draggedRef.current) return;
+      void getNotchOffset()
+        .then(([x, y]) => {
+          updateSettings({ notchFree: { x, y } });
+          return setNotchFreePosition(x, y);
+        })
+        .catch(() => {})
+        // Keep draggedRef true briefly so the trailing click is swallowed, then
+        // clear it on the next tick.
+        .finally(() => {
+          setTimeout(() => {
+            draggedRef.current = false;
+          }, 0);
+        });
+    }
+    window.addEventListener("pointerup", onUp);
+    return () => window.removeEventListener("pointerup", onUp);
+  }, []);
 
   const hasAlert = pending.length > 0;
 
@@ -158,6 +215,17 @@ export function Shell() {
             class="islet-notch-canvas"
           />
         ) : null}
+        {/* Drag grip (place-anywhere). Appears on hover; a pointer-down here
+            starts a native window drag instead of toggling the panel. */}
+        <span
+          class="islet-notch-grip"
+          title={t("notch.drag")}
+          aria-label={t("notch.drag")}
+          onPointerDown={handleDragStart}
+          onClick={(e) => e.stopPropagation()}
+        >
+          ⠿
+        </span>
       </div>
 
       {hasAlert ? <PermissionPrompt /> : null}
@@ -171,9 +239,22 @@ export function Shell() {
                 signals={characterSignals(false)}
                 class="islet-panel-canvas"
               />
-              <span class="islet-panel-character-name">
-                {character.manifest.name}
-              </span>
+              <div class="islet-panel-character-row">
+                <span class="islet-panel-character-name">
+                  {character.manifest.name}
+                </span>
+                {/* On-notch quick control: toggle whether the character shows
+                    in the closed pill, without opening Settings. */}
+                <button
+                  class={`islet-toggle small${showInNotch ? " on" : ""}`}
+                  role="switch"
+                  aria-checked={showInNotch}
+                  title={t("settings.character.inNotch")}
+                  onClick={() => toggleCharacterInNotch()}
+                >
+                  {t("settings.character.inNotch")}
+                </button>
+              </div>
             </div>
           ) : null}
           <TabBar active={active} onSelect={setActive} />

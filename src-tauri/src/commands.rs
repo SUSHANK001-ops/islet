@@ -86,11 +86,46 @@ pub fn set_monitor(window: WebviewWindow, name: Option<String>) -> Result<(), St
 }
 
 /// Set the notch horizontal position ("left" | "center" | "right") and re-place
-/// the pill immediately.
+/// the pill immediately. Choosing a preset also clears any free-dragged
+/// position so the preset takes effect (Spec 8 snap presets).
 #[tauri::command]
 pub fn set_notch_position(window: WebviewWindow, position: String) -> Result<(), String> {
     let pos = window::NotchPosition::parse(&position);
+    window::set_free_position(&window, None)
+        .map_err(|e| format!("reset position failed: {e}"))?;
     window::set_notch_position(&window, pos).map_err(|e| format!("set_notch_position failed: {e}"))
+}
+
+/// Begin a native window drag so the user can place the notch anywhere. The OS
+/// moves the window (smooth + DPI-correct); the frontend calls
+/// `persist_notch_offset` when the drag ends to save the new spot.
+#[tauri::command]
+pub fn start_notch_drag(window: WebviewWindow) -> Result<(), String> {
+    window.start_dragging().map_err(|e| format!("start drag failed: {e}"))
+}
+
+/// Read the current pill offset (logical px from the active monitor's origin).
+#[tauri::command]
+pub fn get_notch_offset(window: WebviewWindow) -> (f64, f64) {
+    let p = window::current_offset(&window);
+    (p.x, p.y)
+}
+
+/// Persist a free-dragged position (logical px from the monitor origin). This
+/// is clamped on-screen when applied. Pass this back into settings to restore
+/// it on next launch.
+#[tauri::command]
+pub fn set_notch_free_position(window: WebviewWindow, x: f64, y: f64) -> Result<(), String> {
+    window::set_free_position(&window, Some(window::FreePosition { x, y }))
+        .map_err(|e| format!("set free position failed: {e}"))
+}
+
+/// Clear any free-dragged position, returning the pill to its preset. Used by
+/// the "reset position" action.
+#[tauri::command]
+pub fn clear_notch_free_position(window: WebviewWindow) -> Result<(), String> {
+    window::set_free_position(&window, None)
+        .map_err(|e| format!("clear free position failed: {e}"))
 }
 
 // ---- Spec 2: storage, settings, modules ----

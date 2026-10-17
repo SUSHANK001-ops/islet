@@ -35,6 +35,17 @@ pub struct Settings {
     /// Notch opacity, 0.2..=1.0 (transparency setting).
     #[serde(default = "default_notch_opacity")]
     pub notch_opacity: f32,
+    /// Free-dragged position (logical px from the active monitor origin). None
+    /// means "use the notch_position preset" (Spec 8 place-anywhere).
+    #[serde(default)]
+    pub notch_free: Option<NotchFree>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct NotchFree {
+    pub x: f64,
+    pub y: f64,
 }
 
 fn default_notch_position() -> String {
@@ -62,6 +73,7 @@ impl Default for Settings {
             active_character: None,
             notch_position: default_notch_position(),
             notch_opacity: default_notch_opacity(),
+            notch_free: None,
         }
     }
 }

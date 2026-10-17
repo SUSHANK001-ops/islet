@@ -29,6 +29,8 @@ export interface Settings {
   notchPosition: NotchPosition;
   // Notch opacity 0.2..1 (transparency setting).
   notchOpacity: number;
+  // Free-dragged position (logical px from active monitor origin); null = preset.
+  notchFree: { x: number; y: number } | null;
 }
 
 const DEFAULTS: Settings = {
@@ -44,6 +46,7 @@ const DEFAULTS: Settings = {
   ],
   notchPosition: "center",
   notchOpacity: 1,
+  notchFree: null,
 };
 
 export const settings = signal<Settings>(structuredClone(DEFAULTS));
@@ -101,6 +104,7 @@ function toPersisted() {
     tabs: v.tabs.map((t) => ({ id: t.id, enabled: t.enabled })),
     notchPosition: v.notchPosition,
     notchOpacity: v.notchOpacity,
+    notchFree: v.notchFree,
   };
 }
 
@@ -134,6 +138,12 @@ export async function initSettings(): Promise<void> {
         typeof disk.notchOpacity === "number"
           ? Math.min(1, Math.max(0.2, disk.notchOpacity))
           : 1,
+      notchFree:
+        disk.notchFree &&
+        typeof disk.notchFree.x === "number" &&
+        typeof disk.notchFree.y === "number"
+          ? { x: disk.notchFree.x, y: disk.notchFree.y }
+          : null,
     };
   } catch {
     // Not in Tauri or load failed: keep defaults.
@@ -156,6 +166,7 @@ effect(() => {
     tabs: snapshot.tabs.map((tb) => ({ id: tb.id, enabled: tb.enabled })),
     notchPosition: snapshot.notchPosition,
     notchOpacity: snapshot.notchOpacity,
+    notchFree: snapshot.notchFree,
   }).catch(() => {
     /* non-fatal: keep working from memory */
   });

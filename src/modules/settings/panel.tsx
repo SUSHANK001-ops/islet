@@ -10,6 +10,7 @@ import {
   listMonitors,
   setMonitor,
   setNotchPosition,
+  clearNotchFreePosition,
 } from "../../app/window-bridge";
 import { getAutostart, setAutostart } from "../../app/autostart-bridge";
 import type { NotchPosition } from "../../app/settings-store";
@@ -52,8 +53,15 @@ export default function SettingsPanel() {
   }
 
   function onNotchPositionChange(pos: NotchPosition) {
-    updateSettings({ notchPosition: pos });
+    // Choosing a preset clears any free-dragged position (the backend does this
+    // too; mirror it in the store so the UI stays consistent).
+    updateSettings({ notchPosition: pos, notchFree: null });
     void setNotchPosition(pos);
+  }
+
+  function onResetPosition() {
+    updateSettings({ notchFree: null });
+    void clearNotchFreePosition();
   }
 
   function onNotchOpacityChange(value: number) {
@@ -107,6 +115,15 @@ export default function SettingsPanel() {
           <option value="right">{t("settings.notchPosition.right")}</option>
         </select>
       </label>
+
+      {s.notchFree ? (
+        <div class="islet-field">
+          <span>{t("settings.notchPosition.reset")}</span>
+          <button class="islet-btn" onClick={onResetPosition}>
+            {t("settings.notchPosition.reset")}
+          </button>
+        </div>
+      ) : null}
 
       <label class="islet-field">
         <span>{t("settings.notchOpacity")}</span>

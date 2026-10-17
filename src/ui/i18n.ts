@@ -53,6 +53,9 @@ const en: Strings = {
   "character.unavailable":
     "Your character’s artwork isn’t ready yet. Drop sheet.png into its pack folder.",
 
+  "notch.drag": "Drag to move",
+  "settings.notchPosition.reset": "Reset position",
+
   "hotkey.conflict":
     "The shortcut {combo} is in use by another app. Open the tray icon to toggle Islet instead.",
 

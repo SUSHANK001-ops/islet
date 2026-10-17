@@ -46,6 +46,20 @@ impl Default for NotchPositionState {
     }
 }
 
+/// A free-dragged position (Spec 8 "place anywhere"). When set, it overrides the
+/// left/center/right preset. Stored in LOGICAL pixels relative to the active
+/// monitor's work-area origin so it stays correct across DPI changes. `None`
+/// means "use the left/center/right preset".
+#[derive(Clone, Copy, PartialEq)]
+pub struct FreePosition {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// Current free position, held in app state. Seeded from settings on launch.
+#[derive(Default)]
+pub struct FreePositionState(pub Mutex<Option<FreePosition>>);
+
 /// Pick the monitor the pill should live on. Honors the user's choice if that
 /// monitor is still connected; otherwise falls back to primary (then current).
 /// Graceful fallback matters: a chosen monitor can be unplugged at any time.
@@ -139,16 +153,70 @@ pub fn position_top_center(window: &WebviewWindow, open: bool) -> tauri::Result<
 
     window.set_size(LogicalSize::new(w, h))?;
 
-    // A small inset from the screen edges for the left/right positions.
-    let edge = 24.0_f64;
-    let x = match notch_position(window) {
-        NotchPosition::Left => mon_pos.x + edge,
-        NotchPosition::Center => mon_pos.x + (mon_size.width - w) / 2.0,
-        NotchPosition::Right => mon_pos.x + mon_size.width - w - edge,
+    // A free-dragged position (if any) overrides the preset. Both are clamped
+    // so the pill always stays fully on the active monitor's work area, even if
+    // a monitor was unplugged or resized since the position was saved.
+    let (x, y) = match free_position(window) {
+        Some(p) => {
+            let max_x = mon_pos.x + (mon_size.width - w).max(0.0);
+            let max_y = mon_pos.y + (mon_size.height - h).max(0.0);
+            let x = (mon_pos.x + p.x).clamp(mon_pos.x, max_x);
+            let y = (mon_pos.y + p.y).clamp(mon_pos.y, max_y);
+            (x, y)
+        }
+        None => {
+            // A small inset from the screen edges for the left/right positions.
+            let edge = 24.0_f64;
+            let x = match notch_position(window) {
+                NotchPosition::Left => mon_pos.x + edge,
+                NotchPosition::Center => mon_pos.x + (mon_size.width - w) / 2.0,
+                NotchPosition::Right => mon_pos.x + mon_size.width - w - edge,
+            };
+            (x, mon_pos.y + PILL.top_margin)
+        }
     };
-    let y = mon_pos.y + PILL.top_margin;
     window.set_position(LogicalPosition::new(x, y))?;
     Ok(())
+}
+
+/// Read the current free position from app state (None = use a preset).
+fn free_position(window: &WebviewWindow) -> Option<FreePosition> {
+    window
+        .try_state::<FreePositionState>()
+        .and_then(|s| s.0.lock().ok().map(|g| *g))
+        .flatten()
+}
+
+/// Set (or clear with `None`) the free-dragged position and re-place the pill.
+/// The incoming x/y are logical pixels relative to the active monitor's origin.
+pub fn set_free_position(window: &WebviewWindow, pos: Option<FreePosition>) -> tauri::Result<()> {
+    if let Some(state) = window.try_state::<FreePositionState>() {
+        if let Ok(mut guard) = state.0.lock() {
+            *guard = pos;
+        }
+    }
+    let open = is_open(window);
+    position_top_center(window, open)
+}
+
+/// Current pill top-left in LOGICAL pixels relative to the active monitor's
+/// work-area origin. Used to persist a drag. Returns (0,0) if unknown.
+pub fn current_offset(window: &WebviewWindow) -> FreePosition {
+    let Some(monitor) = active_monitor(window) else {
+        return FreePosition { x: 0.0, y: 0.0 };
+    };
+    let scale = monitor.scale_factor();
+    let mon_pos = monitor.position().to_logical::<f64>(scale);
+    match window.outer_position() {
+        Ok(phys) => {
+            let p = phys.to_logical::<f64>(scale);
+            FreePosition {
+                x: (p.x - mon_pos.x).max(0.0),
+                y: (p.y - mon_pos.y).max(0.0),
+            }
+        }
+        Err(_) => FreePosition { x: 0.0, y: 0.0 },
+    }
 }
 
 /// Set the notch horizontal position and re-place the pill immediately.

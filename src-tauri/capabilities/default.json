@@ -18,6 +18,7 @@
       "identifier": "opener:allow-open-url",
       "allow": [{ "url": "https://music.youtube.com/*" }]
     },
+    "opener:allow-open-path",
     "dialog:allow-open"
   ]
 }

@@ -14,6 +14,7 @@ const en: Strings = {
   "tab.tasks": "Tasks",
   "tab.notes": "Notes",
   "tab.media": "Media",
+  "tab.launcher": "Apps",
   "tab.settings": "Settings",
 
   "common.comingSoon": "Coming soon",
@@ -94,6 +95,10 @@ const en: Strings = {
   "media.unknownArtist": "Unknown artist",
   "media.openYtMusic": "Open YouTube Music",
   "media.openHint": "Play in your browser, control it here.",
+
+  "launcher.add": "Add an app…",
+  "launcher.remove": "Remove app",
+  "launcher.empty": "No apps yet. Add one to launch it from here.",
 };
 
 const locales: Record<Locale, Strings> = { en };

@@ -6,6 +6,7 @@ use tauri::{AppHandle, WebviewWindow};
 
 use crate::app_config::APP_NAME;
 use crate::characters::{self, ActiveCharacter, CharacterSummary, LoadedCharacter};
+use crate::launcher;
 use crate::modules::focus::engine::FocusState;
 use crate::modules::focus::FocusHandle;
 use crate::modules::hub::{Hub, HubSnapshot};
@@ -314,6 +315,73 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
     app.opener()
         .open_url("https://music.youtube.com", None::<&str>)
         .map_err(|e| format!("could not open YouTube Music: {e}"))
+}
+
+// ---- Spec 9: safe app launcher ----
+
+/// List the user's saved apps (id + name + path). The path is informational;
+/// the frontend launches by id, never by path.
+#[tauri::command]
+pub fn launcher_list(app: AppHandle) -> launcher::LauncherList {
+    launcher::load(&app)
+}
+
+/// Open the file picker and add the chosen app. The picker is the user's
+/// consent; Rust validates before storing. Returns null if the user cancels.
+#[tauri::command]
+pub async fn launcher_add(app: AppHandle) -> Result<Option<launcher::LauncherList>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let picked = app
+        .dialog()
+        .file()
+        .set_title("Choose an app to add")
+        .add_filter("Apps and shortcuts", &["exe", "lnk", "url"])
+        .blocking_pick_file();
+    let Some(file) = picked else {
+        return Ok(None);
+    };
+    let path = file
+        .into_path()
+        .map_err(|e| format!("could not resolve the chosen file: {e}"))?;
+    let list = launcher::add(&app, &path).map_err(|e| e.to_string())?;
+    Ok(Some(list))
+}
+
+/// Remove a saved app by id.
+#[tauri::command]
+pub fn launcher_remove(app: AppHandle, id: String) -> Result<launcher::LauncherList, String> {
+    launcher::remove(&app, &id).map_err(|e| e.to_string())
+}
+
+/// Rename a saved app. Only the display name changes; the path is immutable.
+#[tauri::command]
+pub fn launcher_rename(
+    app: AppHandle,
+    id: String,
+    name: String,
+) -> Result<launcher::LauncherList, String> {
+    let mut list = launcher::load(&app);
+    let trimmed = name.trim();
+    if let Some(e) = list.entries.iter_mut().find(|e| e.id == id) {
+        if !trimmed.is_empty() {
+            e.name = trimmed.chars().take(60).collect();
+        }
+    }
+    crate::store::write_json_atomic(&app, launcher::LAUNCHER_FILE, &list)
+        .map_err(|e| e.to_string())?;
+    Ok(list)
+}
+
+/// Launch a saved app BY ID. Rust looks up the stored entry and RE-VALIDATES
+/// its path before opening it with the OS opener. The frontend can never pass a
+/// path or command here — only an id it got from `launcher_list`.
+#[tauri::command]
+pub fn launcher_launch(app: AppHandle, id: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let path = launcher::resolve_for_launch(&app, &id).map_err(|e| e.to_string())?;
+    app.opener()
+        .open_path(path.to_string_lossy().to_string(), None::<&str>)
+        .map_err(|e| format!("could not open the app: {e}"))
 }
 
 // ---- Spec 6: characters ----

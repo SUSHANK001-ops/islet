@@ -913,3 +913,64 @@ body {
     transition: none;
   }
 }
+
+/* ---- App launcher ---- */
+.islet-launcher {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.islet-launcher-head {
+  display: flex;
+  justify-content: flex-end;
+}
+.islet-launcher-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.islet-launcher-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.islet-launcher-launch {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  font: inherit;
+  text-align: left;
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background var(--islet-transition), border-color var(--islet-transition),
+    transform var(--islet-transition);
+}
+.islet-launcher-launch:hover {
+  background: var(--islet-control-hover);
+  border-color: var(--islet-border);
+}
+.islet-launcher-launch:active {
+  transform: scale(0.99);
+}
+.islet-launcher-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.islet-launcher-path {
+  font-size: 10px;
+  color: var(--islet-fg-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

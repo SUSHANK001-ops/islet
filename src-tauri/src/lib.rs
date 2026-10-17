@@ -7,6 +7,7 @@
 mod app_config;
 mod characters;
 mod commands;
+mod launcher;
 mod modules;
 mod platform;
 mod scheduler;
@@ -93,7 +94,12 @@ pub fn run() {
             commands::character_load_active,
             commands::character_set_active,
             commands::character_import,
-            commands::character_delete
+            commands::character_delete,
+            commands::launcher_list,
+            commands::launcher_add,
+            commands::launcher_remove,
+            commands::launcher_rename,
+            commands::launcher_launch
         ])
         .setup(|app| {
             let handle = app.handle();

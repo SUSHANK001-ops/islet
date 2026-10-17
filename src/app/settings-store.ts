@@ -11,7 +11,7 @@ export type NotchPosition = "left" | "center" | "right";
 
 export interface TabConfig {
   // Stable id; also the i18n key suffix (tab.<id>).
-  id: "focus" | "tasks" | "notes" | "media";
+  id: "focus" | "tasks" | "notes" | "media" | "launcher";
   enabled: boolean;
 }
 
@@ -43,6 +43,7 @@ const DEFAULTS: Settings = {
     { id: "tasks", enabled: true },
     { id: "notes", enabled: true },
     { id: "media", enabled: true },
+    { id: "launcher", enabled: true },
   ],
   notchPosition: "center",
   notchOpacity: 1,
@@ -112,6 +113,20 @@ function coerceNotchPosition(p: unknown): NotchPosition {
   return p === "left" || p === "right" ? p : "center";
 }
 
+/**
+ * Keep the user's saved tab order/toggles but append any default tab they do
+ * not have yet (e.g. a tab added in a new version). New tabs go to the end,
+ * enabled by default. This avoids a migration just to introduce a tab.
+ */
+function mergeTabs(saved: TabConfig[]): TabConfig[] {
+  const present = new Set(saved.map((t) => t.id));
+  const merged = [...saved];
+  for (const def of DEFAULTS.tabs) {
+    if (!present.has(def.id)) merged.push({ ...def });
+  }
+  return merged;
+}
+
 export async function initSettings(): Promise<void> {
   // Flush the latest settings on unload so a change inside the debounce window
   // is never lost (pairs with the debounced save below).
@@ -128,11 +143,13 @@ export async function initSettings(): Promise<void> {
       theme: disk.theme === "light" ? "light" : "dark",
       monitorName: disk.monitorName ?? null,
       launchAtStartup: !!disk.launchAtStartup,
-      tabs: disk.tabs
-        .filter((t): t is { id: TabConfig["id"]; enabled: boolean } =>
-          ["focus", "tasks", "notes", "media"].includes(t.id)
-        )
-        .map((t) => ({ id: t.id, enabled: !!t.enabled })),
+      tabs: mergeTabs(
+        disk.tabs
+          .filter((t): t is { id: TabConfig["id"]; enabled: boolean } =>
+            ["focus", "tasks", "notes", "media", "launcher"].includes(t.id)
+          )
+          .map((t) => ({ id: t.id, enabled: !!t.enabled }))
+      ),
       notchPosition: coerceNotchPosition(disk.notchPosition),
       notchOpacity:
         typeof disk.notchOpacity === "number"

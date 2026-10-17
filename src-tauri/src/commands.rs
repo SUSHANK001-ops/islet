@@ -10,7 +10,9 @@ use crate::modules::focus::FocusHandle;
 use crate::modules::hub::{Hub, HubSnapshot};
 use crate::modules::registry::{ModuleInfo, Registry};
 use crate::store::activity::{self, ActivityDay};
+use crate::store::notes::{self, NoteList};
 use crate::store::settings::{self, Settings};
+use crate::store::tasks::{self, TaskList};
 use crate::{platform, window};
 
 /// Snapshot the spike cares about: monitor/DPI/fullscreen state.
@@ -171,4 +173,74 @@ pub fn focus_reset(focus: tauri::State<'_, FocusHandle>) -> FocusState {
 #[tauri::command]
 pub fn focus_get_state(focus: tauri::State<'_, FocusHandle>) -> FocusState {
     focus.0.state()
+}
+
+// ---- Spec 4: tasks ----
+
+/// Publish the open-task count to the hub after any change.
+fn publish_task_count(hub: &tauri::State<'_, Hub>, list: &TaskList) {
+    let open = tasks::open_count(list);
+    hub.update(|s| s.open_tasks = open);
+}
+
+#[tauri::command]
+pub fn tasks_list(app: AppHandle, hub: tauri::State<'_, Hub>) -> TaskList {
+    let list = tasks::load(&app);
+    publish_task_count(&hub, &list);
+    list
+}
+
+#[tauri::command]
+pub fn tasks_add(
+    app: AppHandle,
+    hub: tauri::State<'_, Hub>,
+    title: String,
+) -> Result<TaskList, String> {
+    let list = tasks::add(&app, &title).map_err(|e| e.to_string())?;
+    publish_task_count(&hub, &list);
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn tasks_toggle(
+    app: AppHandle,
+    hub: tauri::State<'_, Hub>,
+    id: String,
+) -> Result<TaskList, String> {
+    let list = tasks::toggle(&app, &id).map_err(|e| e.to_string())?;
+    publish_task_count(&hub, &list);
+    Ok(list)
+}
+
+#[tauri::command]
+pub fn tasks_delete(
+    app: AppHandle,
+    hub: tauri::State<'_, Hub>,
+    id: String,
+) -> Result<TaskList, String> {
+    let list = tasks::delete(&app, &id).map_err(|e| e.to_string())?;
+    publish_task_count(&hub, &list);
+    Ok(list)
+}
+
+// ---- Spec 4: notes ----
+
+#[tauri::command]
+pub fn notes_list(app: AppHandle) -> NoteList {
+    notes::load(&app)
+}
+
+#[tauri::command]
+pub fn notes_add(app: AppHandle, text: String) -> Result<NoteList, String> {
+    notes::add(&app, &text).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn notes_update(app: AppHandle, id: String, text: String) -> Result<NoteList, String> {
+    notes::update(&app, &id, &text).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn notes_delete(app: AppHandle, id: String) -> Result<NoteList, String> {
+    notes::delete(&app, &id).map_err(|e| e.to_string())
 }

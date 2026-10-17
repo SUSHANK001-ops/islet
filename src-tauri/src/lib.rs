@@ -64,7 +64,15 @@ pub fn run() {
             commands::focus_pause,
             commands::focus_resume,
             commands::focus_reset,
-            commands::focus_get_state
+            commands::focus_get_state,
+            commands::tasks_list,
+            commands::tasks_add,
+            commands::tasks_toggle,
+            commands::tasks_delete,
+            commands::notes_list,
+            commands::notes_add,
+            commands::notes_update,
+            commands::notes_delete
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -101,6 +109,12 @@ pub fn run() {
             registry.register(focus, focus_enabled);
             registry.register(Arc::new(ExampleModule), false);
             registry.start_enabled();
+
+            // Seed the hub with the open-task count from disk so the shell and
+            // character have it before the Tasks panel is ever opened.
+            let task_list = store::tasks::load(handle);
+            let open_tasks = store::tasks::open_count(&task_list);
+            app.state::<Hub>().update(|s| s.open_tasks = open_tasks);
 
             // Tray icon + menu. Non-fatal if it fails.
             if let Err(e) = tray::build(handle) {

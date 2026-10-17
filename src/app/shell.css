@@ -414,3 +414,100 @@ body {
   font-size: 11px;
   color: var(--islet-fg-dim);
 }
+
+/* ---- Tasks & Notes lists (Spec 4) ---- */
+
+.islet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.islet-add-row {
+  display: flex;
+}
+
+.islet-input {
+  font: inherit;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  border: 1px solid var(--islet-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  resize: none;
+}
+
+.islet-input:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
+}
+
+.islet-textarea {
+  line-height: 1.4;
+  font-family: var(--islet-font);
+}
+
+.islet-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.islet-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--islet-control);
+}
+
+.islet-item.done .islet-check span {
+  text-decoration: line-through;
+  color: var(--islet-fg-dim);
+}
+
+.islet-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+
+.islet-check span {
+  overflow-wrap: anywhere;
+}
+
+.islet-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.islet-icon-btn {
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
+.islet-icon-btn:hover {
+  color: var(--islet-danger);
+  background: var(--islet-control-hover);
+}

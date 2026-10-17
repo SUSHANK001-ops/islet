@@ -52,6 +52,16 @@ const en: Strings = {
   "focus.preset": "{min} min",
   "focus.round": "Round {n} of {total}",
   "focus.todayCount": "{n} done today",
+
+  "tasks.add": "Add a task…",
+  "tasks.empty": "No tasks yet. Add one above.",
+  "tasks.delete": "Delete task",
+  "tasks.openCount": "{n} open",
+
+  "notes.add": "Write a quick note…",
+  "notes.empty": "No notes yet.",
+  "notes.delete": "Delete note",
+  "notes.save": "Save",
 };
 
 const locales: Record<Locale, Strings> = { en };

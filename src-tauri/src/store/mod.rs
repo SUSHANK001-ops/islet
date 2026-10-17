@@ -11,7 +11,9 @@
 
 pub mod activity;
 pub mod migrate;
+pub mod notes;
 pub mod settings;
+pub mod tasks;
 
 use std::fs;
 use std::io::Write;

@@ -8,17 +8,23 @@ mod app_config;
 mod commands;
 mod modules;
 mod platform;
+mod scheduler;
 mod shortcut;
 mod store;
 mod tray;
 mod window;
 
+use std::sync::Arc;
+
 use tauri::Manager;
 use tauri_plugin_autostart::MacosLauncher;
 
 use modules::example::ExampleModule;
+use modules::focus::engine::FocusConfig;
+use modules::focus::{FocusHandle, FocusModule};
 use modules::hub::Hub;
 use modules::registry::Registry;
+use scheduler::Scheduler;
 use store::WriteDebouncer;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -33,11 +39,14 @@ pub fn run() {
         ))
         // global-shortcut: the toggle hotkey plumbing.
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        // App state: monitor choice, write debouncer, shared hub, module registry.
+        // notification: Windows toast when a focus round ends.
+        .plugin(tauri_plugin_notification::init())
+        // App state: monitor choice, write debouncer, hub, registry, scheduler.
         .manage(window::MonitorChoice::default())
         .manage(WriteDebouncer::default())
         .manage(Hub::default())
         .manage(Registry::default())
+        .manage(Scheduler::default())
         .invoke_handler(tauri::generate_handler![
             commands::set_panel_open,
             commands::get_spike_report,
@@ -50,7 +59,12 @@ pub fn run() {
             commands::read_activity_day,
             commands::list_modules,
             commands::set_module_enabled,
-            commands::get_hub
+            commands::get_hub,
+            commands::focus_start,
+            commands::focus_pause,
+            commands::focus_resume,
+            commands::focus_reset,
+            commands::focus_get_state
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -70,17 +84,22 @@ pub fn run() {
                 eprintln!("islet: island window '{}' not found", window::ISLAND_LABEL);
             }
 
+            // Build the focus module and keep a shared handle in state so the
+            // focus_* commands and the scheduler callback can reach it.
+            let focus = Arc::new(FocusModule::new(handle.clone(), FocusConfig::default()));
+            app.manage(FocusHandle(Arc::clone(&focus)));
+
             // Register modules with their enabled state from settings, then
-            // start the enabled ones. The example module tracks the "example"
-            // switch if present, else defaults to enabled for the demo.
+            // start the enabled ones. A module follows its tab's on/off switch.
             let registry = app.state::<Registry>();
-            let example_enabled = settings
+            let focus_enabled = settings
                 .tabs
                 .iter()
-                .find(|t| t.id == "example")
+                .find(|t| t.id == "focus")
                 .map(|t| t.enabled)
                 .unwrap_or(true);
-            registry.register(Box::new(ExampleModule), example_enabled);
+            registry.register(focus, focus_enabled);
+            registry.register(Arc::new(ExampleModule), false);
             registry.start_enabled();
 
             // Tray icon + menu. Non-fatal if it fails.

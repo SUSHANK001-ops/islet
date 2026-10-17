@@ -349,3 +349,41 @@ body {
 .islet-reorder button:hover {
   color: var(--islet-fg);
 }
+
+/* ---- Focus panel (Spec 3) ---- */
+
+.islet-focus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.islet-focus-phase {
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.islet-focus-clock {
+  font-size: 44px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  color: var(--islet-fg);
+  line-height: 1;
+}
+
+.islet-focus-presets,
+.islet-focus-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.islet-focus-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--islet-fg-dim);
+}

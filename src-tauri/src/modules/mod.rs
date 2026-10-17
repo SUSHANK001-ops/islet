@@ -5,5 +5,6 @@
 //! Real feature modules (focus, tasks, notes, media) arrive in later specs.
 
 pub mod example;
+pub mod focus;
 pub mod hub;
 pub mod registry;

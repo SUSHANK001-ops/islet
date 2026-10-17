@@ -148,7 +148,7 @@ mod tests {
         let stops = Arc::new(AtomicU32::new(0));
         let reg = Registry::default();
         reg.register(
-            Box::new(Counter {
+            Arc::new(Counter {
                 starts: starts.clone(),
                 stops: stops.clone(),
             }),
@@ -177,7 +177,7 @@ mod tests {
         let stops = Arc::new(AtomicU32::new(0));
         let reg = Registry::default();
         reg.register(
-            Box::new(Counter {
+            Arc::new(Counter {
                 starts: starts.clone(),
                 stops,
             }),

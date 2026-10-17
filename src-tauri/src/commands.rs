@@ -5,6 +5,8 @@ use serde::Serialize;
 use tauri::{AppHandle, WebviewWindow};
 
 use crate::app_config::APP_NAME;
+use crate::modules::focus::engine::FocusState;
+use crate::modules::focus::FocusHandle;
 use crate::modules::hub::{Hub, HubSnapshot};
 use crate::modules::registry::{ModuleInfo, Registry};
 use crate::store::activity::{self, ActivityDay};
@@ -136,4 +138,37 @@ pub fn set_module_enabled(
 #[tauri::command]
 pub fn get_hub(hub: tauri::State<'_, Hub>) -> HubSnapshot {
     hub.snapshot()
+}
+
+// ---- Spec 3: focus timer ----
+
+/// Start a focus round with the given preset length in minutes.
+#[tauri::command]
+pub fn focus_start(focus: tauri::State<'_, FocusHandle>, minutes: u32) -> FocusState {
+    focus.0.with_engine(|e| e.start_work(minutes));
+    focus.0.state()
+}
+
+#[tauri::command]
+pub fn focus_pause(focus: tauri::State<'_, FocusHandle>) -> FocusState {
+    focus.0.with_engine(|e| e.pause());
+    focus.0.state()
+}
+
+#[tauri::command]
+pub fn focus_resume(focus: tauri::State<'_, FocusHandle>) -> FocusState {
+    focus.0.with_engine(|e| e.resume());
+    focus.0.state()
+}
+
+#[tauri::command]
+pub fn focus_reset(focus: tauri::State<'_, FocusHandle>) -> FocusState {
+    focus.0.with_engine(|e| e.reset());
+    focus.0.state()
+}
+
+/// Read the current focus state (used when the panel opens).
+#[tauri::command]
+pub fn focus_get_state(focus: tauri::State<'_, FocusHandle>) -> FocusState {
+    focus.0.state()
 }

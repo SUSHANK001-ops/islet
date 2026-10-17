@@ -40,6 +40,18 @@ const en: Strings = {
   "perm.notifications.title": "Allow notifications?",
   "perm.notifications.body":
     "Islet can tell you when a focus round ends. You can change this later in Settings.",
+
+  "focus.idle": "Ready to focus",
+  "focus.working": "Focusing",
+  "focus.shortBreak": "Short break",
+  "focus.longBreak": "Long break",
+  "focus.start": "Start",
+  "focus.pause": "Pause",
+  "focus.resume": "Resume",
+  "focus.reset": "Reset",
+  "focus.preset": "{min} min",
+  "focus.round": "Round {n} of {total}",
+  "focus.todayCount": "{n} done today",
 };
 
 const locales: Record<Locale, Strings> = { en };

@@ -24,7 +24,17 @@ export function closePanel(): Promise<void> {
   return invoke("set_panel_open", { open: false });
 }
 
-/** One-shot snapshot used by the spike panel and docs/perf-results.md. */
+/** One-shot snapshot used by the status view and docs/perf-results.md. */
 export function getSpikeReport(): Promise<SpikeReport> {
   return invoke("get_spike_report");
+}
+
+/** Names of connected monitors, for the monitor-choice setting. */
+export function listMonitors(): Promise<string[]> {
+  return invoke("list_monitors");
+}
+
+/** Choose the monitor the pill lives on. Empty string / null = primary. */
+export function setMonitor(name: string | null): Promise<void> {
+  return invoke("set_monitor", { name });
 }

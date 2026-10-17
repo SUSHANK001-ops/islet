@@ -17,6 +17,12 @@ Measured numbers from `scripts/perf-check`. Compare against the budgets in
 
 ## Spec 0 (spike) results
 
+> STATUS: **perf measurement intentionally deferred.** All Spec 0 window
+> behaviors are verified on real hardware (see docs/windows-notes.md), but
+> CPU/memory numbers have not been captured yet. This must be filled in before
+> Spec 1 is closed. Note: measure against a RELEASE build, not `tauri dev`
+> (dev is unoptimized and will report worse numbers).
+
 Run `scripts/perf-check.ps1` on the target machine and paste results here.
 
 | Metric | Target | Measured | Pass? |

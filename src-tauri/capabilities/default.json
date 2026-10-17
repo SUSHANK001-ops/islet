@@ -1,10 +1,16 @@
 {
   "identifier": "default",
-  "description": "Minimal permissions for the Spec 0 spike: the island window may listen to events and call the explicitly allowed commands only.",
+  "description": "Spec 1 shell permissions: the island window may listen to events, call the allowed commands, register the toggle hotkey, and manage launch-at-startup.",
   "windows": ["island"],
   "permissions": [
     "core:default",
     "core:event:allow-listen",
-    "core:event:allow-unlisten"
+    "core:event:allow-unlisten",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

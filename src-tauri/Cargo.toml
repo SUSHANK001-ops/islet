@@ -13,9 +13,16 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# tray-icon: built-in tray menu (Show/Hide, Settings, Quit). No extra crate.
 tauri = { version = "2", features = ["tray-icon"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# global-shortcut: OS-level hotkey that fires when Islet is NOT focused.
+# Reimplementing means Win32 RegisterHotKey + conflict handling; official+small.
+tauri-plugin-global-shortcut = "2"
+# autostart: writes the Windows "run at login" entry correctly across install
+# types. Rolling our own risks registry mistakes; official + small.
+tauri-plugin-autostart = "2"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]

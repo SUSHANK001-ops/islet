@@ -51,7 +51,13 @@ body {
   height: 14px;
 }
 
-/* The panel that opens below the pill. */
+/* The panel that opens below the pill.
+   - overflow: hidden so the rounded corners ALWAYS clip content (fixes the
+     square bottom corners).
+   - max-height caps it to the viewport so it never runs off-screen; the body
+     scrolls instead. It grows with content up to that cap.
+   - The window behind it (Rust) is larger + transparent, giving room for the
+     shadow and for the panel to enlarge. */
 .islet-panel {
   width: 340px;
   box-sizing: border-box;
@@ -59,10 +65,10 @@ body {
   border: 1px solid var(--islet-border);
   border-radius: var(--islet-radius);
   box-shadow: var(--islet-shadow);
-  padding: var(--islet-pad) calc(var(--islet-pad) + 2px) calc(var(--islet-pad) + 2px);
   display: flex;
   flex-direction: column;
-  gap: var(--islet-gap);
+  overflow: hidden;
+  max-height: calc(100vh - 2 * var(--islet-pad) - 20px);
 }
 
 .islet-panel h1 {
@@ -168,19 +174,40 @@ body {
 
 /* ---- Spec 1 shell: tabs, panel body, settings, toggles ---- */
 
+/* Scrollable content region. Fills remaining height and scrolls when the
+   content is taller than the cap. Padding lives here (not on the panel) so the
+   scrollbar sits inside the rounded clip. */
 .islet-panel-body {
-  min-height: 150px;
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  padding-top: 2px;
+  padding: 10px calc(var(--islet-pad) + 2px) calc(var(--islet-pad) + 2px);
+  /* Thin, theme-aware scrollbar. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--islet-border) transparent;
 }
 
+.islet-panel-body::-webkit-scrollbar {
+  width: 8px;
+}
+.islet-panel-body::-webkit-scrollbar-thumb {
+  background: var(--islet-border);
+  border-radius: 4px;
+}
+.islet-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Tab bar is a FIXED header inside the panel; it does not scroll. */
 .islet-tabbar {
+  flex: 0 0 auto;
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--islet-divider);
-  padding-bottom: 8px;
-  margin-bottom: 4px;
+  padding: var(--islet-pad) calc(var(--islet-pad) + 2px) 8px;
   flex-wrap: wrap;
 }
 

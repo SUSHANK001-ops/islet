@@ -11,8 +11,8 @@ export const APP_NAME = "Islet" as const;
 export const PILL = {
   closedWidth: 160,
   closedHeight: 24,
-  openWidth: 360,
-  openHeight: 240,
+  openWidth: 400,
+  openHeight: 580,
   // Gap from the very top of the active monitor's work area.
   topMargin: 0,
 } as const;

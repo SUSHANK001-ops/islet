@@ -120,16 +120,16 @@ export function Shell() {
 
       {open ? (
         <div class="islet-panel" role="dialog" aria-label={APP_NAME}>
-          {hotkeyMsg ? (
-            <div class="islet-notice" role="status">
-              <span>{hotkeyMsg}</span>
-              <button class="islet-btn" onClick={() => setHotkeyMsg(null)}>
-                OK
-              </button>
-            </div>
-          ) : null}
           <TabBar active={active} onSelect={setActive} />
           <div class="islet-panel-body">
+            {hotkeyMsg ? (
+              <div class="islet-notice" role="status">
+                <span>{hotkeyMsg}</span>
+                <button class="islet-btn" onClick={() => setHotkeyMsg(null)}>
+                  OK
+                </button>
+              </div>
+            ) : null}
             <LazyPanel id={active} />
           </div>
         </div>

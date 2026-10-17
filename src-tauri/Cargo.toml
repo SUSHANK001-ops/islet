@@ -29,6 +29,9 @@ tauri-plugin-autostart = "2"
 # notification: Windows toast on focus round end. Hand-rolling WinRT toast XML
 # is far more than 100 lines and fragile; official + small.
 tauri-plugin-notification = "2"
+# opener: launch an external URL (YouTube Music) in the user's default browser.
+# Official + small; avoids shelling out and handles the OS launch correctly.
+tauri-plugin-opener = "2"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]

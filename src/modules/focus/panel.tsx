@@ -12,6 +12,7 @@ import {
 
 const PRESETS = [5, 10, 25];
 const POMODORO_TOTAL = 4; // display only; engine owns the real cycle
+const RING = 2 * Math.PI * 67; // circumference for r=67
 
 function mmss(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -33,12 +34,12 @@ function phaseLabel(p: FocusState["phase"]): string {
 }
 
 /**
- * Focus tab. Subscribes to "islet://focus-state" only while mounted, so a
- * closed panel does no work (closed == asleep). The Rust engine keeps the real
- * time; this view just reflects and controls it.
+ * Focus tab with a circular progress ring, presets, and a custom-minutes input.
+ * Subscribes to "islet://focus-state" only while mounted (closed == asleep).
  */
 export default function FocusPanel() {
   const [state, setState] = useState<FocusState | null>(null);
+  const [custom, setCustom] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -60,27 +61,82 @@ export default function FocusPanel() {
 
   const idle = state.phase === "idle";
   const running = state.runState === "running";
-  const display = idle ? PRESETS[2] * 60 : state.remainingSecs;
+  const total = idle ? PRESETS[2] * 60 : state.totalSecs || 1;
+  const remaining = idle ? PRESETS[2] * 60 : state.remainingSecs;
+  // Fraction elapsed -> ring offset.
+  const elapsed = idle ? 0 : 1 - remaining / total;
+  const dashOffset = RING * (1 - elapsed);
+
+  function startCustom() {
+    const min = Math.max(1, Math.min(180, parseInt(custom, 10) || 0));
+    if (min > 0) {
+      setCustom("");
+      void focusStart(min).then(setState);
+    }
+  }
 
   return (
     <div class="islet-focus">
       <div class="islet-focus-phase">{phaseLabel(state.phase)}</div>
-      <div class="islet-focus-clock" aria-live="polite">
-        {mmss(display)}
+
+      <div class="islet-focus-ring">
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          <defs>
+            <linearGradient id="islet-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7c9cff" />
+              <stop offset="100%" stop-color="#a78bfa" />
+            </linearGradient>
+          </defs>
+          <circle class="track" cx="75" cy="75" r="67" />
+          <circle
+            class="progress"
+            cx="75"
+            cy="75"
+            r="67"
+            stroke-dasharray={RING}
+            stroke-dashoffset={dashOffset}
+          />
+        </svg>
+        <div class="islet-focus-clock" aria-live="polite">
+          {mmss(remaining)}
+        </div>
       </div>
 
       {idle ? (
-        <div class="islet-focus-presets">
-          {PRESETS.map((min) => (
-            <button
-              key={min}
-              class="islet-btn"
-              onClick={() => void focusStart(min).then(setState)}
-            >
-              {t("focus.preset", { min })}
+        <>
+          <div class="islet-focus-presets">
+            {PRESETS.map((min) => (
+              <button
+                key={min}
+                class="islet-btn"
+                onClick={() => void focusStart(min).then(setState)}
+              >
+                {t("focus.preset", { min })}
+              </button>
+            ))}
+          </div>
+          <form
+            class="islet-focus-custom"
+            onSubmit={(e) => {
+              e.preventDefault();
+              startCustom();
+            }}
+          >
+            <input
+              type="number"
+              min={1}
+              max={180}
+              placeholder="custom"
+              value={custom}
+              aria-label={t("focus.customMinutes")}
+              onInput={(e) => setCustom(e.currentTarget.value)}
+            />
+            <span>{t("focus.minutes")}</span>
+            <button type="submit" class="islet-btn primary">
+              {t("focus.start")}
             </button>
-          ))}
-        </div>
+          </form>
+        </>
       ) : (
         <>
           <div class="islet-focus-controls">

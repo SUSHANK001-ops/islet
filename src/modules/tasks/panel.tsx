@@ -68,6 +68,7 @@ export default function TasksPanel() {
                     void tasksToggle(task.id).then((l) => setTasks(l.tasks))
                   }
                 />
+                <span class="islet-checkbox" aria-hidden="true" />
                 <span>{task.title}</span>
               </label>
               <button

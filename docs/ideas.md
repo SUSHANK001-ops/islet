@@ -22,3 +22,22 @@ Each entry: what it is, why it is out of scope now, what it would need.
   OS permission requests (notifications, run-at-startup, hide-from-capture),
   shown only when the feature that needs it is first used. See
   `src/app/permission-store.ts` and `src/app/permission-prompt.tsx`.
+
+## Embedded YouTube Music player + in-app search
+
+- **Idea:** Play YouTube Music directly inside Islet, with an in-app search box,
+  instead of only controlling whatever is already playing.
+- **Why it is out of v1 scope:** It conflicts with several AGENTS.md hard rules:
+  the Media feature is defined as "through the Windows media controls" (control,
+  not embed); "No remote code, no remote images"; "One webview window"; and the
+  performance budgets (embedding YouTube pulls in a heavy second webview +
+  network, well over the 80/130 MB memory targets). It also changes the privacy
+  posture ("Nothing leaves the PC").
+- **What ships in v1 instead (Option A):** a one-click "Open YouTube Music"
+  button that launches `music.youtube.com` in the user's default browser via the
+  opener plugin (fixed URL, allow-listed). The user plays/searches there, and
+  Islet controls playback through the existing Windows media controls. See
+  `src/modules/media/panel.tsx` and the `open_youtube_music` command.
+- **What a real embedded player would need (future spec):** a dedicated,
+  measured second webview with a strict CSP exception, a decision to relax the
+  "one webview" and "no remote content" rules, and a fresh performance budget.

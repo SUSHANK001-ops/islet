@@ -260,3 +260,14 @@ pub fn media_now_playing() -> Option<NowPlaying> {
 pub fn media_control(action: MediaAction) -> bool {
     platform::media::control(action)
 }
+
+/// Open YouTube Music in the user's default browser. The URL is FIXED here (not
+/// passed from the frontend) so this command can never be used to open an
+/// arbitrary link — it only ever opens the one allow-listed destination.
+#[tauri::command]
+pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url("https://music.youtube.com", None::<&str>)
+        .map_err(|e| format!("could not open YouTube Music: {e}"))
+}

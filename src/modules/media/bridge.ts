@@ -17,3 +17,8 @@ export function mediaNowPlaying(): Promise<NowPlaying | null> {
 export function mediaControl(action: MediaAction): Promise<boolean> {
   return invoke("media_control", { action });
 }
+
+/** Open YouTube Music in the default browser (fixed URL, set in Rust). */
+export function openYoutubeMusic(): Promise<void> {
+  return invoke("open_youtube_music");
+}

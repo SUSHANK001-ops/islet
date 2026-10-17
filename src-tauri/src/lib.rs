@@ -41,6 +41,8 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         // notification: Windows toast when a focus round ends.
         .plugin(tauri_plugin_notification::init())
+        // opener: launch YouTube Music in the default browser (Media tab).
+        .plugin(tauri_plugin_opener::init())
         // App state: monitor choice, write debouncer, hub, registry, scheduler.
         .manage(window::MonitorChoice::default())
         .manage(WriteDebouncer::default())
@@ -74,7 +76,8 @@ pub fn run() {
             commands::notes_update,
             commands::notes_delete,
             commands::media_now_playing,
-            commands::media_control
+            commands::media_control,
+            commands::open_youtube_music
         ])
         .setup(|app| {
             let handle = app.handle();

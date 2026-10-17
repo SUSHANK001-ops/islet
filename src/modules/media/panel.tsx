@@ -1,14 +1,20 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
-import { mediaNowPlaying, mediaControl, type NowPlaying } from "./bridge";
+import {
+  mediaNowPlaying,
+  mediaControl,
+  openYoutubeMusic,
+  type NowPlaying,
+} from "./bridge";
 
 /**
- * Media tab: Windows "now playing" + transport controls.
+ * Media tab: Windows "now playing" + transport controls, plus a one-click
+ * "Open YouTube Music" launcher (opens the default browser; Islet then controls
+ * playback via the Windows media controls — no embedding, per AGENTS.md).
  *
  * SMTC change events are awkward to subscribe to from Rust, so while the panel
  * is OPEN we poll at a slow 2s rate (only while visible -> closed == asleep).
- * This is the documented exception to the no-polling rule; see
- * docs/windows-notes.md. A control click refreshes immediately for snappiness.
+ * Documented exception to the no-polling rule; see docs/windows-notes.md.
  */
 export default function MediaPanel() {
   const [np, setNp] = useState<NowPlaying | null | undefined>(undefined);
@@ -37,19 +43,42 @@ export default function MediaPanel() {
 
   async function act(action: "playPause" | "next" | "previous") {
     await mediaControl(action);
-    // Give the media app a beat to update, then refresh.
     window.setTimeout(refresh, 250);
   }
+
+  const openButton = (
+    <div class="islet-media-open">
+      <button class="islet-btn primary" onClick={() => void openYoutubeMusic()}>
+        ♪ {t("media.openYtMusic")}
+      </button>
+    </div>
+  );
 
   if (np === undefined) {
     return <div class="islet-empty">{t("common.loading")}</div>;
   }
+
+  // Nothing playing: still offer the launcher + a hint.
   if (np === null) {
-    return <div class="islet-empty">{t("media.nothing")}</div>;
+    return (
+      <div class="islet-media">
+        <div class="islet-media-art" aria-hidden="true">
+          ♪
+        </div>
+        <div class="islet-media-meta">
+          <div class="islet-media-title">{t("media.nothing")}</div>
+          <div class="islet-media-artist">{t("media.openHint")}</div>
+        </div>
+        {openButton}
+      </div>
+    );
   }
 
   return (
     <div class="islet-media">
+      <div class="islet-media-art" aria-hidden="true">
+        {np.playing ? "♫" : "♪"}
+      </div>
       <div class="islet-media-meta">
         <div class="islet-media-title" title={np.title}>
           {np.title}
@@ -81,6 +110,7 @@ export default function MediaPanel() {
           ⏭
         </button>
       </div>
+      {openButton}
     </div>
   );
 }

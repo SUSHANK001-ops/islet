@@ -1,5 +1,5 @@
-/* The window itself is transparent (set in tauri.conf.json). The body must not
-   paint a background or the "notch" illusion breaks. */
+/* The window itself is transparent (tauri.conf.json). Body must not paint a
+   background or the "notch" illusion breaks. */
 html,
 body {
   margin: 0;
@@ -8,9 +8,9 @@ body {
   overflow: hidden;
   font-family: var(--islet-font);
   color: var(--islet-fg);
-  /* Prevent text selection / native drag feel on the overlay. */
   user-select: none;
   -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -21,7 +21,6 @@ body {
   align-items: flex-start;
 }
 
-/* Column that holds the pill and (when open) the panel below it. */
 .islet-stack {
   display: flex;
   flex-direction: column;
@@ -29,37 +28,86 @@ body {
   gap: var(--islet-gap);
 }
 
-/* The black pill / notch. Stays dark in BOTH themes: it mimics a hardware
-   notch at the top of the screen, so it should not turn light in light mode. */
+/* ---- The pill / notch ---- */
+/* Stays dark in both themes (mimics a hardware notch). A thin gradient accent
+   line sits under it so it reads as "Islet", not just a black bar. */
 .islet-pill {
-  margin-top: var(--islet-pad);
-  height: 10px;
-  width: 120px;
-  background: #0a0a0a;
+  margin-top: 10px;
+  height: 11px;
+  width: 128px;
+  background: #0a0a0d;
   border-radius: var(--islet-radius-pill);
-  box-shadow: var(--islet-shadow);
-  transition: width 120ms ease, height 120ms ease, background 120ms ease;
+  box-shadow: var(--islet-shadow-sm);
+  transition: width var(--islet-transition), height var(--islet-transition),
+    background var(--islet-transition), box-shadow var(--islet-transition);
   cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.islet-pill::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  width: 44px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--islet-grad);
+  opacity: 0;
+  transition: opacity var(--islet-transition);
+}
+
+.islet-pill:hover {
+  width: 150px;
+  box-shadow: var(--islet-shadow);
+}
+.islet-pill:hover::after {
+  opacity: 0.9;
+}
+
+.islet-pill.open {
+  width: 168px;
+  height: 14px;
 }
 
 .islet-pill.has-alert {
   background: var(--islet-warn);
 }
 
-.islet-pill.open {
-  width: 160px;
-  height: 14px;
+.islet-alert-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0a0a0d;
+  animation: islet-pulse 1.4s ease-in-out infinite;
 }
 
-/* The panel that opens below the pill.
-   - overflow: hidden so the rounded corners ALWAYS clip content (fixes the
-     square bottom corners).
-   - max-height caps it to the viewport so it never runs off-screen; the body
-     scrolls instead. It grows with content up to that cap.
-   - The window behind it (Rust) is larger + transparent, giving room for the
-     shadow and for the panel to enlarge. */
+@keyframes islet-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes islet-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Panel ---- */
 .islet-panel {
-  width: 340px;
+  width: 348px;
   box-sizing: border-box;
   background: var(--islet-bg-panel);
   border: 1px solid var(--islet-border);
@@ -68,7 +116,8 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-height: calc(100vh - 2 * var(--islet-pad) - 20px);
+  max-height: calc(100vh - 44px);
+  animation: islet-fade-in 160ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .islet-panel h1 {
@@ -76,120 +125,86 @@ body {
   margin: 0 0 4px;
 }
 
-.islet-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--islet-fg-dim);
-}
-
-.islet-row b {
-  color: var(--islet-fg);
-  font-weight: 600;
-}
-
-/* Permission prompt shown right on/under the notch. */
+/* ---- Permission prompt ---- */
 .islet-perm {
-  background: var(--islet-bg);
+  background: var(--islet-bg-panel);
   border: 1px solid var(--islet-warn);
   border-radius: var(--islet-radius);
+  box-shadow: var(--islet-shadow);
   padding: var(--islet-pad);
   display: flex;
   flex-direction: column;
   gap: var(--islet-gap);
   width: 300px;
+  animation: islet-fade-in 160ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .islet-perm p {
   margin: 0;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.45;
+  color: var(--islet-fg-dim);
 }
-
 .islet-perm .islet-perm-title {
   font-weight: 600;
   font-size: 13px;
+  color: var(--islet-fg);
 }
-
 .islet-perm-actions {
   display: flex;
   gap: var(--islet-gap);
   justify-content: flex-end;
 }
 
+/* ---- Buttons ---- */
 .islet-btn {
   font: inherit;
   font-size: 12px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: var(--islet-radius-sm);
+  border: 1px solid var(--islet-border);
   cursor: pointer;
   background: var(--islet-control);
   color: var(--islet-fg);
+  transition: background var(--islet-transition), transform var(--islet-transition),
+    border-color var(--islet-transition);
 }
-
 .islet-btn:hover {
   background: var(--islet-control-hover);
 }
-
-.islet-btn.primary {
-  background: var(--islet-accent);
-  color: #06142e;
+.islet-btn:active {
+  transform: scale(0.97);
 }
-
+.islet-btn.primary {
+  background: var(--islet-grad);
+  border-color: transparent;
+  color: #0a0a1f;
+  font-weight: 600;
+}
+.islet-btn.primary:hover {
+  filter: brightness(1.06);
+}
 .islet-btn.danger {
   background: transparent;
   border-color: var(--islet-danger);
   color: var(--islet-danger);
 }
-
-/* A pulsing dot to indicate a pending permission request on the notch. */
-.islet-alert-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--islet-warn);
-  animation: islet-pulse 1.4s ease-in-out infinite;
+.islet-btn.danger:hover {
+  background: color-mix(in srgb, var(--islet-danger) 14%, transparent);
 }
 
-@keyframes islet-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-/* Honor the OS "reduce motion" setting (ties into battery-saver rule later). */
-@media (prefers-reduced-motion: reduce) {
-  .islet-pill {
-    transition: none;
-  }
-  .islet-alert-dot {
-    animation: none;
-  }
-}
-
-/* ---- Spec 1 shell: tabs, panel body, settings, toggles ---- */
-
-/* Scrollable content region. Fills remaining height and scrolls when the
-   content is taller than the cap. Padding lives here (not on the panel) so the
-   scrollbar sits inside the rounded clip. */
+/* ---- Scrollable body + tab bar ---- */
 .islet-panel-body {
   flex: 1 1 auto;
-  min-height: 120px;
+  min-height: 130px;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  padding: 10px calc(var(--islet-pad) + 2px) calc(var(--islet-pad) + 2px);
-  /* Thin, theme-aware scrollbar. */
+  padding: 14px var(--islet-pad) var(--islet-pad);
   scrollbar-width: thin;
   scrollbar-color: var(--islet-border) transparent;
 }
-
 .islet-panel-body::-webkit-scrollbar {
   width: 8px;
 }
@@ -201,153 +216,155 @@ body {
   background: transparent;
 }
 
-/* Tab bar is a FIXED header inside the panel; it does not scroll. */
 .islet-tabbar {
   flex: 0 0 auto;
   display: flex;
-  gap: 4px;
+  gap: 2px;
   border-bottom: 1px solid var(--islet-divider);
-  padding: var(--islet-pad) calc(var(--islet-pad) + 2px) 8px;
+  padding: 12px 12px 0;
   flex-wrap: wrap;
 }
-
 .islet-tab {
   font: inherit;
   font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+  font-weight: 500;
+  padding: 7px 11px 9px;
+  border: none;
   background: transparent;
   color: var(--islet-fg-dim);
   cursor: pointer;
+  position: relative;
+  border-radius: 8px 8px 0 0;
+  transition: color var(--islet-transition);
 }
-
 .islet-tab:hover {
   color: var(--islet-fg);
 }
-
 .islet-tab.active {
-  background: var(--islet-control);
   color: var(--islet-fg);
 }
-
+/* Gradient underline under the active tab. */
+.islet-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--islet-grad);
+}
 .islet-tab:focus-visible {
   outline: 2px solid var(--islet-accent);
-  outline-offset: 1px;
+  outline-offset: -2px;
 }
 
-/* Empty / loading / error placeholder shared by panels. */
+/* ---- Empty / loading ---- */
 .islet-empty {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--islet-fg-dim);
   font-size: 12px;
-  min-height: 120px;
+  min-height: 130px;
+  text-align: center;
 }
-
 .islet-empty-icon {
-  font-size: 18px;
+  font-size: 22px;
   opacity: 0.5;
 }
 
-/* Hotkey-conflict notice. */
+/* ---- Notice ---- */
 .islet-notice {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: var(--islet-bg-panel);
+  background: var(--islet-bg-elev);
   border: 1px solid var(--islet-warn);
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: var(--islet-radius-sm);
+  padding: 10px 12px;
   font-size: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: var(--islet-fg);
 }
 
-/* Last settings row sits directly above the tabs editor; drop its divider to
-   avoid a doubled line. */
-.islet-field:last-of-type {
-  border-bottom: none;
-}
-
-/* Settings. */
+/* ---- Settings ---- */
 .islet-settings {
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
-
 .islet-settings h1 {
-  font-size: 14px;
-  margin: 2px 0 10px;
+  font-size: 15px;
+  margin: 0 0 8px;
 }
-
 .islet-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;
-  padding: 7px 0;
+  font-size: 13px;
+  padding: 9px 0;
   border-bottom: 1px solid var(--islet-divider);
 }
-
+.islet-field:last-of-type {
+  border-bottom: none;
+}
 .islet-field select {
   font: inherit;
   font-size: 12px;
   background: var(--islet-control);
   color: var(--islet-fg);
   border: 1px solid var(--islet-border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: 8px;
+  padding: 6px 10px;
   max-width: 180px;
   cursor: pointer;
 }
 
+/* Pill toggle switch. */
 .islet-toggle {
   font: inherit;
-  font-size: 12px;
-  padding: 3px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 4px 14px;
   border-radius: 999px;
-  border: 1px solid var(--islet-fg-dim);
-  background: transparent;
+  border: 1px solid var(--islet-border);
+  background: var(--islet-control);
   color: var(--islet-fg-dim);
   cursor: pointer;
+  transition: all var(--islet-transition);
 }
-
 .islet-toggle.on {
-  background: var(--islet-ok);
-  border-color: var(--islet-ok);
-  color: #05230f;
+  background: var(--islet-grad);
+  border-color: transparent;
+  color: #0a0a1f;
 }
-
 .islet-toggle.small {
-  padding: 2px 8px;
+  padding: 3px 10px;
 }
-
 .islet-kbd {
   font-size: 11px;
+  font-weight: 600;
   background: var(--islet-control);
   border: 1px solid var(--islet-border);
   color: var(--islet-fg);
-  padding: 3px 7px;
-  border-radius: 5px;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 .islet-tabs-editor {
-  font-size: 12px;
-  margin-top: 10px;
-  padding-top: 2px;
+  font-size: 13px;
+  margin-top: 12px;
 }
-
 .islet-tabs-editor > span {
   color: var(--islet-fg-dim);
+  font-size: 12px;
 }
-
 .islet-tabs-editor ul {
   list-style: none;
   margin: 8px 0 0;
@@ -356,58 +373,105 @@ body {
   flex-direction: column;
   gap: 6px;
 }
-
 .islet-tabs-editor li {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  background: var(--islet-control);
+  padding: 6px 8px 6px 12px;
+  border-radius: 10px;
 }
-
 .islet-reorder button {
   font: inherit;
+  font-size: 14px;
   background: transparent;
   border: none;
   color: var(--islet-fg-dim);
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
-
 .islet-reorder button:hover {
   color: var(--islet-fg);
+  background: var(--islet-control-hover);
 }
 
-/* ---- Focus panel (Spec 3) ---- */
-
+/* ---- Focus ---- */
 .islet-focus {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
+  gap: 16px;
+  padding: 6px 0 2px;
 }
-
 .islet-focus-phase {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--islet-fg-dim);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.1em;
+  font-weight: 600;
 }
-
+.islet-focus-ring {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.islet-focus-ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.islet-focus-ring .track {
+  fill: none;
+  stroke: var(--islet-divider);
+  stroke-width: 6;
+}
+.islet-focus-ring .progress {
+  fill: none;
+  stroke: url(#islet-grad);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
 .islet-focus-clock {
-  font-size: 44px;
+  font-size: 38px;
   font-variant-numeric: tabular-nums;
   font-weight: 300;
   color: var(--islet-fg);
   line-height: 1;
 }
-
-.islet-focus-presets,
+.islet-focus-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.islet-focus-custom {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+}
+.islet-focus-custom input {
+  width: 52px;
+  font: inherit;
+  font-size: 13px;
+  text-align: center;
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  border: 1px solid var(--islet-border);
+  border-radius: 8px;
+  padding: 5px 4px;
+}
 .islet-focus-controls {
   display: flex;
   gap: 8px;
 }
-
 .islet-focus-meta {
   display: flex;
   gap: 16px;
@@ -415,18 +479,15 @@ body {
   color: var(--islet-fg-dim);
 }
 
-/* ---- Tasks & Notes lists (Spec 4) ---- */
-
+/* ---- Lists (tasks / notes) ---- */
 .islet-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
-
 .islet-add-row {
   display: flex;
 }
-
 .islet-input {
   font: inherit;
   font-size: 13px;
@@ -435,21 +496,22 @@ body {
   background: var(--islet-control);
   color: var(--islet-fg);
   border: 1px solid var(--islet-border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 9px 12px;
   resize: none;
+  transition: border-color var(--islet-transition);
 }
-
+.islet-input::placeholder {
+  color: var(--islet-fg-dim);
+}
 .islet-input:focus-visible {
-  outline: 2px solid var(--islet-accent);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--islet-accent);
 }
-
 .islet-textarea {
-  line-height: 1.4;
+  line-height: 1.45;
   font-family: var(--islet-font);
 }
-
 .islet-items {
   list-style: none;
   margin: 0;
@@ -458,32 +520,66 @@ body {
   flex-direction: column;
   gap: 6px;
 }
-
 .islet-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   font-size: 13px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
   background: var(--islet-control);
+  transition: background var(--islet-transition);
+}
+.islet-item:hover {
+  background: var(--islet-control-hover);
 }
 
-.islet-item.done .islet-check span {
-  text-decoration: line-through;
-  color: var(--islet-fg-dim);
-}
-
+/* Custom checkbox. */
 .islet-check {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   flex: 1;
   min-width: 0;
 }
-
+.islet-check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.islet-checkbox {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid var(--islet-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--islet-transition);
+}
+.islet-check input:checked + .islet-checkbox {
+  background: var(--islet-grad);
+  border-color: transparent;
+}
+.islet-check input:checked + .islet-checkbox::after {
+  content: "✓";
+  font-size: 12px;
+  font-weight: 700;
+  color: #0a0a1f;
+  line-height: 1;
+}
+.islet-check input:focus-visible + .islet-checkbox {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 2px;
+}
+.islet-item.done .islet-check span {
+  text-decoration: line-through;
+  color: var(--islet-fg-dim);
+}
 .islet-check span {
   overflow-wrap: anywhere;
 }
@@ -493,41 +589,49 @@ body {
   align-items: flex-start;
   gap: 6px;
 }
-
 .islet-icon-btn {
   font: inherit;
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
   background: transparent;
   border: none;
   color: var(--islet-fg-dim);
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
   flex: 0 0 auto;
+  transition: all var(--islet-transition);
 }
-
 .islet-icon-btn:hover {
   color: var(--islet-danger);
-  background: var(--islet-control-hover);
+  background: color-mix(in srgb, var(--islet-danger) 14%, transparent);
 }
 
-/* ---- Media panel (Spec 5) ---- */
-
+/* ---- Media ---- */
 .islet-media {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   align-items: center;
-  padding: 8px 0;
+  padding: 8px 0 4px;
 }
-
+.islet-media-art {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: var(--islet-grad);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: #0a0a1f;
+  box-shadow: var(--islet-shadow-sm);
+}
 .islet-media-meta {
   text-align: center;
   width: 100%;
   min-width: 0;
 }
-
 .islet-media-title {
   font-size: 15px;
   font-weight: 600;
@@ -536,42 +640,63 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .islet-media-artist {
   font-size: 12px;
   color: var(--islet-fg-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 2px;
+  margin-top: 3px;
 }
-
 .islet-media-controls {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-
 .islet-media-btn {
-  font-size: 18px;
+  font-size: 16px;
   background: var(--islet-control);
   color: var(--islet-fg);
   border: 1px solid var(--islet-border);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all var(--islet-transition);
 }
-
 .islet-media-btn:hover {
   background: var(--islet-control-hover);
+  transform: translateY(-1px);
+}
+.islet-media-btn.big {
+  width: 56px;
+  height: 56px;
+  font-size: 22px;
+  background: var(--islet-grad);
+  border-color: transparent;
+  color: #0a0a1f;
+}
+.islet-media-open {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
 }
 
-.islet-media-btn.big {
-  width: 52px;
-  height: 52px;
-  font-size: 22px;
+/* ---- Reduced motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .islet-pill,
+  .islet-panel,
+  .islet-perm,
+  .islet-btn,
+  .islet-focus-ring .progress {
+    transition: none;
+    animation: none;
+  }
+  .islet-alert-dot {
+    animation: none;
+  }
 }

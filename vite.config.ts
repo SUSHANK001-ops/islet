@@ -11,6 +11,12 @@ export default defineConfig({
     strictPort: true,
     // Do NOT open a browser tab; the app runs in the Tauri window, not a browser.
     open: false,
+    watch: {
+      // Never watch the Rust side. cargo writes locked build-script .exe files
+      // into target/, which crashes Vite's file watcher (EBUSY). Tauri has its
+      // own watcher for src-tauri, so Vite must ignore it entirely.
+      ignored: ["**/src-tauri/**"],
+    },
   },
   build: {
     target: "es2022",

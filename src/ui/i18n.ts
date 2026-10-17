@@ -52,6 +52,8 @@ const en: Strings = {
   "focus.preset": "{min} min",
   "focus.round": "Round {n} of {total}",
   "focus.todayCount": "{n} done today",
+  "focus.minutes": "min",
+  "focus.customMinutes": "Custom minutes",
 
   "tasks.add": "Add a task…",
   "tasks.empty": "No tasks yet. Add one above.",
@@ -68,6 +70,8 @@ const en: Strings = {
   "media.playPause": "Play / Pause",
   "media.next": "Next",
   "media.unknownArtist": "Unknown artist",
+  "media.openYtMusic": "Open YouTube Music",
+  "media.openHint": "Play in your browser, control it here.",
 };
 
 const locales: Record<Locale, Strings> = { en };

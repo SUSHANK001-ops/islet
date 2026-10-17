@@ -1,40 +1,54 @@
-/* Design tokens. Plain CSS variables, no framework (AGENTS.md tech stack). */
+/* Design tokens. Plain CSS variables, no framework (AGENTS.md tech stack).
+   Performance rules respected: no backdrop-filter, no large blurs. Shadows are
+   kept modest. */
 :root {
-  --islet-bg: #0a0a0a;
-  --islet-bg-panel: #141414;
-  --islet-fg: #f2f2f2;
-  --islet-fg-dim: #9a9a9a;
-  --islet-accent: #6ea8fe;
+  /* Surfaces */
+  --islet-bg: #0b0b0f;
+  --islet-bg-panel: #16161c;
+  --islet-bg-elev: #1e1e26;
+  --islet-fg: #f4f4f6;
+  --islet-fg-dim: #9a9ab6;
+
+  /* Accents */
+  --islet-accent: #7c9cff;
+  --islet-accent-2: #a78bfa;
   --islet-ok: #4ade80;
   --islet-warn: #fbbf24;
   --islet-danger: #f87171;
 
-  /* Interactive surfaces (controls, hover, borders). Theme-aware so light mode
-     does not fall back to hardcoded dark colors. */
-  --islet-control: #2a2a2a;
-  --islet-control-hover: #363636;
-  --islet-border: rgba(255, 255, 255, 0.12);
-  --islet-divider: rgba(255, 255, 255, 0.08);
+  /* Interactive surfaces (theme-aware) */
+  --islet-control: #262630;
+  --islet-control-hover: #32323e;
+  --islet-border: rgba(255, 255, 255, 0.10);
+  --islet-divider: rgba(255, 255, 255, 0.07);
 
-  --islet-radius: 14px;
+  /* A subtle brand gradient used sparingly (pill accent, active states). */
+  --islet-grad: linear-gradient(135deg, #7c9cff 0%, #a78bfa 100%);
+
+  --islet-radius: 16px;
+  --islet-radius-sm: 10px;
   --islet-radius-pill: 999px;
   --islet-gap: 8px;
-  --islet-pad: 14px;
+  --islet-pad: 16px;
   --islet-font: system-ui, "Segoe UI", sans-serif;
-  --islet-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --islet-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --islet-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --islet-transition: 140ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Light theme is opt-in via a class on <html>; dark is the default. */
 :root.theme-light {
-  --islet-bg: #e9e9ec;
+  --islet-bg: #e8e8ee;
   --islet-bg-panel: #ffffff;
-  --islet-fg: #141414;
-  --islet-fg-dim: #5a5a5a;
+  --islet-bg-elev: #f4f4f8;
+  --islet-fg: #16161c;
+  --islet-fg-dim: #63636f;
 
-  --islet-control: #eceef1;
-  --islet-control-hover: #e0e3e8;
-  --islet-border: rgba(0, 0, 0, 0.14);
-  --islet-divider: rgba(0, 0, 0, 0.08);
+  --islet-control: #eef0f4;
+  --islet-control-hover: #e3e6ec;
+  --islet-border: rgba(0, 0, 0, 0.12);
+  --islet-divider: rgba(0, 0, 0, 0.07);
 
-  --islet-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --islet-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --islet-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.10);
 }

@@ -221,3 +221,44 @@ and write why). A control action also triggers an immediate refresh.
 - Prev / play-pause / next control the real app.
 - Close all media; Media shows "Nothing playing".
 - Artwork is intentionally NOT shown in v1 (thumbnail stream reading deferred).
+
+## v2 notes (living notch, place-anywhere, launcher, extras)
+
+New behaviors to verify on real hardware as each v2 spec lands. Status starts
+UNVERIFIED; fill in after testing.
+
+### Spec 6 - living notch character
+
+- Notch animates at a low rate (≤ 6 fps) while closed and stays within the
+  closed-CPU budget (notch ON < 0.8%). Measure with `scripts/perf-check`.
+- Notch animation STOPS (not slows) on: screen lock, sleep, a foreground
+  fullscreen app, and battery saver. Each must be event-driven.
+- Opening the panel promotes the SAME decoded bitmap to full animation (no
+  reload); closing demotes to the notch loop. Switching characters frees the old
+  bitmap (memory does not grow across 20 switches).
+
+### Spec 8 - place anywhere
+
+- Dragging the notch to any point persists the position and restores it on
+  relaunch, DPI-correct, clamped on-screen. Verify across two monitors and at a
+  different DPI scale. Record any multi-monitor coordinate quirks here.
+- Snap presets (top-left/center/right) and "reset position" still work.
+
+### Spec 9 - safe app launcher
+
+- Adding an app goes through the OS file picker (that is the consent). Rust
+  validates the path on add and again on launch. Confirm `.bat`/script and
+  UNC/remote paths are rejected with a friendly message.
+
+### Spec 10 - Windows extras
+
+- Taskbar progress: Tauri has NO built-in API (feature requests #4386/#4208).
+  Use Win32 `ITaskbarList3::SetProgressValue` / `SetProgressState` via the
+  `windows` crate. Note: the island has `skipTaskbar: true`, so taskbar progress
+  likely needs a taskbar-visible window or a different surface - record what
+  actually works here before building.
+- Hide from capture: `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE =
+  0x11)`. Only works under DWM composition; it is a per-window toggle. Verify the
+  notch disappears from Snipping Tool / screen share and that the toggle
+  reverses cleanly (`WDA_NONE = 0x0`). Record whether transparency interacts
+  badly with the affinity flag (some reports of black instead of excluded).

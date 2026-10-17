@@ -1,6 +1,17 @@
-# Character packs - format and workflow
+# Character packs - format and workflow (v2)
 
 A character is a folder of images and one JSON file. It is DATA ONLY. It never contains code. The app owns all logic (moods, growth). The pack only describes how things look.
+
+> v2 note: the character now renders in TWO places from the SAME decoded sprite
+> sheet - inside the closed notch (a low-rate "idle" animation) and in the open
+> panel (full animation). A pack does not need to know about this; it just
+> provides states and the app picks the rate. See "Notch rendering" below.
+>
+> The built-in default is a **SpongeBob-style cartoon** pack (`id: sponge-pal`).
+> The agent wires up the manifest and engine; the actual `sheet.png` art is
+> supplied by the user and dropped into the pack folder. Per the hard rules the
+> agent never invents, redraws, or ships copyrighted art - "SpongeBob-style"
+> describes the vibe of the user-provided original art, not a copy of the show.
 
 ## Folder layout
 
@@ -109,11 +120,25 @@ Three numbers from 0 to 1: `energy`, `chatty`, `lazy`. The app uses them only to
 
 ## How the app draws a character (rules for the renderer)
 
-- Decode each sheet once into an `ImageBitmap`. Keep only the active character loaded.
+- Decode each sheet once into an `ImageBitmap`. Keep only the active character loaded. The notch and the panel SHARE this one bitmap - never decode twice.
 - Use integer scaling. For `pixelArt: true`, turn image smoothing off.
-- Redraw only when the frame changes. Stop drawing when the panel is closed.
-- Idle animation is capped at 8 fps even if the pack asks for more. Active states respect the pack's fps up to 24.
+- Redraw only when the frame changes.
+- Active states respect the pack's fps up to 24. Panel idle is capped at 8 fps even if the pack asks for more.
 - Outfit layers use the same frame grid as the main sheet and are drawn over it in order.
+- Free the bitmap and stop every `requestAnimationFrame` loop on the hard-stop conditions (lock, sleep, fullscreen app, battery saver) and when switching characters.
+
+### Notch rendering (v2)
+
+- When the panel is CLOSED the character still draws inside the pill, but only
+  the `idle` state (or the current mood's idle-like state) and at most 6 fps.
+  This is the "living notch". It must stay inside the closed-CPU budget in
+  `AGENTS.md`.
+- The notch animation stops instantly (not just slows) on any hard-stop
+  condition and when the user turns the notch character off.
+- Opening the panel promotes the SAME character/bitmap to full animation; it
+  does not reload. Closing demotes back to the low-rate notch loop.
+- The notch draws the character small and centered in the pill; the panel draws
+  it larger. Both use integer scale factors derived from the pack's `scale`.
 
 ## Sharing
 
@@ -164,8 +189,25 @@ When the user gives you a character brief or files, do exactly this:
 5. Check the limits table. If an image is over a limit, report it. Do not silently shrink art.
 6. Render a preview of every state at the final scale (`npm run character-preview -- <id>`) and look at the images.
 7. Add the id to the built-in list only if it ships with the app. User packs are not added to code.
-8. Run `scripts/perf-check` with the character active. It must stay within the budgets in `AGENTS.md`.
+8. Run `scripts/perf-check` with the character active, measuring BOTH notch-closed and panel-open. It must stay within the budgets in `AGENTS.md`.
 9. Report: what was added, the pack size, any warnings, and the perf result.
+
+## The built-in default: `sponge-pal` (v2)
+
+The app ships one built-in character, a cheerful SpongeBob-style cartoon, as the
+default. Treat it like any other pack:
+
+- The agent creates `packs/characters/sponge-pal/` with a `manifest.json`, a
+  `LICENSE.txt`, and a placeholder note where `sheet.png` goes. The agent builds
+  the engine, validator, renderer and manifest wiring so everything works the
+  moment the art is present.
+- The user drops in the real `sheet.png` (and optional `stages/`, `outfits/`,
+  `preview.png`). The agent then runs `validate-character` and `character-preview`.
+- Until the art is present the loader reports the pack as "incomplete" with a
+  clear message (missing `sheet.png`) and the app falls back to no-character
+  gracefully - it never crashes or shows a broken image.
+- Art must be original and appropriately licensed. "SpongeBob-style" is a visual
+  vibe for the user's own art, not a reproduction of the show's assets.
 
 ## Tests every character pack must pass
 

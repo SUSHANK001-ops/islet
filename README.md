@@ -1,12 +1,16 @@
 # Islet
 
-A focus and study companion that lives in a small pill at the top-center of
-your screen. Windows 10 (2004+) and 11. See `AGENTS.md` for the full spec and
-hard rules, and `CHARACTERS.md` for the character pack format.
+A focus and study companion with a living character that sits in a small pill
+(the "notch") on your screen. Windows 10 (2004+) and 11. See `AGENTS.md` for the
+full spec and hard rules, and `CHARACTERS.md` for the character pack format.
 
-> Status: **Spec 0 — the spike (gate).** This proves the hard window behavior
-> on real Windows hardware before any feature is built. Nothing is "done" until
-> it passes its checks and `scripts/perf-check`.
+> Status: **v2 in progress.** v1 shipped the shell, storage, focus timer, tasks,
+> notes and media (build order specs 0-5). v2 adds the living notch character, a
+> notch you can place anywhere, horizontal stretch, a safe user-curated app
+> launcher, Windows extras, progress/sharing, and a hand-built animated UI. See
+> the "Build order" and "v2 scope" sections in `AGENTS.md`. Nothing is "done"
+> until it passes its checks and `scripts/perf-check` (closed notch-on, closed
+> notch-off, and open).
 
 ## Prerequisites
 
@@ -42,23 +46,22 @@ Install frontend deps:
 npm.cmd install
 ```
 
-## Run the spike
+## Run
 
 ```powershell
 npm.cmd run tauri dev
 ```
 
-A black pill should appear at the top-center of your primary monitor. Hover it
-to open the spike panel (monitor count, DPI scale, fullscreen state). A sample
-"Allow notifications?" prompt appears on the notch to exercise the on-notch
-permission surface.
+A black pill (the notch) appears at the top of your primary monitor. Hover or
+click it to open the panel of tabs (focus, tasks, notes, media, settings). In
+v2 the active character also renders inside the notch itself.
 
-## Verify (Spec 0 checklist — must be done on real hardware)
+## Verify (must be done on real hardware)
 
-Work through the table in `docs/windows-notes.md`: transparency, always-on-top,
-click-through when closed, no focus steal, hover-to-open, fullscreen hide, two
-monitors, mixed DPI. Note the known **click-through vs hover** open question
-there.
+Work through the checklists in `docs/windows-notes.md` (window behavior per
+spec: transparency, always-on-top, no focus steal, fullscreen hide, placement,
+multi-monitor, mixed DPI, and the v2 additions - notch animation, drag-anywhere,
+launcher, capture exclusion, taskbar progress).
 
 Then measure performance:
 
@@ -67,8 +70,9 @@ Then measure performance:
 powershell -ExecutionPolicy Bypass -File scripts/perf-check.ps1 -Minutes 5
 ```
 
-Record results in `docs/perf-results.md`. The spike is the gate: if a plan
-fails here, stop and change the plan (AGENTS.md build order, step 0).
+Record results in `docs/perf-results.md`. Perf is a gate after every spec:
+measure closed with the notch character ON, closed with it OFF, and open. If a
+plan breaks a budget, stop and change the plan (AGENTS.md build order).
 
 ## Tests
 
@@ -79,5 +83,8 @@ cargo test --manifest-path src-tauri/Cargo.toml   # Rust
 
 ## Layout
 
-See the "Architecture" section in `AGENTS.md`. The spike currently implements
-`src-tauri/src/{window,platform,commands}` and `src/app/*` only.
+See the "Architecture" section in `AGENTS.md`. v1 implemented the shell,
+storage/settings/modules, focus, tasks, notes and media
+(`src-tauri/src/{window,platform,scheduler,store,modules,characters}` and
+`src/{app,modules,ui}`). v2 adds `src/characters/` (renderer), the notch UX,
+`src-tauri/src/launcher/`, and the Windows extras under `platform/`.

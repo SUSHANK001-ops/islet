@@ -72,7 +72,9 @@ pub fn run() {
             commands::notes_list,
             commands::notes_add,
             commands::notes_update,
-            commands::notes_delete
+            commands::notes_delete,
+            commands::media_now_playing,
+            commands::media_control
         ])
         .setup(|app| {
             let handle = app.handle();

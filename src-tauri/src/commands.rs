@@ -13,6 +13,7 @@ use crate::store::activity::{self, ActivityDay};
 use crate::store::notes::{self, NoteList};
 use crate::store::settings::{self, Settings};
 use crate::store::tasks::{self, TaskList};
+use crate::platform::media::{MediaAction, NowPlaying};
 use crate::{platform, window};
 
 /// Snapshot the spike cares about: monitor/DPI/fullscreen state.
@@ -243,4 +244,19 @@ pub fn notes_update(app: AppHandle, id: String, text: String) -> Result<NoteList
 #[tauri::command]
 pub fn notes_delete(app: AppHandle, id: String) -> Result<NoteList, String> {
     notes::delete(&app, &id).map_err(|e| e.to_string())
+}
+
+// ---- Spec 5: media (SMTC) ----
+
+/// Current now-playing info, or null when nothing is playing.
+#[tauri::command]
+pub fn media_now_playing() -> Option<NowPlaying> {
+    platform::media::now_playing()
+}
+
+/// Send a transport action (play/pause, next, previous). Returns whether it
+/// was accepted by the owning media app.
+#[tauri::command]
+pub fn media_control(action: MediaAction) -> bool {
+    platform::media::control(action)
 }

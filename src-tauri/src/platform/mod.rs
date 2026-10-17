@@ -8,6 +8,7 @@
 //! one-shot check can later be called from a low-rate, display-change-driven
 //! timer. The reason it is not a tight poll is recorded in docs/windows-notes.md.
 
+pub mod media;
 pub mod session;
 
 #[cfg(windows)]

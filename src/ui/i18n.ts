@@ -62,6 +62,12 @@ const en: Strings = {
   "notes.empty": "No notes yet.",
   "notes.delete": "Delete note",
   "notes.save": "Save",
+
+  "media.nothing": "Nothing playing",
+  "media.previous": "Previous",
+  "media.playPause": "Play / Pause",
+  "media.next": "Next",
+  "media.unknownArtist": "Unknown artist",
 };
 
 const locales: Record<Locale, Strings> = { en };

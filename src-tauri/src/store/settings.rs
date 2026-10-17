@@ -29,6 +29,20 @@ pub struct Settings {
     /// Active character pack id; None = use the built-in default.
     #[serde(default)]
     pub active_character: Option<String>,
+    /// Where the notch sits along the top edge: "left" | "center" | "right".
+    #[serde(default = "default_notch_position")]
+    pub notch_position: String,
+    /// Notch opacity, 0.2..=1.0 (transparency setting).
+    #[serde(default = "default_notch_opacity")]
+    pub notch_opacity: f32,
+}
+
+fn default_notch_position() -> String {
+    "center".into()
+}
+
+fn default_notch_opacity() -> f32 {
+    1.0
 }
 
 impl Default for Settings {
@@ -46,6 +60,8 @@ impl Default for Settings {
                 })
                 .collect(),
             active_character: None,
+            notch_position: default_notch_position(),
+            notch_opacity: default_notch_opacity(),
         }
     }
 }

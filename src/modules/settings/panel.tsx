@@ -6,8 +6,13 @@ import {
   moveTab,
   toggleTab,
 } from "../../app/settings-store";
-import { listMonitors, setMonitor } from "../../app/window-bridge";
+import {
+  listMonitors,
+  setMonitor,
+  setNotchPosition,
+} from "../../app/window-bridge";
 import { getAutostart, setAutostart } from "../../app/autostart-bridge";
+import type { NotchPosition } from "../../app/settings-store";
 
 // Settings tab. Covers Spec 1: theme, monitor choice, launch-at-startup,
 // tabs on/off + reorder, and the (fixed for now) toggle shortcut.
@@ -45,6 +50,17 @@ export default function SettingsPanel() {
     updateSettings({ launchAtStartup: actual });
   }
 
+  function onNotchPositionChange(pos: NotchPosition) {
+    updateSettings({ notchPosition: pos });
+    void setNotchPosition(pos);
+  }
+
+  function onNotchOpacityChange(value: number) {
+    // Clamp to a sensible visible range so the notch never fully disappears.
+    const clamped = Math.min(1, Math.max(0.2, value));
+    updateSettings({ notchOpacity: clamped });
+  }
+
   return (
     <div class="islet-settings">
       <h1>{t("settings.title")}</h1>
@@ -75,6 +91,34 @@ export default function SettingsPanel() {
             </option>
           ))}
         </select>
+      </label>
+
+      <label class="islet-field">
+        <span>{t("settings.notchPosition")}</span>
+        <select
+          value={s.notchPosition}
+          onChange={(e) =>
+            onNotchPositionChange(e.currentTarget.value as NotchPosition)
+          }
+        >
+          <option value="left">{t("settings.notchPosition.left")}</option>
+          <option value="center">{t("settings.notchPosition.center")}</option>
+          <option value="right">{t("settings.notchPosition.right")}</option>
+        </select>
+      </label>
+
+      <label class="islet-field">
+        <span>{t("settings.notchOpacity")}</span>
+        <input
+          type="range"
+          min={20}
+          max={100}
+          step={5}
+          value={Math.round(s.notchOpacity * 100)}
+          onInput={(e) =>
+            onNotchOpacityChange(Number(e.currentTarget.value) / 100)
+          }
+        />
       </label>
 
       <label class="islet-field">

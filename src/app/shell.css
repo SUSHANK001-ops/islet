@@ -32,10 +32,11 @@ body {
 /* Stays dark in both themes (mimics a hardware notch). A thin gradient accent
    line sits under it so it reads as "Islet", not just a black bar. */
 .islet-pill {
-  margin-top: 10px;
-  height: 11px;
-  width: 128px;
-  background: #0a0a0d;
+  margin-top: 8px;
+  height: 18px;
+  width: 132px;
+  /* Opacity is user-adjustable (transparency setting); default fully opaque. */
+  background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
   border-radius: var(--islet-radius-pill);
   box-shadow: var(--islet-shadow-sm);
   transition: width var(--islet-transition), height var(--islet-transition),
@@ -60,7 +61,7 @@ body {
 }
 
 .islet-pill:hover {
-  width: 150px;
+  width: 154px;
   box-shadow: var(--islet-shadow);
 }
 .islet-pill:hover::after {
@@ -68,8 +69,8 @@ body {
 }
 
 .islet-pill.open {
-  width: 168px;
-  height: 14px;
+  width: 172px;
+  height: 20px;
 }
 
 .islet-pill.has-alert {
@@ -699,4 +700,35 @@ body {
   .islet-alert-dot {
     animation: none;
   }
+}
+
+/* ---- Range slider (notch transparency) ---- */
+.islet-field input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--islet-control);
+  outline: none;
+  cursor: pointer;
+}
+.islet-field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--islet-grad);
+  border: 2px solid var(--islet-bg-panel);
+  box-shadow: var(--islet-shadow-sm);
+}
+.islet-field input[type="range"]:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 4px;
+}
+
+/* ---- Number input (custom focus minutes) ---- */
+.islet-focus-custom input[type="number"]::-webkit-inner-spin-button {
+  opacity: 0.4;
 }

@@ -21,6 +21,8 @@ describe("settings-store", () => {
         { id: "notes", enabled: true },
         { id: "media", enabled: true },
       ],
+      notchPosition: "center",
+      notchOpacity: 1,
     };
   });
 

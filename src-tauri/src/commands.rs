@@ -84,6 +84,14 @@ pub fn set_monitor(window: WebviewWindow, name: Option<String>) -> Result<(), St
     window::set_monitor_choice(&window, choice).map_err(|e| format!("set_monitor failed: {e}"))
 }
 
+/// Set the notch horizontal position ("left" | "center" | "right") and re-place
+/// the pill immediately.
+#[tauri::command]
+pub fn set_notch_position(window: WebviewWindow, position: String) -> Result<(), String> {
+    let pos = window::NotchPosition::parse(&position);
+    window::set_notch_position(&window, pos).map_err(|e| format!("set_notch_position failed: {e}"))
+}
+
 // ---- Spec 2: storage, settings, modules ----
 
 /// Load persisted settings (or defaults on first run / recovery).

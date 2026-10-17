@@ -39,6 +39,13 @@ export function setMonitor(name: string | null): Promise<void> {
   return invoke("set_monitor", { name });
 }
 
+/** Set the notch horizontal position and re-place the pill immediately. */
+export function setNotchPosition(
+  position: "left" | "center" | "right"
+): Promise<void> {
+  return invoke("set_notch_position", { position });
+}
+
 // ---- Spec 2: persisted settings (Rust owns the file) ----
 
 export interface PersistedSettings {
@@ -47,6 +54,8 @@ export interface PersistedSettings {
   monitorName: string | null;
   launchAtStartup: boolean;
   tabs: { id: string; enabled: boolean }[];
+  notchPosition: "left" | "center" | "right";
+  notchOpacity: number;
 }
 
 /** Load settings from disk (defaults on first run). */

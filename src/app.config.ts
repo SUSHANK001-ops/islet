@@ -9,8 +9,8 @@ export const APP_NAME = "Islet" as const;
 // black pill in CSS can be smaller than the closed window (the extra height is
 // transparent and used to catch hover).
 export const PILL = {
-  closedWidth: 160,
-  closedHeight: 24,
+  closedWidth: 180,
+  closedHeight: 36,
   openWidth: 400,
   openHeight: 580,
   // Gap from the very top of the active monitor's work area.

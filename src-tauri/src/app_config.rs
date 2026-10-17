@@ -14,8 +14,8 @@ pub struct PillGeometry {
 }
 
 pub const PILL: PillGeometry = PillGeometry {
-    closed_width: 160.0,
-    closed_height: 24.0,
+    closed_width: 180.0,
+    closed_height: 36.0,
     // The open WINDOW is intentionally larger than the visible panel: the extra
     // area is transparent and gives the panel room to grow and to show fully
     // rounded corners + a drop shadow without being clipped. The panel itself

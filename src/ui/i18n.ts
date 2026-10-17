@@ -33,6 +33,11 @@ const en: Strings = {
   "settings.startup": "Launch at startup",
   "settings.hotkey": "Toggle shortcut",
   "settings.tabs": "Tabs",
+  "settings.notchPosition": "Notch position",
+  "settings.notchPosition.left": "Left",
+  "settings.notchPosition.center": "Center",
+  "settings.notchPosition.right": "Right",
+  "settings.notchOpacity": "Notch transparency",
 
   "hotkey.conflict":
     "The shortcut {combo} is in use by another app. Open the tray icon to toggle Islet instead.",

@@ -19,6 +19,33 @@ pub const ISLAND_LABEL: &str = "island";
 #[derive(Default)]
 pub struct MonitorChoice(pub Mutex<Option<String>>);
 
+/// Where the notch sits along the top edge. User-settable; persisted.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum NotchPosition {
+    Left,
+    Center,
+    Right,
+}
+
+impl NotchPosition {
+    pub fn parse(s: &str) -> Self {
+        match s {
+            "left" => NotchPosition::Left,
+            "right" => NotchPosition::Right,
+            _ => NotchPosition::Center,
+        }
+    }
+}
+
+/// Current notch horizontal position, held in app state.
+pub struct NotchPositionState(pub Mutex<NotchPosition>);
+
+impl Default for NotchPositionState {
+    fn default() -> Self {
+        NotchPositionState(Mutex::new(NotchPosition::Center))
+    }
+}
+
 /// Pick the monitor the pill should live on. Honors the user's choice if that
 /// monitor is still connected; otherwise falls back to primary (then current).
 /// Graceful fallback matters: a chosen monitor can be unplugged at any time.
@@ -82,8 +109,17 @@ fn is_open(window: &WebviewWindow) -> bool {
     }
 }
 
-/// Center the pill horizontally and pin it to the top of the active monitor.
-/// Works in logical units so it is correct regardless of DPI scale.
+/// Read the current notch position from app state (defaults to Center).
+fn notch_position(window: &WebviewWindow) -> NotchPosition {
+    window
+        .try_state::<NotchPositionState>()
+        .and_then(|s| s.0.lock().ok().map(|g| *g))
+        .unwrap_or(NotchPosition::Center)
+}
+
+/// Pin the pill to the top edge of the active monitor at the user's chosen
+/// horizontal position (left / center / right). Logical units, so correct at
+/// any DPI. (Name kept for callers; it now honors the position setting.)
 pub fn position_top_center(window: &WebviewWindow, open: bool) -> tauri::Result<()> {
     let Some(monitor) = active_monitor(window) else {
         // No monitor info: leave the window where it is rather than guessing.
@@ -103,10 +139,27 @@ pub fn position_top_center(window: &WebviewWindow, open: bool) -> tauri::Result<
 
     window.set_size(LogicalSize::new(w, h))?;
 
-    let x = mon_pos.x + (mon_size.width - w) / 2.0;
+    // A small inset from the screen edges for the left/right positions.
+    let edge = 24.0_f64;
+    let x = match notch_position(window) {
+        NotchPosition::Left => mon_pos.x + edge,
+        NotchPosition::Center => mon_pos.x + (mon_size.width - w) / 2.0,
+        NotchPosition::Right => mon_pos.x + mon_size.width - w - edge,
+    };
     let y = mon_pos.y + PILL.top_margin;
     window.set_position(LogicalPosition::new(x, y))?;
     Ok(())
+}
+
+/// Set the notch horizontal position and re-place the pill immediately.
+pub fn set_notch_position(window: &WebviewWindow, pos: NotchPosition) -> tauri::Result<()> {
+    if let Some(state) = window.try_state::<NotchPositionState>() {
+        if let Ok(mut guard) = state.0.lock() {
+            *guard = pos;
+        }
+    }
+    let open = is_open(window);
+    position_top_center(window, open)
 }
 
 /// When closed, the pill must not eat clicks or steal focus; when open, it must

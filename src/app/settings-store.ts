@@ -7,6 +7,7 @@ import { loadSettings, saveSettings, flushSettings } from "./window-bridge";
 // startup; changes are saved (debounced in Rust).
 
 export type ThemeName = "light" | "dark";
+export type NotchPosition = "left" | "center" | "right";
 
 export interface TabConfig {
   // Stable id; also the i18n key suffix (tab.<id>).
@@ -24,6 +25,10 @@ export interface Settings {
   launchAtStartup: boolean;
   // Tab order + on/off. Order is the array order.
   tabs: TabConfig[];
+  // Where the notch sits along the top edge.
+  notchPosition: NotchPosition;
+  // Notch opacity 0.2..1 (transparency setting).
+  notchOpacity: number;
 }
 
 const DEFAULTS: Settings = {
@@ -37,6 +42,8 @@ const DEFAULTS: Settings = {
     { id: "notes", enabled: true },
     { id: "media", enabled: true },
   ],
+  notchPosition: "center",
+  notchOpacity: 1,
 };
 
 export const settings = signal<Settings>(structuredClone(DEFAULTS));
@@ -92,7 +99,13 @@ function toPersisted() {
     monitorName: v.monitorName,
     launchAtStartup: v.launchAtStartup,
     tabs: v.tabs.map((t) => ({ id: t.id, enabled: t.enabled })),
+    notchPosition: v.notchPosition,
+    notchOpacity: v.notchOpacity,
   };
+}
+
+function coerceNotchPosition(p: unknown): NotchPosition {
+  return p === "left" || p === "right" ? p : "center";
 }
 
 export async function initSettings(): Promise<void> {
@@ -116,6 +129,11 @@ export async function initSettings(): Promise<void> {
           ["focus", "tasks", "notes", "media"].includes(t.id)
         )
         .map((t) => ({ id: t.id, enabled: !!t.enabled })),
+      notchPosition: coerceNotchPosition(disk.notchPosition),
+      notchOpacity:
+        typeof disk.notchOpacity === "number"
+          ? Math.min(1, Math.max(0.2, disk.notchOpacity))
+          : 1,
     };
   } catch {
     // Not in Tauri or load failed: keep defaults.
@@ -136,6 +154,8 @@ effect(() => {
     monitorName: snapshot.monitorName,
     launchAtStartup: snapshot.launchAtStartup,
     tabs: snapshot.tabs.map((tb) => ({ id: tb.id, enabled: tb.enabled })),
+    notchPosition: snapshot.notchPosition,
+    notchOpacity: snapshot.notchOpacity,
   }).catch(() => {
     /* non-fatal: keep working from memory */
   });

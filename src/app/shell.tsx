@@ -31,6 +31,15 @@ export function Shell() {
     document.documentElement.classList.toggle("theme-light", theme === "light");
   }, [theme]);
 
+  // Apply the user's notch transparency as a CSS variable the pill reads.
+  const notchOpacity = settings.value.notchOpacity;
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--islet-pill-opacity",
+      String(notchOpacity)
+    );
+  }, [notchOpacity]);
+
   // Backend-driven toggle (tray icon, global hotkey). Payload = new open state.
   useEffect(() => {
     const un = listen<boolean>("islet://toggle-open", (e) => {

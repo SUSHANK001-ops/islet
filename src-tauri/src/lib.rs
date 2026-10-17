@@ -45,6 +45,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         // App state: monitor choice, write debouncer, hub, registry, scheduler.
         .manage(window::MonitorChoice::default())
+        .manage(window::NotchPositionState::default())
         .manage(WriteDebouncer::default())
         .manage(Hub::default())
         .manage(Registry::default())
@@ -54,6 +55,7 @@ pub fn run() {
             commands::get_spike_report,
             commands::list_monitors,
             commands::set_monitor,
+            commands::set_notch_position,
             commands::load_settings,
             commands::save_settings,
             commands::flush_settings,
@@ -85,10 +87,16 @@ pub fn run() {
             // Load settings first; everything else keys off them.
             let settings = store::settings::load(handle);
 
-            // Apply the saved monitor choice before showing the pill.
+            // Apply saved monitor choice + notch position before showing the pill.
             if let Some(win) = window::island(handle) {
                 if settings.monitor_name.is_some() {
                     let _ = window::set_monitor_choice(&win, settings.monitor_name.clone());
+                }
+                // Seed the notch position state from settings.
+                if let Some(state) = win.try_state::<window::NotchPositionState>() {
+                    if let Ok(mut guard) = state.0.lock() {
+                        *guard = window::NotchPosition::parse(&settings.notch_position);
+                    }
                 }
                 if let Err(e) = window::apply_closed_state(&win) {
                     eprintln!("islet: failed to apply closed window state: {e}");

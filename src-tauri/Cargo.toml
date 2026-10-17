@@ -1,6 +1,6 @@
 [package]
 name = "islet"
-version = "0.0.0"
+version = "0.2.0"
 description = "Islet - a focus and study companion in a pill at the top of your screen."
 edition = "2021"
 rust-version = "1.77"

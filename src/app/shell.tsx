@@ -296,7 +296,10 @@ export function Shell() {
                 <span>{t("character.unavailable")}</span>
               </div>
             ) : null}
-            <LazyPanel id={active} />
+            {/* key on the active tab so switching re-triggers the enter motion */}
+            <div class="islet-tab-view" key={active}>
+              <LazyPanel id={active} />
+            </div>
           </div>
         </div>
       ) : null}

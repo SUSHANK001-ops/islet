@@ -4,13 +4,17 @@ A focus and study companion with a living character that sits in a small pill
 (the "notch") on your screen. Windows 10 (2004+) and 11. See `AGENTS.md` for the
 full spec and hard rules, and `CHARACTERS.md` for the character pack format.
 
-> Status: **v2 in progress.** v1 shipped the shell, storage, focus timer, tasks,
-> notes and media (build order specs 0-5). v2 adds the living notch character, a
-> notch you can place anywhere, horizontal stretch, a safe user-curated app
-> launcher, Windows extras, progress/sharing, and a hand-built animated UI. See
-> the "Build order" and "v2 scope" sections in `AGENTS.md`. Nothing is "done"
-> until it passes its checks and `scripts/perf-check` (closed notch-on, closed
-> notch-off, and open).
+> Status: **v2 feature-complete (pending hardware verification).** v1 shipped the
+> shell, storage, focus timer, tasks, notes and media. v2 added the living notch
+> character + engine, moods/growth/personality, place-anywhere drag + on-notch
+> controls + stretch, a safe user-curated app launcher, Windows extras (game
+> mode, taskbar progress, hide-from-capture), progress (streaks + heatmap) and
+> character export/import, plus a hand-built animated UI. All specs build clean
+> with `cargo test` + `vitest` green. STILL REQUIRED before release: run
+> `scripts/perf-check` on real Windows hardware (closed notch-on, closed
+> notch-off, open), verify the Windows-native features (capture hide, taskbar
+> progress, fullscreen game mode) and multi-monitor/DPI behavior, drop in the
+> Sponge Pal `sheet.png`, and code-sign the installer. See `docs/windows-notes.md`.
 
 ## Prerequisites
 

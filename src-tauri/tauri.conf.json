@@ -1,6 +1,6 @@
 {
   "productName": "Islet",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "identifier": "dev.islet.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -37,6 +37,16 @@
     "active": true,
     "targets": ["nsis"],
     "icon": ["icons/icon.ico"],
-    "resources": ["../packs/**/*"]
+    "resources": ["../packs/**/*"],
+    "publisher": "Islet",
+    "copyright": "© Islet",
+    "category": "Productivity",
+    "shortDescription": "A focus and study companion in a pill.",
+    "longDescription": "Islet is a focus and study companion with a living character that sits in a small pill at the top of your screen. Focus timer, tasks, notes, media controls, a safe app launcher, and progress tracking - all local, no account, no telemetry.",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
   }
 }

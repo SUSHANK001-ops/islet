@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "validate-character": "node scripts/validate-character.mjs",
     "character-preview": "node scripts/character-preview.mjs",
-    "size-report": "node scripts/size-report.mjs"
+    "size-report": "node scripts/size-report.mjs",
+    "release": "tauri build && node scripts/size-report.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",

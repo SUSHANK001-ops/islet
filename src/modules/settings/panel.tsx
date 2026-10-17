@@ -13,6 +13,7 @@ import {
   clearNotchFreePosition,
 } from "../../app/window-bridge";
 import { getAutostart, setAutostart } from "../../app/autostart-bridge";
+import { setHiddenFromCapture } from "../../app/window-bridge";
 import type { NotchPosition } from "../../app/settings-store";
 import { CharacterSettings } from "./character-settings";
 
@@ -62,6 +63,17 @@ export default function SettingsPanel() {
   function onResetPosition() {
     updateSettings({ notchFree: null });
     void clearNotchFreePosition();
+  }
+
+  function onCaptureToggle() {
+    const next = !s.hiddenFromCapture;
+    updateSettings({ hiddenFromCapture: next });
+    void setHiddenFromCapture(next).catch(() => {});
+  }
+
+  function onGameModeToggle() {
+    // Takes effect on next launch (the watcher starts at startup). Persist now.
+    updateSettings({ gameMode: !s.gameMode });
   }
 
   function onNotchOpacityChange(value: number) {
@@ -148,6 +160,30 @@ export default function SettingsPanel() {
           onClick={onStartupToggle}
         >
           {s.launchAtStartup ? t("common.on") : t("common.off")}
+        </button>
+      </label>
+
+      <label class="islet-field">
+        <span>{t("settings.hideFromCapture")}</span>
+        <button
+          class={`islet-toggle${s.hiddenFromCapture ? " on" : ""}`}
+          role="switch"
+          aria-checked={s.hiddenFromCapture}
+          onClick={onCaptureToggle}
+        >
+          {s.hiddenFromCapture ? t("common.on") : t("common.off")}
+        </button>
+      </label>
+
+      <label class="islet-field">
+        <span>{t("settings.gameMode")}</span>
+        <button
+          class={`islet-toggle${s.gameMode ? " on" : ""}`}
+          role="switch"
+          aria-checked={s.gameMode}
+          onClick={onGameModeToggle}
+        >
+          {s.gameMode ? t("common.on") : t("common.off")}
         </button>
       </label>
 

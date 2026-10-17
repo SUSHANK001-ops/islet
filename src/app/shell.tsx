@@ -8,6 +8,7 @@ import {
   startNotchDrag,
   getNotchOffset,
   setNotchFreePosition,
+  setTaskbarProgress,
 } from "./window-bridge";
 import { settings, updateSettings } from "./settings-store";
 import { pendingPermissions } from "./permission-store";
@@ -55,6 +56,29 @@ export function Shell() {
     initCharacterGate();
     initCharacterSignals();
     void loadActiveCharacter();
+  }, []);
+
+  // Drive the taskbar progress from the focus timer. The shell is always
+  // mounted (even while closed), so this keeps the taskbar in sync while a
+  // round runs in the background. Idle/complete clears it. See
+  // platform/taskbar.rs for the skipTaskbar visibility caveat.
+  useEffect(() => {
+    const un = listen<{
+      phase: string;
+      runState: string;
+      remainingSecs: number;
+      totalSecs: number;
+    }>("islet://focus-state", (e) => {
+      const s = e.payload;
+      if (s.phase === "idle" || s.totalSecs <= 0) {
+        void setTaskbarProgress("none", 0).catch(() => {});
+        return;
+      }
+      const frac = 1 - s.remainingSecs / s.totalSecs;
+      const state = s.runState === "paused" ? "paused" : "normal";
+      void setTaskbarProgress(state, frac).catch(() => {});
+    });
+    return () => void un.then((f) => f());
   }, []);
 
   // Apply the theme to <html> so the design tokens switch.

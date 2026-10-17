@@ -99,7 +99,9 @@ pub fn run() {
             commands::launcher_add,
             commands::launcher_remove,
             commands::launcher_rename,
-            commands::launcher_launch
+            commands::launcher_launch,
+            commands::set_hidden_from_capture,
+            commands::set_taskbar_progress
         ])
         .setup(|app| {
             let handle = app.handle();
@@ -164,6 +166,21 @@ pub fn run() {
             // Tray icon + menu. Non-fatal if it fails.
             if let Err(e) = tray::build(handle) {
                 eprintln!("islet: failed to build tray: {e}");
+            }
+
+            // Apply the saved hide-from-capture setting to the island window.
+            if settings.hidden_from_capture {
+                if let Some(win) = window::island(handle) {
+                    if let Err(e) = platform::capture::set_excluded_from_capture(&win, true) {
+                        eprintln!("islet: hide-from-capture failed: {e}");
+                    }
+                }
+            }
+
+            // Game mode: watch for a foreground fullscreen app and emit
+            // islet://fullscreen-changed so the panel hides. Only when enabled.
+            if settings.game_mode {
+                platform::start_fullscreen_watch(handle.clone());
             }
 
             // Toggle hotkey. A conflict is reported to the frontend, not fatal.

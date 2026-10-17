@@ -24,6 +24,8 @@ describe("settings-store", () => {
       notchPosition: "center",
       notchOpacity: 1,
       notchFree: null,
+      hiddenFromCapture: false,
+      gameMode: true,
     };
   });
 

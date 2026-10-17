@@ -67,6 +67,21 @@ export function clearNotchFreePosition(): Promise<void> {
   return invoke("clear_notch_free_position");
 }
 
+// ---- Spec 10: Windows extras ----
+
+/** Hide/show the island in screen capture and recordings (Windows only). */
+export function setHiddenFromCapture(hidden: boolean): Promise<void> {
+  return invoke("set_hidden_from_capture", { hidden });
+}
+
+/** Set the focus-timer taskbar progress. fraction 0..1; state none|normal|paused. */
+export function setTaskbarProgress(
+  state: "none" | "normal" | "paused",
+  fraction: number
+): Promise<void> {
+  return invoke("set_taskbar_progress", { state, fraction });
+}
+
 // ---- Spec 2: persisted settings (Rust owns the file) ----
 
 export interface PersistedSettings {
@@ -78,6 +93,8 @@ export interface PersistedSettings {
   notchPosition: "left" | "center" | "right";
   notchOpacity: number;
   notchFree: { x: number; y: number } | null;
+  hiddenFromCapture: boolean;
+  gameMode: boolean;
 }
 
 /** Load settings from disk (defaults on first run). */

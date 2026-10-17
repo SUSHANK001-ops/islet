@@ -283,3 +283,29 @@ loader returns the pack as invalid/unavailable and the UI shows a gentle hint
   notch disappears from Snipping Tool / screen share and that the toggle
   reverses cleanly (`WDA_NONE = 0x0`). Record whether transparency interacts
   badly with the affinity flag (some reports of black instead of excluded).
+
+#### IMPLEMENTED (Spec 10) - needs hardware verification
+
+All three are coded and compile clean; they CANNOT be verified from the build
+machine. Verify each on real Windows:
+
+1. **Game mode / fullscreen watch** (`platform::start_fullscreen_watch`): a
+   background thread samples `is_fullscreen_app_active()` every **2s** and emits
+   `islet://fullscreen-changed` only on change. This is the sanctioned poll for
+   Spec 6's fullscreen hard-stop too (no fullscreen event exists; 2s is the
+   slowest safe rate). Started at launch only when `game_mode` is on. VERIFY: a
+   fullscreen game hides the panel + stops the notch within ~2s, and the island
+   reappears on exit. Toggling game mode off takes effect next launch.
+2. **Hide from capture** (`platform::capture`): `SetWindowDisplayAffinity` with
+   `WDA_EXCLUDEFROMCAPTURE` / `WDA_NONE`, applied on launch from the
+   `hidden_from_capture` setting and via the `set_hidden_from_capture` command.
+   VERIFY: the notch vanishes from Snipping Tool / Teams share and reverses; and
+   that the transparent window is EXCLUDED (not rendered black) with the flag.
+3. **Taskbar progress** (`platform::taskbar`, `ITaskbarList3` via COM): driven
+   from the shell's focus-state listener (works while closed since the shell is
+   always mounted). KNOWN ISSUE confirmed in code: the window is
+   `skipTaskbar: true`, so there is no taskbar button and the progress will not
+   be visible. The COM calls succeed but show nothing. DECISION NEEDED on
+   hardware: either (a) accept no taskbar progress, (b) drop `skipTaskbar` and
+   measure the cost, or (c) use a dedicated hidden taskbar-visible helper window.
+   Record the choice here before marking Spec 10 done.

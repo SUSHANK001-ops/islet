@@ -39,6 +39,8 @@ const en: Strings = {
   "settings.notchPosition.center": "Center",
   "settings.notchPosition.right": "Right",
   "settings.notchOpacity": "Notch transparency",
+  "settings.hideFromCapture": "Hide from screen capture",
+  "settings.gameMode": "Game mode (hide in full-screen)",
 
   "settings.character": "Character",
   "settings.character.inNotch": "Show in notch",

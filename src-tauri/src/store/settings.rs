@@ -39,6 +39,16 @@ pub struct Settings {
     /// means "use the notch_position preset" (Spec 8 place-anywhere).
     #[serde(default)]
     pub notch_free: Option<NotchFree>,
+    /// Hide the island from screen capture / recordings (Spec 10 toggle).
+    #[serde(default)]
+    pub hidden_from_capture: bool,
+    /// Pause + hide when a fullscreen game/app is foreground (Spec 10 game mode).
+    #[serde(default = "default_true")]
+    pub game_mode: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq)]
@@ -74,6 +84,8 @@ impl Default for Settings {
             notch_position: default_notch_position(),
             notch_opacity: default_notch_opacity(),
             notch_free: None,
+            hidden_from_capture: false,
+            game_mode: true,
         }
     }
 }

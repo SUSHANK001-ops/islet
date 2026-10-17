@@ -50,6 +50,9 @@ windows = { version = "0.62", features = [
   "Win32_System_RemoteDesktop",
   "Win32_System_Power",
   "Win32_System_LibraryLoader",
+  # Spec 10: hide-from-capture + taskbar progress (ITaskbarList3 via COM).
+  "Win32_UI_Shell",
+  "Win32_System_Com",
   # SMTC "now playing" + transport controls (Spec 5 media).
   "Media_Control",
   "Foundation",

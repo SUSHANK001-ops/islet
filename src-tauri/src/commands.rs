@@ -317,6 +317,34 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("could not open YouTube Music: {e}"))
 }
 
+// ---- Spec 10: Windows extras ----
+
+/// Hide or show the island in screen capture / recordings. A per-window toggle
+/// (SetWindowDisplayAffinity). No-op off Windows. HARDWARE VERIFICATION PENDING.
+#[tauri::command]
+pub fn set_hidden_from_capture(window: WebviewWindow, hidden: bool) -> Result<(), String> {
+    platform::capture::set_excluded_from_capture(&window, hidden)
+}
+
+/// Set the taskbar progress for the focus timer. `fraction` is 0.0..=1.0.
+/// `state` is "none" | "normal" | "paused". See platform/taskbar.rs for the
+/// skipTaskbar limitation (progress may not be visible until a taskbar-visible
+/// surface exists). HARDWARE VERIFICATION PENDING.
+#[tauri::command]
+pub fn set_taskbar_progress(
+    window: WebviewWindow,
+    state: String,
+    fraction: f64,
+) -> Result<(), String> {
+    use platform::taskbar::Progress;
+    let p = match state.as_str() {
+        "normal" => Progress::Normal(fraction),
+        "paused" => Progress::Paused(fraction),
+        _ => Progress::None,
+    };
+    platform::taskbar::set(&window, p)
+}
+
 // ---- Spec 9: safe app launcher ----
 
 /// List the user's saved apps (id + name + path). The path is informational;

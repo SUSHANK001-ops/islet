@@ -31,6 +31,10 @@ export interface Settings {
   notchOpacity: number;
   // Free-dragged position (logical px from active monitor origin); null = preset.
   notchFree: { x: number; y: number } | null;
+  // Hide the island from screen capture / recordings (Windows only).
+  hiddenFromCapture: boolean;
+  // Pause + hide when a fullscreen game/app is foreground.
+  gameMode: boolean;
 }
 
 const DEFAULTS: Settings = {
@@ -48,6 +52,8 @@ const DEFAULTS: Settings = {
   notchPosition: "center",
   notchOpacity: 1,
   notchFree: null,
+  hiddenFromCapture: false,
+  gameMode: true,
 };
 
 export const settings = signal<Settings>(structuredClone(DEFAULTS));
@@ -106,6 +112,8 @@ function toPersisted() {
     notchPosition: v.notchPosition,
     notchOpacity: v.notchOpacity,
     notchFree: v.notchFree,
+    hiddenFromCapture: v.hiddenFromCapture,
+    gameMode: v.gameMode,
   };
 }
 
@@ -161,6 +169,8 @@ export async function initSettings(): Promise<void> {
         typeof disk.notchFree.y === "number"
           ? { x: disk.notchFree.x, y: disk.notchFree.y }
           : null,
+      hiddenFromCapture: !!disk.hiddenFromCapture,
+      gameMode: disk.gameMode !== false,
     };
   } catch {
     // Not in Tauri or load failed: keep defaults.
@@ -184,6 +194,8 @@ effect(() => {
     notchPosition: snapshot.notchPosition,
     notchOpacity: snapshot.notchOpacity,
     notchFree: snapshot.notchFree,
+    hiddenFromCapture: snapshot.hiddenFromCapture,
+    gameMode: snapshot.gameMode,
   }).catch(() => {
     /* non-fatal: keep working from memory */
   });

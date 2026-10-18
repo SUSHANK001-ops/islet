@@ -43,3 +43,19 @@ Machine (OS version, CPU, monitors, DPI): _TBD_
 > animation ON, notch OFF, panel open). The notch-ON number is the one that pays
 > for the living character; the notch-OFF number proves the cost of that
 > feature so it can be disabled cleanly.
+
+## Spec 11 (System flyouts / status-bar) results
+
+Budgets specific to Spec 11 (on top of the v2 table above). Measure a RELEASE
+build; record here. Status: _TBD_ (hardware).
+
+| Metric | Target | Measured | Pass? |
+|---|---|---|---|
+| CPU closed, status-bar style (5 min avg) | < 0.5% | _TBD_ | _TBD_ |
+| Mem closed, status-bar style | ≤ (Spec 10 closed) + 10 MB | _TBD_ | _TBD_ |
+| Installer growth vs Spec 10 | ≤ 1 MB | _TBD_ | _TBD_ |
+| Flyout open (clock/sound/power/quick/notif) | within open budget | _TBD_ | _TBD_ |
+
+Closed subscriptions expected while status-bar is closed: exactly three
+(volume+mute, battery, minute tick). Confirm no other source is subscribed at
+rest. Date run / machine: _TBD_

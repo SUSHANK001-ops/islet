@@ -10,7 +10,7 @@ describe("month-grid", () => {
   it("marks in-month vs leading/trailing correctly", () => {
     // October 2026: Oct 1 is a Thursday (dow 4). Sunday-start -> 4 lead cells.
     const grid = buildMonthGrid(2026, 9, 0);
-    const lead = grid.filter((c, i) => i < 4);
+    const lead = grid.filter((_c, i) => i < 4);
     expect(lead.every((c) => !c.inMonth)).toBe(true);
     expect(grid[4].inMonth).toBe(true);
     expect(grid[4].day).toBe(1);

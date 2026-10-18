@@ -159,8 +159,10 @@ src-tauri/src/
 src/
   app/           shell, notch, tab bar, routing, placement/drag, motion
   modules/<name>/  one folder per feature panel (lazy loaded)
+  system/        shared system flyouts (clock, sound, power, quick, notifications)
   characters/    renderer (notch + panel), state machine, mood logic
-  ui/            shared components, design tokens, motion primitives
+  ui/            shared components, design tokens, motion primitives, controls/
+  dev/           DEV-only gallery (every panel + state); excluded from release
 packs/characters/<id>/   built-in characters (data only)
 shared/schemas/          JSON Schemas (character, settings, launcher, ...)
 docs/                    windows-notes.md, ideas.md, perf-results.md
@@ -253,6 +255,32 @@ AI of any kind, voice, accounts, servers, sync, study parties, inbox reading,
 calendar login, Anki, typing/keystroke tracking, reading the active app's
 content, keyboard hooks, running arbitrary commands the user did not explicitly
 add through the launcher picker.
+
+Added in Spec 11 (do NOT build): **tray-icon mirroring** (no public Windows API
+to enumerate tray icons; the status-bar launcher chevron reuses the Spec 9
+launcher instead), **reading other apps' notifications** (needs MSIX package
+identity + the userNotificationListener capability; out of scope), and
+**Night light** (no public API).
+
+### System group modules (Spec 11)
+
+The "System" module group provides flyouts that control Windows basics from the
+island. Each is built once as a shared component and reached two ways: from a
+status-bar pill item, and as a tab in the System group of the Notch panel.
+
+- `system/clock` — local clock, month calendar, and local events (versioned
+  JSON, no network). Publishes "next event" to the hub.
+- `system/sound` — default-output volume/mute/device via Core Audio; "Mixer"
+  opens an allow-listed `ms-settings:` link. Permissions: none beyond the
+  settings-link opener. Network: none.
+- `system/power` — battery via `GetSystemPowerStatus` (Spec 3 power-broadcast),
+  power-mode overlay via undocumented powrprof. Network: none.
+- `system/quick` — Wi-Fi/Bluetooth via `Windows.Devices.Radios` (one-time
+  access request surfaced on the notch), plus embedded sound/power cards and
+  settings-link action tiles. Permissions: radio access (user-consented).
+  Network: none. Never requests location.
+- `system/notifications` — Islet's OWN notification history + toast. Network:
+  none. Does NOT read other apps' notifications.
 
 ## Build order (one Kiro spec each)
 

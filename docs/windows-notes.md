@@ -311,3 +311,68 @@ machine. Verify each on real Windows:
    hardware: either (a) accept no taskbar progress, (b) drop `skipTaskbar` and
    measure the cost, or (c) use a dedicated hidden taskbar-visible helper window.
    Record the choice here before marking Spec 10 done.
+
+## Spec 11 (System flyouts) notes
+
+All system-control code compiles + links clean but CANNOT be verified from the
+build machine. Status UNVERIFIED — verify each on real Windows 10 (2004+)/11.
+
+### Sound (`platform/audio.rs`, Core Audio)
+- [ ] Volume slider changes the real system volume; mute toggles.
+- [ ] Device name shows; "Mixer" opens `ms-settings:apps-volume`.
+- [ ] External volume change (keyboard keys) is reflected when the flyout is
+      reopened. NOTE: a live `IAudioEndpointVolumeCallback` is the event-driven
+      ideal; v1 re-reads on open + after each action (Media-class exception,
+      documented). Decide on hardware whether the callback is worth wiring.
+- [ ] No audio device → the Sound flyout shows the unsupported state.
+
+### Battery & power (`platform/power.rs`)
+- [ ] Battery % + charging/on-battery correct; desktop (no battery) hides the
+      battery item and card.
+- [ ] Power-mode segmented control reflects the REAL overlay (read-back) and
+      changes it. **Confirm the Balanced GUID** (we use the zero GUID) and that
+      the overlay differs correctly on AC vs battery. Efficiency
+      `961cc777-…` / Performance `ded574b5-…` are the known GUIDs.
+- [ ] If overlay get/set fails, the control becomes "Open Windows settings".
+- NOTE: the two powrprof functions are undocumented and bound via
+  `#[link(kind="raw-dylib")]` (no import lib). If a future toolchain breaks the
+  link, this is the place to look.
+
+### Wi-Fi / Bluetooth (`platform/radios.rs`, WinRT Radios)
+- [ ] Wi-Fi / Bluetooth tiles show real state and toggle it; after a toggle the
+      UI shows the state READ BACK (hardware/policy can override).
+- [ ] First toggle surfaces the access request (RequestAccessAsync). If denied,
+      the tile does not lie about state.
+- [ ] A radio absent at launch is simply not shown (GetRadiosAsync is
+      launch-time). Network NAME is never shown (we never request location).
+
+### Settings links (`platform/links.rs`)
+- [ ] Each exposed tile opens the correct Windows page on BOTH Win10 and Win11:
+      sound, power, notifications (DND), bluetooth, project (display),
+      accessibility. `cast` / `captions` have no verified stable ms-settings
+      target and are therefore NOT exposed (tiles dropped) — revisit if a
+      verified link is found.
+
+### Status-bar pill + flyouts
+- [ ] Status-bar strip stays visible on hover (does NOT open the whole panel);
+      items open their own flyouts; strip never wraps to a second line and does
+      not overflow at 1366 px.
+- [ ] Flyouts open/size correctly at 100/125/150/200% and on a 2nd monitor;
+      the card stays on-screen (clamped).
+- [ ] Minute clock updates on the minute only; seconds tick only while the clock
+      flyout is open.
+- [ ] Character "wing" renders in its own left slot and shares the one decoded
+      bitmap with the panel.
+
+### Notifications
+- Islet's OWN notifications only. Reading OTHER apps' notifications is OUT of
+  scope: the Windows UserNotificationListener API requires PACKAGE IDENTITY,
+  which an unpackaged (plain installer) app does not have. To ever support it
+  would require shipping as an MSIX-packaged app and requesting the
+  `userNotificationListener` capability + user consent. Not planned.
+
+### Performance (measure with scripts/perf-check, record in perf-results.md)
+- [ ] Closed status-bar CPU < 0.5% avg / 5 min; memory ≤ 10 MB over the Spec 10
+      closed number; installer ≤ 1 MB larger.
+- [ ] Only three closed subscriptions active (volume+mute, battery, minute tick);
+      other sources subscribe only while their flyout is open.

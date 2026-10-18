@@ -157,10 +157,15 @@ export function Shell() {
   }, [open]);
 
   function handleEnter() {
+    // Status-bar style never opens the whole panel on hover — its items open
+    // their own flyouts. Only the Notch pill grows on hover.
+    if (pillStyle.value === "statusBar") return;
     if (!open) setOpen(true);
   }
 
   function handleLeave() {
+    // In status-bar style the strip stays put; nothing to close on leave.
+    if (pillStyle.value === "statusBar") return;
     // Pinned or a pending permission keeps it open; otherwise close.
     if (pinned || pending.length > 0) return;
     setOpen(false);

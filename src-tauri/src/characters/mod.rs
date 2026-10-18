@@ -22,7 +22,7 @@ use manifest::Manifest;
 use validate::{validate, ValidationError};
 
 /// The id of the built-in default pack that ships with the app.
-pub const BUILTIN_ID: &str = "sponge-pal";
+pub const BUILTIN_ID: &str = "pixel-pal";
 
 /// Small persisted record of which character is active and whether it is shown
 /// in the notch. Versioned like every other saved file (data rule).

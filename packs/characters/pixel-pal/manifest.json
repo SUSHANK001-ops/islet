@@ -1,18 +1,18 @@
 {
   "schemaVersion": 1,
-  "id": "sponge-pal",
-  "name": "Sponge Pal",
+  "id": "pixel-pal",
+  "name": "Pip",
   "version": "1.0.0",
   "author": "Islet",
-  "license": "CC-BY-4.0",
+  "license": "CC0-1.0",
 
   "sheet": {
     "file": "sheet.png",
     "frameWidth": 48,
     "frameHeight": 48,
     "columns": 8,
-    "scale": 3,
-    "pixelArt": true
+    "scale": 2,
+    "pixelArt": false
   },
 
   "states": {
@@ -32,19 +32,10 @@
   },
 
   "stages": [
-    { "id": "spore",  "minFocusMinutes": 0,    "sheet": "sheet.png" },
-    { "id": "bubbly", "minFocusMinutes": 600,  "sheet": "stages/bubbly.png" },
-    { "id": "mighty", "minFocusMinutes": 3000, "sheet": "stages/mighty.png" }
+    { "id": "spark", "minFocusMinutes": 0, "sheet": "sheet.png" }
   ],
 
-  "personality": { "energy": 0.8, "chatty": 0.6, "lazy": 0.2 },
+  "personality": { "energy": 0.7, "chatty": 0.5, "lazy": 0.3 },
 
-  "outfits": [
-    {
-      "id": "hard-hat",
-      "name": "Hard Hat",
-      "layer": "outfits/hard-hat.png",
-      "unlock": { "type": "focusMinutes", "value": 300 }
-    }
-  ]
+  "outfits": []
 }

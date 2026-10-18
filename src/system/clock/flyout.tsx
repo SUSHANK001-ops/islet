@@ -9,9 +9,6 @@ import { eventsListMonth, eventAdd, eventDelete, type CalEvent } from "./bridge"
 // mounted/open), month grid with today highlighted + prev/next, and inline
 // local events. OS-locale formatting via Intl.
 
-function ym(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
 function isoToday(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(

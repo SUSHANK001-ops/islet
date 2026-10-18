@@ -1,6 +1,16 @@
 import { t } from "../ui/i18n";
 import type { TabId } from "./tabs";
+import { SYSTEM_TABS } from "./tabs";
 import { enabledTabs } from "./settings-store";
+
+// Short labels for the System group tabs (Spec 11).
+const SYSTEM_LABEL: Record<string, string> = {
+  "sys-clock": "tab.clock",
+  "sys-sound": "tab.sound",
+  "sys-power": "tab.battery",
+  "sys-quick": "tab.quick",
+  "sys-notifications": "tab.notifications",
+};
 
 // The tab row shown at the top of the open panel. Keyboard accessible: arrow
 // keys move between tabs (roving tabindex), Enter/Space activates.
@@ -11,8 +21,16 @@ export function TabBar({
   active: TabId;
   onSelect: (id: TabId) => void;
 }) {
-  // Settings is always available and sits last.
-  const tabs: TabId[] = [...enabledTabs().map((tb) => tb.id), "settings"];
+  // Feature tabs, then the System group, then Settings last.
+  const tabs: TabId[] = [
+    ...enabledTabs().map((tb) => tb.id),
+    ...SYSTEM_TABS,
+    "settings",
+  ];
+
+  function labelFor(id: TabId): string {
+    return SYSTEM_LABEL[id] ? t(SYSTEM_LABEL[id]) : t(`tab.${id}`);
+  }
 
   function onKey(e: KeyboardEvent, index: number) {
     if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
@@ -35,7 +53,7 @@ export function TabBar({
           onClick={() => onSelect(id)}
           onKeyDown={(e) => onKey(e, i)}
         >
-          {t(`tab.${id}`)}
+          {labelFor(id)}
         </button>
       ))}
     </div>

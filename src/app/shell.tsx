@@ -32,6 +32,8 @@ import { characterSetActive } from "../characters/bridge";
 import { StatusBar } from "./status-bar";
 import { pillStyle } from "./pill-style";
 import { SystemFlyouts, useFlyoutController } from "../system/flyouts-host";
+import { Toast } from "../system/notifications/toast";
+import { notifications } from "../system/notifications/store";
 
 /**
  * Spec 1 shell.
@@ -249,7 +251,7 @@ export function Shell() {
             setPinned(false);
           }}
           hasBattery={true}
-          unread={0}
+          unread={notifications.value.filter((n) => !n.read).length}
         />
       ) : (
         <div
@@ -284,6 +286,8 @@ export function Shell() {
       )}
 
       <SystemFlyouts ctrl={flyoutCtrl} />
+
+      <Toast />
 
       {hasAlert ? <PermissionPrompt /> : null}
 

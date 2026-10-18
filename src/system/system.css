@@ -444,3 +444,298 @@
     transition: none;
   }
 }
+
+/* ---- Flyout host positioning ---- */
+.islet-flyout-host {
+  z-index: 50;
+}
+
+/* ---- Shared small helpers ---- */
+.islet-dim {
+  color: var(--islet-fg-dim);
+  font-size: 12px;
+}
+.islet-link-btn {
+  font: inherit;
+  font-size: 12px;
+  background: none;
+  border: none;
+  color: var(--islet-accent);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.islet-link-btn:hover {
+  text-decoration: underline;
+}
+
+/* ---- Clock flyout ---- */
+.islet-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.islet-clock-time {
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+  color: var(--islet-fg);
+}
+.islet-clock-date {
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+  margin-top: -6px;
+}
+.islet-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.islet-cal-month {
+  font-size: 13px;
+  font-weight: 600;
+}
+.islet-cal-nav {
+  display: flex;
+  gap: 2px;
+}
+.islet-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.islet-cal-wd {
+  text-align: center;
+  font-size: 10px;
+  color: var(--islet-fg-dim);
+  padding-bottom: 2px;
+}
+.islet-cal-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 8px;
+  color: var(--islet-fg);
+}
+.islet-cal-cell.muted {
+  color: var(--islet-fg-dim);
+  opacity: 0.5;
+}
+.islet-cal-cell.today {
+  background: var(--islet-grad);
+  color: #0a0a1f;
+  font-weight: 700;
+}
+.islet-cal-dot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--islet-accent-2);
+}
+.islet-cal-cell.today .islet-cal-dot {
+  background: #0a0a1f;
+}
+.islet-event-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.islet-event {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  background: var(--islet-control);
+  border-radius: 8px;
+  padding: 6px 6px 6px 10px;
+}
+.islet-event-add {
+  display: flex;
+  gap: 6px;
+}
+.islet-event-new {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* ---- Sound flyout ---- */
+.islet-sound-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.islet-sound-row .islet-slider {
+  flex: 1;
+}
+.islet-sound-device {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+/* ---- Power flyout ---- */
+.islet-power {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.islet-batt-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--islet-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--islet-fg);
+}
+.islet-batt-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.islet-batt-pct {
+  font-size: 18px;
+  font-weight: 600;
+}
+.islet-plan-row {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  color: var(--islet-fg);
+  cursor: pointer;
+}
+
+/* ---- Quick settings ---- */
+.islet-quick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.islet-quick-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.islet-quick-grid .islet-tile:last-child:nth-child(odd) {
+  grid-column: span 2;
+}
+.islet-quick-mini {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.islet-quick-more {
+  width: 100%;
+}
+
+/* ---- Toast (Islet's own notifications) ---- */
+.islet-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 300px;
+  box-sizing: border-box;
+  background: var(--islet-bg-panel);
+  border: 1px solid var(--islet-border);
+  border-radius: var(--islet-radius);
+  padding: 12px;
+  box-shadow: var(--islet-shadow);
+  animation: islet-toast-in var(--islet-dur) var(--islet-ease-out);
+}
+.islet-toast-mark {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--islet-control);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--islet-accent);
+}
+.islet-toast-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.islet-toast-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.islet-toast-text {
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.islet-toast-text.expanded {
+  white-space: normal;
+}
+.islet-toast-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+@keyframes islet-toast-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Notifications flyout ---- */
+.islet-notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.islet-notif {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--islet-control);
+}
+.islet-notif.unread {
+  border-left: 2px solid var(--islet-accent);
+}
+.islet-notif-mark {
+  color: var(--islet-fg-dim);
+  flex: 0 0 auto;
+}
+.islet-notif-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.islet-notif-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.islet-notif-text {
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-toast { animation: none; }
+}

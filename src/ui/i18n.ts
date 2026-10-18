@@ -25,6 +25,43 @@ const en: Strings = {
   "tab.system": "System",
 
   "notch.collapse": "Collapse",
+
+  "clock.prev": "Previous month",
+  "clock.next": "Next month",
+  "clock.events": "Events · {date}",
+  "clock.noEvents": "No events",
+  "clock.newEvent": "New event",
+  "clock.save": "Save",
+  "clock.deleteEvent": "Delete event",
+
+  "sound.unsupported": "No audio device found",
+  "sound.mute": "Mute",
+  "sound.unmute": "Unmute",
+  "sound.mixer": "Mixer",
+  "sound.defaultDevice": "Default device",
+
+  "power.title": "Power",
+  "power.plan": "Plan",
+  "power.efficiency": "Efficiency",
+  "power.balanced": "Balanced",
+  "power.performance": "Performance",
+  "power.charging": "Charging",
+  "power.onBattery": "On battery",
+  "power.openSettings": "Open Windows settings",
+
+  "quick.wifi": "Wi-Fi",
+  "quick.bluetooth": "Bluetooth",
+  "quick.connected": "Connected",
+  "quick.dnd": "Do not disturb",
+  "quick.viaSettings": "In Settings",
+  "quick.project": "Project",
+  "quick.accessibility": "Accessibility",
+  "quick.more": "More Windows controls",
+
+  "notif.empty": "No notifications",
+  "notif.clear": "Clear",
+  "notif.expand": "Expand",
+  "notif.close": "Close",
   "pillStyle.offer.title": "Try the status bar?",
   "pillStyle.offer.body":
     "Show live system items — clock, sound, battery and more — right on the pill.",

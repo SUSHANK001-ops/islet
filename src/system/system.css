@@ -337,7 +337,8 @@
 
 /* ---- Status-bar pill (Spec 11, design §6) ---- */
 .islet-statusbar {
-  display: flex;
+  display: inline-flex;      /* shrink-to-content; its own horizontal strip */
+  flex-wrap: nowrap;         /* never wrap to a second line */
   align-items: center;
   gap: 6px;
   height: 30px;
@@ -346,9 +347,25 @@
   background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
   border-radius: var(--islet-radius-pill);
   box-shadow: var(--islet-shadow-sm);
-  max-width: calc(100vw - 16px);
   box-sizing: border-box;
   white-space: nowrap;
+  width: max-content;        /* expand horizontally with content */
+  max-width: calc(100vw - 16px);
+}
+
+/* Character wing: its own fixed slot on the far left of the strip. */
+.islet-sb-wing {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.islet-sb-wing-canvas {
+  width: 28px;
+  height: 28px;
+  image-rendering: auto;
 }
 .islet-sb-item {
   flex: 0 0 auto;

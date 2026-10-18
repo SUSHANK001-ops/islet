@@ -253,10 +253,12 @@ The renderer gates animation on four conditions (`src/characters/character-store
 
 #### Art dependency
 
-`sponge-pal` ships wired but WITHOUT `sheet.png` (see
-`packs/characters/sponge-pal/ART-TODO.md`). Until the PNG is dropped in, the
-loader returns the pack as invalid/unavailable and the UI shows a gentle hint
-("artwork isn't ready") and no character - verified to not crash.
+The built-in default is now **`pixel-pal`** ("Pip"), an ORIGINAL CC0 mascot
+with a generated 48x48 8-column atlas (`scripts/gen-placeholder-sprite.mjs`).
+The previous `sponge-pal` art was a copyrighted character and was removed; do
+not reintroduce it. If app data still holds an old `sponge-pal` folder from a
+prior run, delete `%APPDATA%\dev.islet.app\characters\sponge-pal` and reset the
+active character in Settings.
 
 ### Spec 8 - place anywhere
 

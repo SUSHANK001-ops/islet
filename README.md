@@ -13,8 +13,9 @@ full spec and hard rules, and `CHARACTERS.md` for the character pack format.
 > with `cargo test` + `vitest` green. STILL REQUIRED before release: run
 > `scripts/perf-check` on real Windows hardware (closed notch-on, closed
 > notch-off, open), verify the Windows-native features (capture hide, taskbar
-> progress, fullscreen game mode) and multi-monitor/DPI behavior, drop in the
-> Sponge Pal `sheet.png`, and code-sign the installer. See `docs/windows-notes.md`.
+> progress, fullscreen game mode) and multi-monitor/DPI behavior, and code-sign
+> the installer. See `docs/windows-notes.md`. The built-in character "Pip"
+> (`pixel-pal`) is original CC0 art; swap in your own original art to customize.
 
 ## Prerequisites
 

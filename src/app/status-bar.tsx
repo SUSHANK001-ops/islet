@@ -3,6 +3,9 @@ import { Icon, type IconName } from "../ui/controls/icon";
 import { statusItems, type StatusItemId } from "./pill-style";
 import { settings } from "./settings-store";
 import { t } from "../ui/i18n";
+import { CharacterCanvas } from "../characters/renderer";
+import { activeCharacter, activeRecord } from "../characters/character-store";
+import { characterSignals } from "../characters/signals-store";
 
 // The status-bar pill (Spec 11). A compact strip of live system items on the
 // closed pill. Each item opens its flyout (wired in Task 3 via `onOpen`). The
@@ -56,6 +59,8 @@ export function StatusBar({
 }) {
   const items = statusItems.value;
   const [now, setNow] = useState(() => new Date());
+  const character = activeCharacter.value;
+  const showWing = character && activeRecord.value.showInNotch;
 
   // Minute-aligned clock: schedule one timeout to the next minute boundary,
   // then reschedule. One timer, only while the status bar is mounted.
@@ -134,6 +139,17 @@ export function StatusBar({
       aria-label="Islet status bar"
       style={{ "--islet-pill-opacity": String(settings.value.notchOpacity) }}
     >
+      {/* Character wing: the active character in its own left slot (design §6).
+          Shares the one decoded bitmap + low-rate notch loop with the panel. */}
+      {showWing ? (
+        <span class="islet-sb-wing" aria-hidden="true">
+          <CharacterCanvas
+            surface="notch"
+            signals={characterSignals(true)}
+            class="islet-sb-wing-canvas"
+          />
+        </span>
+      ) : null}
       {items.map(renderItem)}
     </div>
   );

@@ -10,6 +10,7 @@
 //! - No `unwrap()` in app code; everything returns a friendly error.
 
 pub mod activity;
+pub mod events;
 pub mod migrate;
 pub mod notes;
 pub mod settings;

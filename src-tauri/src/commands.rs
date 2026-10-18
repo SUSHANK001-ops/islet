@@ -317,6 +317,77 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
         .map_err(|e| format!("could not open YouTube Music: {e}"))
 }
 
+// ---- Spec 11: system flyouts ----
+
+/// Open an allow-listed Windows settings page. `link` is an ENUM key, never a
+/// free URL (Spec 9 id-not-path rule). Unknown/unverified keys are rejected.
+#[tauri::command]
+pub fn open_ms_settings(app: AppHandle, link: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let uri = platform::links::resolve(&link)
+        .ok_or_else(|| format!("unknown settings link: {link}"))?;
+    app.opener()
+        .open_url(uri, None::<&str>)
+        .map_err(|e| format!("could not open settings: {e}"))
+}
+
+#[tauri::command]
+pub fn audio_get() -> platform::audio::AudioState {
+    platform::audio::get()
+}
+#[tauri::command]
+pub fn audio_set_volume(volume: u8) -> platform::audio::AudioState {
+    platform::audio::set_volume(volume);
+    platform::audio::get()
+}
+#[tauri::command]
+pub fn audio_set_mute(muted: bool) -> platform::audio::AudioState {
+    platform::audio::set_mute(muted);
+    platform::audio::get()
+}
+
+#[tauri::command]
+pub fn power_get() -> platform::power::PowerState {
+    platform::power::get()
+}
+#[tauri::command]
+pub fn power_set_overlay(overlay: String) -> platform::power::PowerState {
+    platform::power::set_overlay(&overlay)
+}
+
+#[tauri::command]
+pub fn radios_get() -> platform::radios::RadioState {
+    platform::radios::get()
+}
+#[tauri::command]
+pub fn radios_request_access() -> bool {
+    platform::radios::request_access()
+}
+#[tauri::command]
+pub fn radios_set(kind: String, on: bool) -> platform::radios::RadioState {
+    platform::radios::set(&kind, on)
+}
+
+use crate::store::events::{self, CalEvent, EventList};
+
+#[tauri::command]
+pub fn events_list_month(app: AppHandle, month: String) -> Vec<CalEvent> {
+    events::list_month(&app, &month)
+}
+#[tauri::command]
+pub fn event_add(
+    app: AppHandle,
+    title: String,
+    date: String,
+    time: Option<String>,
+) -> Result<EventList, String> {
+    events::add(&app, &title, &date, time).map_err(|e| e.to_string())
+}
+#[tauri::command]
+pub fn event_delete(app: AppHandle, id: String) -> Result<EventList, String> {
+    events::delete(&app, &id).map_err(|e| e.to_string())
+}
+
 // ---- Spec 11: progress ----
 
 /// Per-day focus summary for the last `days` days (oldest first), for the

@@ -104,7 +104,19 @@ pub fn run() {
             commands::set_taskbar_progress,
             commands::progress_summary,
             commands::character_export,
-            commands::character_import_file
+            commands::character_import_file,
+            commands::open_ms_settings,
+            commands::audio_get,
+            commands::audio_set_volume,
+            commands::audio_set_mute,
+            commands::power_get,
+            commands::power_set_overlay,
+            commands::radios_get,
+            commands::radios_request_access,
+            commands::radios_set,
+            commands::events_list_month,
+            commands::event_add,
+            commands::event_delete
         ])
         .setup(|app| {
             let handle = app.handle();

@@ -8,8 +8,12 @@
 //! one-shot check can later be called from a low-rate, display-change-driven
 //! timer. The reason it is not a tight poll is recorded in docs/windows-notes.md.
 
+pub mod audio;
 pub mod capture;
+pub mod links;
 pub mod media;
+pub mod power;
+pub mod radios;
 pub mod session;
 pub mod taskbar;
 

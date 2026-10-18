@@ -1,0 +1,336 @@
+/* System flyouts + shared controls (Spec 11). Tokens only; transform/opacity
+   motion only; no blur/glow/gradient beyond the single accent gradient token.
+   Mirrors the reference screenshots' STRUCTURE with Islet's own look. */
+
+/* ---- Icons ---- */
+.islet-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* ---- Flyout shell: chip + card + spring ---- */
+.islet-flyout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.islet-flyout-chip {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--islet-fg);
+  background: var(--islet-bg-elev);
+  border: 1px solid var(--islet-border);
+  border-radius: var(--islet-radius-sm);
+  padding: 4px 10px;
+  animation: islet-chip-in var(--islet-dur) var(--islet-ease-out) 20ms both;
+}
+.islet-flyout-card {
+  width: 288px;
+  box-sizing: border-box;
+  background: var(--islet-bg-panel);
+  border: 1px solid var(--islet-border);
+  border-radius: var(--islet-radius);
+  padding: var(--islet-pad);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transform-origin: top center;
+  animation: islet-flyout-in var(--islet-dur) var(--islet-ease-spring);
+  will-change: transform, opacity;
+}
+.islet-flyout-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.islet-flyout-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.islet-flyout-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--islet-fg-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@keyframes islet-flyout-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes islet-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Card primitives ---- */
+.islet-card {
+  background: var(--islet-bg-elev);
+  border: 1px solid var(--islet-divider);
+  border-radius: var(--islet-radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.islet-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.islet-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Slider ---- */
+.islet-slider {
+  position: relative;
+  height: 28px;
+}
+.islet-slider-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.islet-slider-input:focus-visible + .islet-slider-track {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 3px;
+}
+.islet-slider-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  background: var(--islet-control);
+  border-radius: 999px;
+}
+.islet-slider-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--islet-grad);
+}
+.islet-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--islet-bg-panel);
+  box-shadow: var(--islet-shadow-sm);
+  transform: translate(-50%, -50%);
+}
+.islet-slider-input:active + .islet-slider-track .islet-slider-thumb {
+  transform: translate(-50%, -50%) scale(1.12);
+}
+
+/* ---- Segmented control (sliding highlight) ---- */
+.islet-segmented {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 0;
+  background: var(--islet-control);
+  border-radius: var(--islet-radius-sm);
+  padding: 4px;
+}
+.islet-seg-highlight {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: calc(var(--islet-radius-sm) - 3px);
+  background: var(--islet-grad);
+}
+.islet-seg-btn {
+  position: relative;
+  z-index: 1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+  border-radius: calc(var(--islet-radius-sm) - 3px);
+  transition: color var(--islet-dur) var(--islet-ease-out);
+}
+.islet-seg-btn.active {
+  color: #0a0a1f;
+}
+.islet-seg-btn:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Tiles ---- */
+.islet-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  font: inherit;
+  background: var(--islet-bg-elev);
+  border: 1px solid var(--islet-divider);
+  border-radius: var(--islet-radius-sm);
+  padding: 12px;
+  cursor: pointer;
+  color: var(--islet-fg);
+  transition: background var(--islet-dur-fast) var(--islet-ease-out),
+    transform var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-tile:hover:not(:disabled) {
+  background: var(--islet-control-hover);
+}
+.islet-tile:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.islet-tile:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.islet-tile:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 2px;
+}
+.islet-tile-badge {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--islet-control);
+  color: var(--islet-fg-dim);
+  transition: background var(--islet-dur) var(--islet-ease-out),
+    color var(--islet-dur) var(--islet-ease-out);
+}
+.islet-tile.on .islet-tile-badge {
+  background: var(--islet-grad);
+  color: #0a0a1f;
+}
+.islet-tile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.islet-tile-title {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.islet-tile-sub {
+  font-size: 11px;
+  color: var(--islet-fg-dim);
+}
+.islet-tile-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--islet-fg-dim);
+  background: var(--islet-bg-elev);
+  border: 1px solid var(--islet-divider);
+  border-radius: var(--islet-radius-sm);
+  padding: 12px 6px;
+  cursor: pointer;
+  transition: background var(--islet-dur-fast) var(--islet-ease-out),
+    transform var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-tile-mini:hover:not(:disabled) {
+  background: var(--islet-control-hover);
+  color: var(--islet-fg);
+}
+.islet-tile-mini:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.islet-tile-mini:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Sliding switch ---- */
+.islet-switch {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  border: none;
+  background: var(--islet-control);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: background var(--islet-dur) var(--islet-ease-out);
+}
+.islet-switch.on {
+  background: var(--islet-grad);
+}
+.islet-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--islet-shadow-sm);
+  transition: transform var(--islet-dur) var(--islet-ease-spring);
+}
+.islet-switch.on .islet-switch-knob {
+  transform: translateX(16px);
+}
+.islet-switch:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Reduced motion: collapse everything above to instant ---- */
+@media (prefers-reduced-motion: reduce) {
+  .islet-flyout-card,
+  .islet-flyout-chip,
+  .islet-seg-highlight,
+  .islet-seg-btn,
+  .islet-slider-fill,
+  .islet-slider-thumb,
+  .islet-tile,
+  .islet-tile-badge,
+  .islet-tile-mini,
+  .islet-switch,
+  .islet-switch-knob {
+    animation: none !important;
+    transition: none !important;
+  }
+}

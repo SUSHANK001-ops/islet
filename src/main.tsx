@@ -1,6 +1,7 @@
 import { render } from "preact";
 import "./ui/tokens.css";
 import "./app/shell.css";
+import "./system/system.css";
 import { Shell } from "./app/shell";
 import { initSettings } from "./app/settings-store";
 

@@ -21,14 +21,14 @@ mod imp {
     use windows::core::PCWSTR;
     use windows::Win32::Media::Audio::Endpoints::IAudioEndpointVolume;
     use windows::Win32::Media::Audio::{
-        eConsole, eRender, IMMDeviceEnumerator, MMDeviceEnumerator, DEVICE_STATE_ACTIVE,
+        eConsole, eRender, IMMDeviceEnumerator, MMDeviceEnumerator,
     };
     use windows::Win32::System::Com::{
-        CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_APARTMENTTHREADED,
+        CoCreateInstance, CoInitializeEx, CoTaskMemFree, CLSCTX_ALL, COINIT_APARTMENTTHREADED,
+        STGM_READ,
     };
     use windows::Win32::Devices::FunctionDiscovery::PKEY_Device_FriendlyName;
     use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
-    use windows::Win32::UI::Shell::PropertiesSystem::STGM_READ;
 
     // Resolve the default render endpoint + its volume interface. Returns None
     // if COM/endpoint is unavailable (headless, no device).
@@ -46,7 +46,7 @@ mod imp {
             let pv = store.GetValue(&PKEY_Device_FriendlyName).ok()?;
             let p = PropVariantToStringAlloc(&pv).ok()?;
             let s = p.to_string().ok();
-            let _ = windows::Win32::System::Com::CoTaskMemFree(Some(p.0 as *const _));
+            CoTaskMemFree(Some(p.0 as *const _));
             s
         })()
         .unwrap_or_else(|| "Default device".into());

@@ -21,8 +21,7 @@ pub struct PowerState {
 mod imp {
     use super::PowerState;
     use windows::core::GUID;
-    use windows::Win32::System::Power::GetSystemPowerStatus;
-    use windows::Win32::System::SystemInformation::SYSTEM_POWER_STATUS;
+    use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 
     // Overlay scheme GUIDs (undocumented). Balanced is the zero GUID in practice
     // on many systems but MUST be confirmed on hardware.
@@ -30,9 +29,12 @@ mod imp {
     const PERFORMANCE: GUID = GUID::from_u128(0xded574b5_45a0_4f42_8737_46345c09c238);
     const BALANCED: GUID = GUID::from_u128(0x00000000_0000_0000_0000_000000000000);
 
-    // powrprof entry points are not in the `windows` metadata we enable, so we
-    // bind them directly. Both return a Win32 error code (0 == success).
-    #[link(name = "powrprof")]
+    // powrprof entry points are UNDOCUMENTED and not present in powrprof.lib's
+    // import table, so a normal `#[link]` leaves them unresolved. `raw-dylib`
+    // makes the linker generate the import directly from the DLL by name, which
+    // resolves them at runtime against powrprof.dll. Both return a Win32 error
+    // code (0 == success).
+    #[link(name = "powrprof", kind = "raw-dylib")]
     extern "system" {
         fn PowerGetActualOverlayScheme(overlay_scheme_guid: *mut GUID) -> u32;
         fn PowerSetActiveOverlayScheme(overlay_scheme_guid: GUID) -> u32;

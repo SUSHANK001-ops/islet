@@ -95,6 +95,10 @@ export interface PersistedSettings {
   notchFree: { x: number; y: number } | null;
   hiddenFromCapture: boolean;
   gameMode: boolean;
+  pillStyle: "notch" | "statusBar";
+  openOnHover: boolean;
+  statusItems: string[];
+  pillStyleOffered: boolean;
 }
 
 /** Load settings from disk (defaults on first run). */

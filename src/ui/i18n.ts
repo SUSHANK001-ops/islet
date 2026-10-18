@@ -17,6 +17,23 @@ const en: Strings = {
   "tab.launcher": "Apps",
   "tab.progress": "Progress",
   "tab.settings": "Settings",
+  "tab.clock": "Clock",
+  "tab.sound": "Sound",
+  "tab.battery": "Battery",
+  "tab.quick": "Quick settings",
+  "tab.notifications": "Notifications",
+  "tab.system": "System",
+
+  "notch.collapse": "Collapse",
+  "pillStyle.offer.title": "Try the status bar?",
+  "pillStyle.offer.body":
+    "Show live system items — clock, sound, battery and more — right on the pill.",
+  "pillStyle.offer.try": "Use status bar",
+  "pillStyle.offer.keep": "Keep notch",
+  "settings.pillStyle": "Pill style",
+  "settings.pillStyle.notch": "Notch",
+  "settings.pillStyle.statusBar": "Status bar",
+  "settings.openOnHover": "Open items on hover",
 
   "common.comingSoon": "Coming soon",
   "common.loading": "Loading…",

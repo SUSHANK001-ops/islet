@@ -35,6 +35,14 @@ export interface Settings {
   hiddenFromCapture: boolean;
   // Pause + hide when a fullscreen game/app is foreground.
   gameMode: boolean;
+  // Pill style: "notch" (default) or "statusBar" (Spec 11).
+  pillStyle: "notch" | "statusBar";
+  // Status-bar items open on hover instead of click.
+  openOnHover: boolean;
+  // Enabled status-bar item ids, in order. Empty = all defaults.
+  statusItems: string[];
+  // Whether the first-run "try Status bar" offer was shown.
+  pillStyleOffered: boolean;
 }
 
 const DEFAULTS: Settings = {
@@ -55,6 +63,10 @@ const DEFAULTS: Settings = {
   notchFree: null,
   hiddenFromCapture: false,
   gameMode: true,
+  pillStyle: "notch",
+  openOnHover: false,
+  statusItems: [],
+  pillStyleOffered: false,
 };
 
 export const settings = signal<Settings>(structuredClone(DEFAULTS));
@@ -115,6 +127,10 @@ function toPersisted() {
     notchFree: v.notchFree,
     hiddenFromCapture: v.hiddenFromCapture,
     gameMode: v.gameMode,
+    pillStyle: v.pillStyle,
+    openOnHover: v.openOnHover,
+    statusItems: v.statusItems,
+    pillStyleOffered: v.pillStyleOffered,
   };
 }
 
@@ -174,6 +190,12 @@ export async function initSettings(): Promise<void> {
           : null,
       hiddenFromCapture: !!disk.hiddenFromCapture,
       gameMode: disk.gameMode !== false,
+      pillStyle: disk.pillStyle === "statusBar" ? "statusBar" : "notch",
+      openOnHover: !!disk.openOnHover,
+      statusItems: Array.isArray(disk.statusItems)
+        ? disk.statusItems.filter((x): x is string => typeof x === "string")
+        : [],
+      pillStyleOffered: !!disk.pillStyleOffered,
     };
   } catch {
     // Not in Tauri or load failed: keep defaults.
@@ -199,6 +221,10 @@ effect(() => {
     notchFree: snapshot.notchFree,
     hiddenFromCapture: snapshot.hiddenFromCapture,
     gameMode: snapshot.gameMode,
+    pillStyle: snapshot.pillStyle,
+    openOnHover: snapshot.openOnHover,
+    statusItems: snapshot.statusItems,
+    pillStyleOffered: snapshot.pillStyleOffered,
   }).catch(() => {
     /* non-fatal: keep working from memory */
   });

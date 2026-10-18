@@ -334,3 +334,96 @@
     transition: none !important;
   }
 }
+
+/* ---- Status-bar pill (Spec 11, design §6) ---- */
+.islet-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 8px;
+  margin-top: 8px;
+  background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
+  border-radius: var(--islet-radius-pill);
+  box-shadow: var(--islet-shadow-sm);
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+.islet-sb-item {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--islet-fg);
+  border-radius: 7px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--islet-dur-fast) var(--islet-ease-out),
+    transform var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-sb-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+.islet-sb-item:active {
+  transform: scale(0.94);
+}
+.islet-sb-item:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
+}
+.islet-sb-clock {
+  flex: 0 0 auto;
+  border: none;
+  background: var(--islet-bg-elev);
+  color: var(--islet-fg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-sb-clock:hover {
+  background: var(--islet-control-hover);
+}
+.islet-sb-clock:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
+}
+.islet-sb-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--islet-danger);
+}
+
+/* First-run pill-style offer reuses the permission card surface. */
+.islet-pill-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.islet-pill-offer-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-sb-item {
+    transition: none;
+  }
+}

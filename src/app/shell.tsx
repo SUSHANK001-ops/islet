@@ -29,6 +29,9 @@ import {
   initCharacterSignals,
 } from "../characters/signals-store";
 import { characterSetActive } from "../characters/bridge";
+import { StatusBar } from "./status-bar";
+import { pillStyle } from "./pill-style";
+import { SystemFlyouts, useFlyoutController } from "../system/flyouts-host";
 
 /**
  * Spec 1 shell.
@@ -183,6 +186,9 @@ export function Shell() {
       .catch(() => {});
   }
 
+  // System flyouts opened from the status-bar items (Spec 11).
+  const flyoutCtrl = useFlyoutController();
+
   // ---- Place anywhere: drag the notch, persist where it lands ----
   const draggedRef = useRef(false);
 
@@ -219,40 +225,85 @@ export function Shell() {
   }, []);
 
   const hasAlert = pending.length > 0;
+  const statusBarStyle = pillStyle.value === "statusBar";
 
   return (
     <div class="islet-stack" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      <div
-        class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
-          character && showInNotch && !open ? " has-character" : ""
-        }`}
-        onClick={handlePillClick}
-        title={`${APP_NAME} · ${t("app.tagline")}`}
-      >
-        {hasAlert && !open ? <span class="islet-alert-dot" /> : null}
-        {/* Living notch: the character draws inside the closed pill at a low
-            rate. Hidden while open (the panel shows the full-size character). */}
-        {character && showInNotch && !open ? (
-          <CharacterCanvas
-            surface="notch"
-            signals={characterSignals(true)}
-            class="islet-notch-canvas"
-          />
-        ) : null}
-        {/* Drag grip (place-anywhere). Appears on hover; a pointer-down here
-            starts a native window drag instead of toggling the panel. */}
-        <span
-          class="islet-notch-grip"
-          title={t("notch.drag")}
-          aria-label={t("notch.drag")}
-          onPointerDown={handleDragStart}
-          onClick={(e) => e.stopPropagation()}
+      {statusBarStyle && !open ? (
+        // Status-bar style: a strip of live system items on the closed pill.
+        // Items open their flyout via the controller (wired fully in Task 3).
+        <StatusBar
+          onOpen={(key, anchor) => flyoutCtrl.openAt(key, anchor)}
+          onLauncher={() => {
+            setActive("launcher");
+            setOpen(true);
+            setPinned(true);
+          }}
+          onCollapse={() => {
+            setOpen(false);
+            setPinned(false);
+          }}
+          hasBattery={true}
+          unread={0}
+        />
+      ) : (
+        <div
+          class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
+            character && showInNotch && !open ? " has-character" : ""
+          }`}
+          onClick={handlePillClick}
+          title={`${APP_NAME} · ${t("app.tagline")}`}
         >
-          ⠿
-        </span>
-      </div>
+          {hasAlert && !open ? <span class="islet-alert-dot" /> : null}
+          {/* Living notch: the character draws inside the closed pill at a low
+              rate. Hidden while open (the panel shows the full-size character). */}
+          {character && showInNotch && !open ? (
+            <CharacterCanvas
+              surface="notch"
+              signals={characterSignals(true)}
+              class="islet-notch-canvas"
+            />
+          ) : null}
+          {/* Drag grip (place-anywhere). Appears on hover; a pointer-down here
+              starts a native window drag instead of toggling the panel. */}
+          <span
+            class="islet-notch-grip"
+            title={t("notch.drag")}
+            aria-label={t("notch.drag")}
+            onPointerDown={handleDragStart}
+            onClick={(e) => e.stopPropagation()}
+          >
+            ⠿
+          </span>
+        </div>
+      )}
+
+      <SystemFlyouts ctrl={flyoutCtrl} />
 
       {hasAlert ? <PermissionPrompt /> : null}
+
+      {!settings.value.pillStyleOffered && !hasAlert ? (
+        <div class="islet-perm islet-pill-offer" role="dialog" aria-label={t("pillStyle.offer.title")}>
+          <span class="islet-perm-title">{t("pillStyle.offer.title")}</span>
+          <p>{t("pillStyle.offer.body")}</p>
+          <div class="islet-pill-offer-actions">
+            <button
+              class="islet-btn"
+              onClick={() => updateSettings({ pillStyleOffered: true })}
+            >
+              {t("pillStyle.offer.keep")}
+            </button>
+            <button
+              class="islet-btn primary"
+              onClick={() =>
+                updateSettings({ pillStyle: "statusBar", pillStyleOffered: true })
+              }
+            >
+              {t("pillStyle.offer.try")}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {open ? (
         <div class="islet-panel" role="dialog" aria-label={APP_NAME}>

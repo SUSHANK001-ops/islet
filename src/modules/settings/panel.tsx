@@ -115,6 +115,35 @@ export default function SettingsPanel() {
       </label>
 
       <label class="islet-field">
+        <span>{t("settings.pillStyle")}</span>
+        <select
+          value={s.pillStyle}
+          onChange={(e) =>
+            updateSettings({
+              pillStyle: e.currentTarget.value === "statusBar" ? "statusBar" : "notch",
+            })
+          }
+        >
+          <option value="notch">{t("settings.pillStyle.notch")}</option>
+          <option value="statusBar">{t("settings.pillStyle.statusBar")}</option>
+        </select>
+      </label>
+
+      {s.pillStyle === "statusBar" ? (
+        <label class="islet-field">
+          <span>{t("settings.openOnHover")}</span>
+          <button
+            class={`islet-toggle${s.openOnHover ? " on" : ""}`}
+            role="switch"
+            aria-checked={s.openOnHover}
+            onClick={() => updateSettings({ openOnHover: !s.openOnHover })}
+          >
+            {s.openOnHover ? t("common.on") : t("common.off")}
+          </button>
+        </label>
+      ) : null}
+
+      <label class="islet-field">
         <span>{t("settings.notchPosition")}</span>
         <select
           value={s.notchPosition}

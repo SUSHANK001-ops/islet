@@ -26,6 +26,10 @@ describe("settings-store", () => {
       notchFree: null,
       hiddenFromCapture: false,
       gameMode: true,
+      pillStyle: "notch",
+      openOnHover: false,
+      statusItems: [],
+      pillStyleOffered: false,
     };
   });
 

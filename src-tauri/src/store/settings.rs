@@ -45,6 +45,22 @@ pub struct Settings {
     /// Pause + hide when a fullscreen game/app is foreground (Spec 10 game mode).
     #[serde(default = "default_true")]
     pub game_mode: bool,
+    /// Pill style: "notch" (default) or "statusBar" (Spec 11).
+    #[serde(default = "default_pill_style")]
+    pub pill_style: String,
+    /// Status-bar items open on hover instead of click (Spec 11).
+    #[serde(default)]
+    pub open_on_hover: bool,
+    /// Which status-bar items are shown, in order. Empty = all defaults.
+    #[serde(default)]
+    pub status_items: Vec<String>,
+    /// Whether the first-run "try Status bar" offer has been shown.
+    #[serde(default)]
+    pub pill_style_offered: bool,
+}
+
+fn default_pill_style() -> String {
+    "notch".into()
 }
 
 fn default_true() -> bool {
@@ -86,6 +102,10 @@ impl Default for Settings {
             notch_free: None,
             hidden_from_capture: false,
             game_mode: true,
+            pill_style: default_pill_style(),
+            open_on_hover: false,
+            status_items: Vec::new(),
+            pill_style_offered: false,
         }
     }
 }

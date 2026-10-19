@@ -19,6 +19,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  /* The window is a large transparent canvas; its empty area must not catch
+     clicks. Only the pill/panel/flyouts (below) re-enable pointer events. */
+  pointer-events: none;
 }
 
 .islet-stack {
@@ -26,6 +29,18 @@ body {
   flex-direction: column;
   align-items: center;
   gap: var(--islet-gap);
+  width: 100%;
+}
+
+/* Re-enable pointer events on the actual interactive surfaces. */
+.islet-pill,
+.islet-statusbar,
+.islet-handle,
+.islet-panel,
+.islet-perm,
+.islet-flyout-host,
+.islet-toast {
+  pointer-events: auto;
 }
 
 /* ---- The pill / notch ---- */
@@ -33,8 +48,8 @@ body {
    line sits under it so it reads as "Islet", not just a black bar. */
 .islet-pill {
   margin-top: 8px;
-  height: 18px;
-  width: 132px;
+  height: 26px;
+  width: 140px;
   /* Opacity is user-adjustable (transparency setting); default fully opaque. */
   background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
   border-radius: var(--islet-radius-pill);
@@ -61,7 +76,7 @@ body {
 }
 
 .islet-pill:hover {
-  width: 154px;
+  width: 162px;
   box-shadow: var(--islet-shadow);
 }
 .islet-pill:hover::after {
@@ -69,8 +84,8 @@ body {
 }
 
 .islet-pill.open {
-  width: 172px;
-  height: 20px;
+  width: 180px;
+  height: 26px;
 }
 
 .islet-pill.has-alert {
@@ -776,23 +791,29 @@ body {
 }
 
 /* ---- Living notch character ---- */
-/* The pill grows a little taller when a character lives in it so the sprite has
-   room to breathe. The canvas is centered and never catches pointer events. */
+/* With a character, the pill is a proper rounded notch with real room for the
+   sprite, so it is clearly visible (not a thin bar). The canvas is centered and
+   never catches pointer events. */
 .islet-pill.has-character {
-  height: 30px;
-  width: 112px;
+  height: 44px;
+  width: 148px;
 }
 .islet-pill.has-character:hover {
-  width: 132px;
+  width: 168px;
+  height: 46px;
 }
 .islet-notch-canvas {
   position: absolute;
-  inset: 0;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 4px);
   pointer-events: none;
-  /* Keep pixel art crisp when the browser upsamples the canvas element box. */
-  image-rendering: pixelated;
+  /* The default mascot is smooth (not pixel art); let the browser interpolate
+     so it scales cleanly inside the notch. Pixel-art packs set their own flag. */
+  image-rendering: auto;
 }
 
 /* ---- Panel character (top of the open panel) ---- */

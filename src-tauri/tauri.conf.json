@@ -13,8 +13,8 @@
       {
         "label": "island",
         "title": "Islet",
-        "width": 360,
-        "height": 240,
+        "width": 640,
+        "height": 720,
         "transparent": true,
         "decorations": false,
         "alwaysOnTop": true,

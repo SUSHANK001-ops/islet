@@ -476,10 +476,25 @@ pub fn ensure_builtin(app: &AppHandle) {
     for id in [BUILTIN_ID] {
         let src = src_root.join(id);
         let dest = dest_root.join(id);
-        if src.exists() && !dest.exists() {
+        // Re-seed when the pack folder is missing OR incomplete (no sheet.png),
+        // which also recovers from an older/partial copy.
+        let needs = !dest.exists() || !dest.join("sheet.png").exists();
+        if src.exists() && needs {
+            let _ = fs::remove_dir_all(&dest);
             if let Err(e) = copy_dir(&src, &dest) {
                 eprintln!("islet: failed to seed built-in character '{id}': {e}");
             }
+        }
+    }
+
+    // If the active record points at a pack that no longer exists on disk (e.g.
+    // the old built-in was removed), fall back to the current built-in so a
+    // character always shows instead of silently nothing.
+    let mut rec = active(app);
+    if let Some(ref id) = rec.id {
+        if !dest_root.join(id).exists() {
+            rec.id = Some(BUILTIN_ID.to_string());
+            let _ = set_active(app, &rec);
         }
     }
 }

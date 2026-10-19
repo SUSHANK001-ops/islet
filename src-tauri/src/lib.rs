@@ -51,6 +51,7 @@ pub fn run() {
         .manage(window::MonitorChoice::default())
         .manage(window::NotchPositionState::default())
         .manage(window::FreePositionState::default())
+        .manage(window::InteractiveState::default())
         .manage(WriteDebouncer::default())
         .manage(Hub::default())
         .manage(Registry::default())
@@ -150,6 +151,9 @@ pub fn run() {
                             .notch_free
                             .map(|f| window::FreePosition { x: f.x, y: f.y });
                     }
+                }
+                if let Err(e) = window::place(&win) {
+                    eprintln!("islet: failed to place window: {e}");
                 }
                 if let Err(e) = window::apply_closed_state(&win) {
                     eprintln!("islet: failed to apply closed window state: {e}");

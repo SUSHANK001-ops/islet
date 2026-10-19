@@ -20,23 +20,16 @@ pub const CATALOG_BASE_URL: &str = "";
 pub const CATALOG_PUBLIC_KEY_HEX: &str =
     "0000000000000000000000000000000000000000000000000000000000000000";
 
-/// Pill geometry in logical pixels. Mirrors `PILL` in `src/app.config.ts`.
+/// Pill geometry used for WINDOW PLACEMENT only (logical px). The window is a
+/// fixed large transparent canvas (see window/mod.rs); the pill is centered in
+/// it by CSS. Rust only needs the pill's closed width (to align the pill to the
+/// monitor edge) and the top margin. Visual sizes live in `src/app.config.ts`.
 pub struct PillGeometry {
     pub closed_width: f64,
-    pub closed_height: f64,
-    pub open_width: f64,
-    pub open_height: f64,
     pub top_margin: f64,
 }
 
 pub const PILL: PillGeometry = PillGeometry {
     closed_width: 180.0,
-    closed_height: 36.0,
-    // The open WINDOW is intentionally larger than the visible panel: the extra
-    // area is transparent and gives the panel room to grow and to show fully
-    // rounded corners + a drop shadow without being clipped. The panel itself
-    // caps its height and scrolls its body (see shell.css).
-    open_width: 400.0,
-    open_height: 580.0,
     top_margin: 0.0,
 };

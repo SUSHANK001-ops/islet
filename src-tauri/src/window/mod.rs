@@ -105,23 +105,21 @@ pub fn set_monitor_choice(window: &WebviewWindow, name: Option<String>) -> tauri
             *guard = name;
         }
     }
-    // Re-center on the (possibly new) active monitor, keeping current size.
-    let open = is_open(window);
-    position_top_center(window, open)
+    place(window)
 }
 
-/// True when the window is currently at (roughly) the open size. Used so a
-/// re-place keeps the current open/closed footprint.
-fn is_open(window: &WebviewWindow) -> bool {
-    match window.inner_size() {
-        Ok(size) => {
-            let scale = window.scale_factor().unwrap_or(1.0);
-            let logical_h = size.height as f64 / scale;
-            logical_h > (PILL.closed_height + PILL.open_height) / 2.0
-        }
-        Err(_) => false,
-    }
-}
+/// The fixed window footprint (logical px). The window is ONE constant size big
+/// enough to hold the pill, a fully-open panel, and a downward flyout; the
+/// frontend positions everything with CSS inside this transparent canvas and
+/// toggles click-through so the empty area passes clicks through. This avoids
+/// per-state OS resizing, which was clipping the panel and flyouts.
+const WINDOW_W: f64 = 640.0;
+const WINDOW_H: f64 = 720.0;
+
+/// Tracks whether the frontend currently has something interactive showing
+/// (pill hovered / panel / flyout open). Drives click-through.
+#[derive(Default)]
+pub struct InteractiveState(pub Mutex<bool>);
 
 /// Read the current notch position from app state (defaults to Center).
 fn notch_position(window: &WebviewWindow) -> NotchPosition {
@@ -131,50 +129,43 @@ fn notch_position(window: &WebviewWindow) -> NotchPosition {
         .unwrap_or(NotchPosition::Center)
 }
 
-/// Pin the pill to the top edge of the active monitor at the user's chosen
-/// horizontal position (left / center / right). Logical units, so correct at
-/// any DPI. (Name kept for callers; it now honors the position setting.)
-pub fn position_top_center(window: &WebviewWindow, open: bool) -> tauri::Result<()> {
+/// Place the ONE fixed-size window at the top of the active monitor, aligned to
+/// the chosen notch position (or a free-dragged spot). The window stays this
+/// size always; the frontend draws the pill/panel/flyouts inside it with CSS.
+/// Logical units, so correct at any DPI.
+pub fn place(window: &WebviewWindow) -> tauri::Result<()> {
     let Some(monitor) = active_monitor(window) else {
-        // No monitor info: leave the window where it is rather than guessing.
         return Ok(());
     };
-
     let scale = monitor.scale_factor();
-    // Monitor position/size are physical; convert to logical for math.
     let mon_pos = monitor.position().to_logical::<f64>(scale);
     let mon_size = monitor.size().to_logical::<f64>(scale);
 
-    let (w, h) = if open {
-        (PILL.open_width, PILL.open_height)
-    } else {
-        (PILL.closed_width, PILL.closed_height)
-    };
+    // Keep the fixed size (DPI-correct).
+    window.set_size(LogicalSize::new(WINDOW_W, WINDOW_H))?;
 
-    window.set_size(LogicalSize::new(w, h))?;
+    // The window is wider than the pill; the pill is centered WITHIN the window
+    // by CSS. So to put the pill at the monitor's left/center/right, we offset
+    // the window by the gap between the window width and the pill width.
+    let pill_w = PILL.closed_width;
+    let side_gap = (WINDOW_W - pill_w) / 2.0;
+    let edge = 24.0_f64;
 
-    // A free-dragged position (if any) overrides the preset. Both are clamped
-    // so the pill always stays fully on the active monitor's work area, even if
-    // a monitor was unplugged or resized since the position was saved.
-    let (x, y) = match free_position(window) {
+    let x = match free_position(window) {
         Some(p) => {
-            let max_x = mon_pos.x + (mon_size.width - w).max(0.0);
-            let max_y = mon_pos.y + (mon_size.height - h).max(0.0);
-            let x = (mon_pos.x + p.x).clamp(mon_pos.x, max_x);
-            let y = (mon_pos.y + p.y).clamp(mon_pos.y, max_y);
-            (x, y)
+            // p is the desired PILL top-left; shift left by side_gap so the pill
+            // (centered in the window) lands there. Clamp to keep on-screen.
+            let want = mon_pos.x + p.x - side_gap;
+            let max_x = mon_pos.x + (mon_size.width - WINDOW_W).max(-side_gap);
+            want.clamp(mon_pos.x - side_gap, max_x)
         }
-        None => {
-            // A small inset from the screen edges for the left/right positions.
-            let edge = 24.0_f64;
-            let x = match notch_position(window) {
-                NotchPosition::Left => mon_pos.x + edge,
-                NotchPosition::Center => mon_pos.x + (mon_size.width - w) / 2.0,
-                NotchPosition::Right => mon_pos.x + mon_size.width - w - edge,
-            };
-            (x, mon_pos.y + PILL.top_margin)
-        }
+        None => match notch_position(window) {
+            NotchPosition::Left => mon_pos.x + edge - side_gap,
+            NotchPosition::Center => mon_pos.x + (mon_size.width - WINDOW_W) / 2.0,
+            NotchPosition::Right => mon_pos.x + mon_size.width - pill_w - edge - side_gap,
+        },
     };
+    let y = mon_pos.y + PILL.top_margin;
     window.set_position(LogicalPosition::new(x, y))?;
     Ok(())
 }
@@ -195,8 +186,7 @@ pub fn set_free_position(window: &WebviewWindow, pos: Option<FreePosition>) -> t
             *guard = pos;
         }
     }
-    let open = is_open(window);
-    position_top_center(window, open)
+    place(window)
 }
 
 /// Current pill top-left in LOGICAL pixels relative to the active monitor's
@@ -207,11 +197,14 @@ pub fn current_offset(window: &WebviewWindow) -> FreePosition {
     };
     let scale = monitor.scale_factor();
     let mon_pos = monitor.position().to_logical::<f64>(scale);
+    // The pill sits centered inside the window, so its left edge is the window
+    // left + side_gap. Report the PILL offset so it round-trips through place().
+    let side_gap = (WINDOW_W - PILL.closed_width) / 2.0;
     match window.outer_position() {
         Ok(phys) => {
             let p = phys.to_logical::<f64>(scale);
             FreePosition {
-                x: (p.x - mon_pos.x).max(0.0),
+                x: (p.x - mon_pos.x + side_gap).max(0.0),
                 y: (p.y - mon_pos.y).max(0.0),
             }
         }
@@ -226,36 +219,36 @@ pub fn set_notch_position(window: &WebviewWindow, pos: NotchPosition) -> tauri::
             *guard = pos;
         }
     }
-    let open = is_open(window);
-    position_top_center(window, open)
+    place(window)
 }
 
-/// When closed, the pill must not eat clicks or steal focus; when open, it must
-/// accept clicks. This is the core of the spike's "click-through" proof.
+/// Toggle whole-window click-through. The frontend calls `set_panel_open` with
+/// whether anything interactive is showing: when nothing is up, the whole
+/// transparent window passes clicks through to apps behind it; when the pill is
+/// hovered or a panel/flyout is open, it accepts clicks.
 pub fn set_click_through(window: &WebviewWindow, click_through: bool) -> tauri::Result<()> {
+    if let Some(state) = window.try_state::<InteractiveState>() {
+        if let Ok(mut g) = state.0.lock() {
+            *g = !click_through;
+        }
+    }
     window.set_ignore_cursor_events(click_through)
 }
 
-/// Apply the full closed-state setup: small, top-center, on top.
-///
-/// Spike finding: a click-through window (`ignore_cursor_events(true)`) cannot
-/// receive the mouse-enter that opens the panel, so hover-to-open and full
-/// click-through are mutually exclusive on one window. For the spike we keep
-/// the closed pill INTERACTIVE so hover works and can be verified. Making the
-/// idle pill truly click-through (option 1 in docs/windows-notes.md: a thin
-/// always-on hover strip over an otherwise pass-through window) is the next
-/// refinement in Spec 1, once hover is confirmed on real hardware.
+/// Closed/idle state: window placed + on top. It stays INTERACTIVE so hover can
+/// open the pill (the known one-window hover-vs-clickthrough tradeoff); the
+/// transparent empty area is small relative to the pill at the top edge.
 pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
-    position_top_center(window, false)?;
+    place(window)?;
     set_click_through(window, false)?;
     Ok(())
 }
 
-/// Apply the open-state setup: larger panel, clickable, still on top.
+/// Open state: same fixed window, interactive, on top.
 pub fn apply_open_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
-    position_top_center(window, true)?;
+    place(window)?;
     set_click_through(window, false)?;
     Ok(())
 }
@@ -280,14 +273,15 @@ pub fn toggle<M: Manager<tauri::Wry>>(manager: &M) -> tauri::Result<()> {
     let Some(win) = island(manager) else {
         return Ok(());
     };
-    let open_now = is_open(&win);
-    if open_now {
-        apply_closed_state(&win)?;
-    } else {
-        apply_open_state(&win)?;
+    // The frontend owns the visual open state; read whether it is currently
+    // interactive/open from our state and flip it.
+    let open_now = win
+        .try_state::<InteractiveState>()
+        .and_then(|s| s.0.lock().ok().map(|g| *g))
+        .unwrap_or(false);
+    if !open_now {
         let _ = win.set_focus();
     }
-    // Tell the frontend to match. Payload = the NEW open state.
     use tauri::Emitter;
     let _ = win.emit("islet://toggle-open", !open_now);
     Ok(())

@@ -195,10 +195,15 @@ export function Shell() {
     }, settings.value.autohideDelayMs);
   }
 
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   function handleEnter() {
+    // Cancel any pending close from a previous leave.
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
     // Status-bar style never opens the whole panel on hover — its items open
     // their own flyouts. Only the Notch pill grows on hover.
     if (pillStyle.value === "statusBar") return;
+    // Hover opens a PREVIEW; it does NOT pin. Clicking pins (see handlePillClick).
     if (!open) setOpen(true);
   }
 
@@ -207,9 +212,12 @@ export function Shell() {
     scheduleCollapse();
     // In status-bar style the strip stays put; nothing to close on leave.
     if (pillStyle.value === "statusBar") return;
-    // Pinned or a pending permission keeps it open; otherwise close.
+    // Pinned (user clicked) or a pending permission keeps it open.
     if (pinned || pending.length > 0) return;
-    setOpen(false);
+    // Otherwise close after a short grace so moving the mouse across the small
+    // gap between pill and panel does not flicker it shut.
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    leaveTimer.current = setTimeout(() => setOpen(false), 180);
   }
 
   function handlePillClick() {
@@ -218,8 +226,14 @@ export function Shell() {
       draggedRef.current = false;
       return;
     }
-    setPinned((p) => !p || !open);
-    setOpen(true);
+    // Click toggles the PIN. If currently pinned open, unpin AND close.
+    if (pinned) {
+      setPinned(false);
+      setOpen(false);
+    } else {
+      setPinned(true);
+      setOpen(true);
+    }
   }
 
   // On-notch quick toggle for showing the character in the closed pill. Writes

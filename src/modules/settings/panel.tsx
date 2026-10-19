@@ -273,13 +273,13 @@ export default function SettingsPanel() {
               </button>
               <span class="islet-reorder">
                 <button
-                  aria-label="Move up"
+                  aria-label={t("settings.moveUp")}
                   onClick={() => moveTab(tab.id, -1)}
                 >
                   ↑
                 </button>
                 <button
-                  aria-label="Move down"
+                  aria-label={t("settings.moveDown")}
                   onClick={() => moveTab(tab.id, 1)}
                 >
                   ↓

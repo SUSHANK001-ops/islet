@@ -25,6 +25,8 @@ const en: Strings = {
   "tab.system": "System",
 
   "notch.collapse": "Collapse",
+  "settings.moveUp": "Move up",
+  "settings.moveDown": "Move down",
 
   "clock.prev": "Previous month",
   "clock.next": "Next month",

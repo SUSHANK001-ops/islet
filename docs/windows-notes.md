@@ -376,3 +376,47 @@ build machine. Status UNVERIFIED — verify each on real Windows 10 (2004+)/11.
       closed number; installer ≤ 1 MB larger.
 - [ ] Only three closed subscriptions active (volume+mute, battery, minute tick);
       other sources subscribe only while their flyout is open.
+
+## Spec 12 (Auto-hide handle) notes
+
+- [ ] Visibility "Auto-hide": pill collapses to the thin handle after the delay;
+      hovering the handle expands it; a running timer or unread notification
+      shows a single dot on the handle.
+- [ ] Visibility "Hidden (hotkey only)": stays collapsed until the hotkey/tray
+      toggles it open.
+- [ ] Hotkey, game mode, hide-from-capture and fullscreen behavior still work in
+      every visibility mode.
+- Animation is width + opacity only. The handle window could in future be sized
+  to just the handle; evaluate hover over the top screen edge on hardware and
+  record the result here (no cursor polling).
+
+## Spec 13 (Character catalog) notes
+
+- Ships NOT configured: `CATALOG_BASE_URL` empty + placeholder public key, so
+  Browse shows "not set up" and no network call is ever made. Set both (see
+  `docs/catalog.md`) to enable. The private signing key is never in the repo.
+- Security is enforced in `characters/catalog.rs`: one HTTPS host, no redirects,
+  no cookies, Ed25519 index signature verify, SHA-256 per pack, size caps
+  (index 256 KB / pack 3 MB / preview 64 KB), 15 s timeout, license allow-list
+  (CC0-1.0 / CC-BY-4.0 / MIT), then the normal validator + temp-dir+rename
+  install. The frontend passes only an id; Rust re-fetches + re-verifies.
+- [ ] Once configured, verify on hardware: Browse lists verified entries;
+      Install downloads, hash-checks, validates, and installs; a tampered pack
+      (wrong hash) and a bad signature are both rejected with a clear message;
+      offline/timeout shows a clear message; Cancel works.
+- Reading other apps' notifications remains OUT (needs MSIX package identity).
+
+## v2 + Specs 11-14 — final integration status
+
+All code builds clean (`tsc`, `cargo`), `vitest` (40) and `cargo test` (55)
+pass, the DEV gallery is confirmed ABSENT from the release bundle, and the
+`/dev/gallery` route renders every control, flyout chrome, state, the handle,
+and a browse card for screenshots at 100% / 150%.
+
+STILL REQUIRES REAL HARDWARE (cannot be done from the build machine):
+- `scripts/perf-check` for every budget (record in `docs/perf-results.md`).
+- All Windows-native behaviors flagged UNVERIFIED above (Spec 10 capture/taskbar/
+  game mode; Spec 11 audio/power-overlay/radios/settings-links; Spec 12 handle;
+  Spec 13 once the catalog is configured).
+- Multi-monitor + 100/125/150/200% DPI checks for the pill, flyouts, and handle.
+- Code-signing the installer.

@@ -95,6 +95,34 @@ export function DevGallery() {
           <div class="islet-flyout-card"><div class="islet-empty">Not available on this PC</div></div>
         </div>
       </Frame>
+
+      <Frame title="Auto-hide handle">
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <button class="islet-handle" aria-label="handle" />
+          <button class="islet-handle" aria-label="handle with dot">
+            <span class="islet-handle-dot" />
+          </button>
+        </div>
+      </Frame>
+
+      <Frame title="Browse card (catalog)">
+        <div class="islet-flyout-card">
+          <div class="islet-browse-card">
+            <div class="islet-browse-prev">
+              <span class="islet-browse-prev-ph">·</span>
+            </div>
+            <div class="islet-browse-meta">
+              <span class="islet-browse-name">Sample Pal</span>
+              <span class="islet-browse-author">An Author</span>
+              <span class="islet-browse-badges">
+                <span class="islet-license-badge">CC-BY-4.0</span>
+                <span class="islet-dim islet-num">42 KB</span>
+              </span>
+            </div>
+            <button class="islet-btn primary">Install</button>
+          </div>
+        </div>
+      </Frame>
     </div>
   );
 }

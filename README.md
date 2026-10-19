@@ -4,18 +4,26 @@ A focus and study companion with a living character that sits in a small pill
 (the "notch") on your screen. Windows 10 (2004+) and 11. See `AGENTS.md` for the
 full spec and hard rules, and `CHARACTERS.md` for the character pack format.
 
-> Status: **v2 feature-complete (pending hardware verification).** v1 shipped the
-> shell, storage, focus timer, tasks, notes and media. v2 added the living notch
+> Status: **feature-complete (pending hardware verification).** On top of v1
+> (shell, storage, focus, tasks, notes, media) the app now has: the living notch
 > character + engine, moods/growth/personality, place-anywhere drag + on-notch
 > controls + stretch, a safe user-curated app launcher, Windows extras (game
 > mode, taskbar progress, hide-from-capture), progress (streaks + heatmap) and
-> character export/import, plus a hand-built animated UI. All specs build clean
-> with `cargo test` + `vitest` green. STILL REQUIRED before release: run
-> `scripts/perf-check` on real Windows hardware (closed notch-on, closed
-> notch-off, open), verify the Windows-native features (capture hide, taskbar
-> progress, fullscreen game mode) and multi-monitor/DPI behavior, and code-sign
-> the installer. See `docs/windows-notes.md`. The built-in character "Pip"
-> (`pixel-pal`) is original CC0 art; swap in your own original art to customize.
+> character export/import, a **status-bar pill style with system flyouts**
+> (clock/calendar, sound, battery/power mode, quick settings, notifications),
+> an **auto-hide handle**, and a **safe signed character catalog** for
+> downloads — all behind a hand-built, animated, tokens-only UI. Everything
+> builds clean with `cargo test` (55) + `vitest` (40) green; a DEV-only
+> `/dev/gallery` renders every panel/state.
+>
+> STILL REQUIRED before release (real Windows hardware only): run
+> `scripts/perf-check` and record budgets; verify the Windows-native features
+> (audio, power-overlay — confirm the Balanced GUID, Wi-Fi/Bluetooth radios,
+> capture hide, taskbar progress, game mode, auto-hide handle); check
+> multi-monitor + 100/125/150/200% DPI; configure the catalog host + signing key
+> if you want downloads (see `docs/catalog.md`); and code-sign the installer.
+> See `docs/windows-notes.md`. The built-in character "Pip" (`pixel-pal`) is
+> original CC0 art; swap in your own to customize.
 
 ## Prerequisites
 

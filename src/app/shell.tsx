@@ -34,6 +34,7 @@ import { pillStyle } from "./pill-style";
 import { SystemFlyouts, useFlyoutController } from "../system/flyouts-host";
 import { Toast } from "../system/notifications/toast";
 import { notifications } from "../system/notifications/store";
+import { Handle } from "./handle";
 
 /**
  * Spec 1 shell.
@@ -55,6 +56,16 @@ export function Shell() {
   const showInNotch = activeRecord.value.showInNotch;
   const charProblem = characterProblem.value;
 
+  // Auto-hide (Spec 12). `collapsed` true = showing only the thin handle.
+  // Visibility modes: always (never collapse), autoHide (collapse on leave),
+  // hidden (stay collapsed until the hotkey toggles open).
+  const visibility = settings.value.pillVisibility;
+  const [collapsed, setCollapsed] = useState(
+    settings.value.pillVisibility !== "always"
+  );
+  const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [focusRunning, setFocusRunning] = useState(false);
+
   // Bring the character system up once: wire the animate/stop gate, the focus
   // signals, and load the active (default) character.
   useEffect(() => {
@@ -75,6 +86,7 @@ export function Shell() {
       totalSecs: number;
     }>("islet://focus-state", (e) => {
       const s = e.payload;
+      setFocusRunning(s.phase !== "idle" && s.runState === "running");
       if (s.phase === "idle" || s.totalSecs <= 0) {
         void setTaskbarProgress("none", 0).catch(() => {});
         return;
@@ -104,6 +116,9 @@ export function Shell() {
   useEffect(() => {
     const un = listen<boolean>("islet://toggle-open", (e) => {
       const next = e.payload;
+      // A deliberate toggle (tray/hotkey) always un-collapses the handle so the
+      // pill is usable even in "hidden" mode.
+      if (next) setCollapsed(false);
       setOpen(next);
       setPinned(next); // a deliberate toggle pins/unpins
     });
@@ -158,6 +173,28 @@ export function Shell() {
     else void closePanel();
   }, [open]);
 
+  // Re-apply the collapsed state when the visibility setting changes.
+  useEffect(() => {
+    setCollapsed(visibility !== "always");
+  }, [visibility]);
+
+  // Expand from the handle (hover/focus). Cancels any pending collapse.
+  function expandFromHandle() {
+    if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    setCollapsed(false);
+  }
+
+  // Collapse back to the handle after the configured delay, unless the panel is
+  // open/pinned or a permission is pending. "always" never collapses.
+  function scheduleCollapse() {
+    if (visibility === "always") return;
+    if (open || pinned || pending.length > 0) return;
+    if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    collapseTimer.current = setTimeout(() => {
+      setCollapsed(true);
+    }, settings.value.autohideDelayMs);
+  }
+
   function handleEnter() {
     // Status-bar style never opens the whole panel on hover — its items open
     // their own flyouts. Only the Notch pill grows on hover.
@@ -166,6 +203,8 @@ export function Shell() {
   }
 
   function handleLeave() {
+    // Auto-hide: start the collapse countdown when the pointer leaves.
+    scheduleCollapse();
     // In status-bar style the strip stays put; nothing to close on leave.
     if (pillStyle.value === "statusBar") return;
     // Pinned or a pending permission keeps it open; otherwise close.
@@ -233,10 +272,15 @@ export function Shell() {
 
   const hasAlert = pending.length > 0;
   const statusBarStyle = pillStyle.value === "statusBar";
+  // The handle shows a single dot when a timer runs OR there are unread notifs.
+  const handleDot =
+    notifications.value.some((n) => !n.read) || focusRunning;
 
   return (
     <div class="islet-stack" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
-      {statusBarStyle && !open ? (
+      {collapsed && !open ? (
+        <Handle dot={handleDot} onEnter={expandFromHandle} />
+      ) : statusBarStyle && !open ? (
         // Status-bar style: a strip of live system items on the closed pill.
         // Items open their flyout via the controller (wired fully in Task 3).
         <StatusBar

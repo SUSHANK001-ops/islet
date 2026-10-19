@@ -1082,3 +1082,44 @@ body {
   display: flex;
   gap: 6px;
 }
+
+/* ---- Auto-hide handle (Spec 12) ---- */
+/* A thin bar at the pill's position. Hovering it expands the pill/status bar.
+   Animation is width + opacity only (nothing heavier), reduced-motion safe. */
+.islet-handle {
+  margin-top: 8px;
+  width: 64px;
+  height: 4px;
+  border: none;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(120, 120, 140, 0.55);
+  cursor: pointer;
+  position: relative;
+  transition: width var(--islet-dur) var(--islet-ease-out),
+    opacity var(--islet-dur) var(--islet-ease-out),
+    background var(--islet-dur) var(--islet-ease-out);
+}
+.islet-handle:hover {
+  width: 84px;
+  background: rgba(150, 150, 170, 0.8);
+}
+.islet-handle:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 3px;
+}
+.islet-handle-dot {
+  position: absolute;
+  top: -3px;
+  right: -2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--islet-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-handle {
+    transition: none;
+  }
+}

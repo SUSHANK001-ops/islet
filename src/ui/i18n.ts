@@ -71,6 +71,11 @@ const en: Strings = {
   "settings.pillStyle.notch": "Notch",
   "settings.pillStyle.statusBar": "Status bar",
   "settings.openOnHover": "Open items on hover",
+  "settings.visibility": "Pill visibility",
+  "settings.visibility.always": "Always visible",
+  "settings.visibility.autoHide": "Auto-hide",
+  "settings.visibility.hidden": "Hidden (hotkey only)",
+  "settings.autohideDelay": "Auto-hide delay",
 
   "common.comingSoon": "Coming soon",
   "common.loading": "Loading…",

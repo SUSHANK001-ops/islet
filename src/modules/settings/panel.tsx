@@ -144,6 +144,41 @@ export default function SettingsPanel() {
       ) : null}
 
       <label class="islet-field">
+        <span>{t("settings.visibility")}</span>
+        <select
+          value={s.pillVisibility}
+          onChange={(e) =>
+            updateSettings({
+              pillVisibility: e.currentTarget.value as
+                | "always"
+                | "autoHide"
+                | "hidden",
+            })
+          }
+        >
+          <option value="always">{t("settings.visibility.always")}</option>
+          <option value="autoHide">{t("settings.visibility.autoHide")}</option>
+          <option value="hidden">{t("settings.visibility.hidden")}</option>
+        </select>
+      </label>
+
+      {s.pillVisibility === "autoHide" ? (
+        <label class="islet-field">
+          <span>{t("settings.autohideDelay")}</span>
+          <input
+            type="range"
+            min={100}
+            max={2000}
+            step={100}
+            value={s.autohideDelayMs}
+            onInput={(e) =>
+              updateSettings({ autohideDelayMs: Number(e.currentTarget.value) })
+            }
+          />
+        </label>
+      ) : null}
+
+      <label class="islet-field">
         <span>{t("settings.notchPosition")}</span>
         <select
           value={s.notchPosition}

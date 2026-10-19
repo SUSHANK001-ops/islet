@@ -57,6 +57,20 @@ pub struct Settings {
     /// Whether the first-run "try Status bar" offer has been shown.
     #[serde(default)]
     pub pill_style_offered: bool,
+    /// Pill visibility (Spec 12): "always" | "autoHide" | "hidden".
+    #[serde(default = "default_pill_visibility")]
+    pub pill_visibility: String,
+    /// Auto-hide collapse delay in ms after the pointer leaves (Spec 12).
+    #[serde(default = "default_autohide_delay")]
+    pub autohide_delay_ms: u32,
+}
+
+fn default_pill_visibility() -> String {
+    "always".into()
+}
+
+fn default_autohide_delay() -> u32 {
+    600
 }
 
 fn default_pill_style() -> String {
@@ -106,6 +120,8 @@ impl Default for Settings {
             open_on_hover: false,
             status_items: Vec::new(),
             pill_style_offered: false,
+            pill_visibility: default_pill_visibility(),
+            autohide_delay_ms: default_autohide_delay(),
         }
     }
 }

@@ -43,6 +43,10 @@ export interface Settings {
   statusItems: string[];
   // Whether the first-run "try Status bar" offer was shown.
   pillStyleOffered: boolean;
+  // Pill visibility (Spec 12): always visible, auto-hide to a handle, or hidden.
+  pillVisibility: "always" | "autoHide" | "hidden";
+  // Auto-hide collapse delay (ms) after the pointer leaves.
+  autohideDelayMs: number;
 }
 
 const DEFAULTS: Settings = {
@@ -67,6 +71,8 @@ const DEFAULTS: Settings = {
   openOnHover: false,
   statusItems: [],
   pillStyleOffered: false,
+  pillVisibility: "always",
+  autohideDelayMs: 600,
 };
 
 export const settings = signal<Settings>(structuredClone(DEFAULTS));
@@ -131,6 +137,8 @@ function toPersisted() {
     openOnHover: v.openOnHover,
     statusItems: v.statusItems,
     pillStyleOffered: v.pillStyleOffered,
+    pillVisibility: v.pillVisibility,
+    autohideDelayMs: v.autohideDelayMs,
   };
 }
 
@@ -196,6 +204,14 @@ export async function initSettings(): Promise<void> {
         ? disk.statusItems.filter((x): x is string => typeof x === "string")
         : [],
       pillStyleOffered: !!disk.pillStyleOffered,
+      pillVisibility:
+        disk.pillVisibility === "autoHide" || disk.pillVisibility === "hidden"
+          ? disk.pillVisibility
+          : "always",
+      autohideDelayMs:
+        typeof disk.autohideDelayMs === "number"
+          ? Math.min(3000, Math.max(100, disk.autohideDelayMs))
+          : 600,
     };
   } catch {
     // Not in Tauri or load failed: keep defaults.
@@ -225,6 +241,8 @@ effect(() => {
     openOnHover: snapshot.openOnHover,
     statusItems: snapshot.statusItems,
     pillStyleOffered: snapshot.pillStyleOffered,
+    pillVisibility: snapshot.pillVisibility,
+    autohideDelayMs: snapshot.autohideDelayMs,
   }).catch(() => {
     /* non-fatal: keep working from memory */
   });

@@ -30,6 +30,8 @@ describe("settings-store", () => {
       openOnHover: false,
       statusItems: [],
       pillStyleOffered: false,
+      pillVisibility: "always",
+      autohideDelayMs: 600,
     };
   });
 

@@ -99,6 +99,8 @@ export interface PersistedSettings {
   openOnHover: boolean;
   statusItems: string[];
   pillStyleOffered: boolean;
+  pillVisibility: "always" | "autoHide" | "hidden";
+  autohideDelayMs: number;
 }
 
 /** Load settings from disk (defaults on first run). */

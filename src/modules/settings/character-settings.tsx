@@ -13,6 +13,7 @@ import {
   activeRecord,
   loadActiveCharacter,
 } from "../../characters/character-store";
+import { BrowseCharacters } from "./browse-characters";
 
 // The Characters section of Settings: pick the active character, toggle whether
 // it shows in the notch, import a pack (folder picker), and delete a pack.
@@ -211,6 +212,28 @@ export function CharacterSettings() {
       )}
 
       {notice ? <p class="islet-char-notice">{notice}</p> : null}
+
+      {/* Browse online catalog (Spec 13). User-started; nothing is contacted
+          until the user taps Browse inside this component. */}
+      <div class="islet-field islet-browse-head">
+        <span>{t("settings.character.browse")}</span>
+      </div>
+      <BrowseCharacters />
+
+      {/* Credits: every installed pack with its author + license. */}
+      {list.length > 0 ? (
+        <div class="islet-credits">
+          <span class="islet-flyout-section-title">{t("settings.credits")}</span>
+          <ul>
+            {list.map((c) => (
+              <li key={c.id}>
+                <span>{c.name || c.id}</span>
+                <span class="islet-dim">{c.author}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

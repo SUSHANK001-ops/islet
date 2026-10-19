@@ -8,6 +8,7 @@
 //! app data. For v1 the loader reads from app data; the sample pack is copied
 //! there on first run by `ensure_builtin`.
 
+pub mod catalog;
 pub mod manifest;
 pub mod validate;
 

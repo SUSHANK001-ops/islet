@@ -43,6 +43,16 @@ tauri-plugin-dialog = "2"
 # directory, CRCs) is well over 100 lines and error-prone by hand; `zip` is the
 # standard, widely-used crate. No compression needed, but it handles the format.
 zip = { version = "2", default-features = false, features = ["deflate"] }
+# Spec 13 character catalog (downloads). All three are security-critical and
+# cannot be safely hand-rolled:
+#  - ureq: a small, blocking HTTPS client (rustls). We only ever GET from ONE
+#    allow-listed host; no cookies, no redirects off-host. Smaller than reqwest.
+#  - ed25519-dalek: verify the catalog index signature against a built-in public
+#    key. Rolling Ed25519 by hand is a security non-starter.
+#  - sha2: SHA-256 hash check of each downloaded pack vs the signed index.
+ureq = { version = "2", default-features = false, features = ["tls"] }
+ed25519-dalek = "2"
+sha2 = "0.10"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]

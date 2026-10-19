@@ -33,8 +33,13 @@ over time, and a few power-user conveniences around it.
    and write why in `docs/windows-notes.md`.
 3. **Scope is this file.** Build what v2 scope lists. A new idea that is not in
    scope goes to `docs/ideas.md` with what it would need, not into the code.
-4. **Privacy by default.** Nothing leaves the PC. Ask for a permission only when
-   the feature that needs it is first used, on the notch surface.
+4. **Privacy by default.** Nothing leaves the PC, with ONE narrow exception
+   (Spec 13): the character catalog may contact a SINGLE allow-listed HTTPS host
+   (`catalog.baseUrl`), and only after a user click (or the optional once-a-day
+   update check, default OFF). Still no telemetry, no analytics, no accounts, no
+   remote code, and no remote images outside signed, hash-checked, validated
+   packs. Ask for a permission only when the feature that needs it is first
+   used, on the notch surface.
 5. **Small steps.** One spec = 5 to 8 requirements. One task = one small, tested
    change.
 6. **Do not guess Windows behavior.** Test it, measure it, and write the result
@@ -281,6 +286,18 @@ status-bar pill item, and as a tab in the System group of the Notch panel.
   Network: none. Never requests location.
 - `system/notifications` — Islet's OWN notification history + toast. Network:
   none. Does NOT read other apps' notifications.
+
+### Character catalog (Spec 13)
+
+- `characters/catalog` (Rust) — user-started downloads from ONE allow-listed
+  HTTPS host. Network: `catalog.baseUrl` only. Declares its single network host
+  and surfaces consent on the notch before the first fetch. Signed index
+  (built-in Ed25519 key), SHA-256 per pack, strict size/timeout limits, and the
+  normal validator runs before install (temp-dir + rename). Licenses limited to
+  CC0-1.0 / CC-BY-4.0 / MIT. Tooling: `scripts/import-sheet`,
+  `scripts/catalog-build`; see `docs/catalog.md`. Default state: NOT configured
+  (empty base URL + placeholder key) → Browse says "not set up", local import
+  still works.
 
 ## Build order (one Kiro spec each)
 

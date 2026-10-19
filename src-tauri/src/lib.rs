@@ -116,7 +116,11 @@ pub fn run() {
             commands::radios_set,
             commands::events_list_month,
             commands::event_add,
-            commands::event_delete
+            commands::event_delete,
+            commands::catalog_is_configured,
+            commands::catalog_fetch,
+            commands::catalog_preview,
+            commands::catalog_install
         ])
         .setup(|app| {
             let handle = app.handle();

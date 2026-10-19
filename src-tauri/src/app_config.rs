@@ -4,6 +4,22 @@
 
 pub const APP_NAME: &str = "Islet";
 
+/// The app version, mirrored from Cargo for the catalog User-Agent + minAppVersion.
+pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Character catalog config (Spec 13). The base URL is the SINGLE allow-listed
+/// host the app may contact, and only after a user click. Empty = "not set up"
+/// (the Browse screen says so; local import still works). The user supplies
+/// this when they host the catalog as static files.
+pub const CATALOG_BASE_URL: &str = "";
+
+/// Ed25519 public key (32 bytes, hex) used to verify the signed catalog index.
+/// The matching PRIVATE key is NEVER in the repo. An all-zero placeholder means
+/// "no key configured" -> the catalog refuses to verify, so Browse stays off
+/// until a real key is set alongside CATALOG_BASE_URL.
+pub const CATALOG_PUBLIC_KEY_HEX: &str =
+    "0000000000000000000000000000000000000000000000000000000000000000";
+
 /// Pill geometry in logical pixels. Mirrors `PILL` in `src/app.config.ts`.
 pub struct PillGeometry {
     pub closed_width: f64,

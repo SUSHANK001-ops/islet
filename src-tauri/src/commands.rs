@@ -619,6 +619,83 @@ pub async fn character_import_file(app: AppHandle) -> Result<Option<CharacterSum
     Ok(Some(summary))
 }
 
+/// Whether the character catalog is configured (base URL + a real public key).
+/// When false the Browse screen shows "Catalog not set up" and local import
+/// still works.
+#[tauri::command]
+pub fn catalog_is_configured() -> bool {
+    characters::catalog::is_configured()
+}
+
+/// Fetch + verify the signed catalog index. Only called after the user opens
+/// Browse (consent gated on the frontend). Returns verified, license-allowed,
+/// non-placeholder entries.
+#[tauri::command]
+pub async fn catalog_fetch(
+) -> Result<Vec<characters::catalog::CatalogEntry>, String> {
+    // Run the blocking HTTP+verify off the async runtime thread.
+    tauri::async_runtime::spawn_blocking(|| {
+        characters::catalog::fetch_index().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Fetch a verified preview image for a catalog entry (by id), returned as a
+/// base64 data-URL body the Browse grid can show. Null when the entry has no
+/// preview. Size-capped + hash-checked in Rust.
+#[tauri::command]
+pub async fn catalog_preview(id: String) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let entries = characters::catalog::fetch_index().map_err(|e| e.to_string())?;
+        let entry = entries
+            .into_iter()
+            .find(|e| e.id == id)
+            .ok_or_else(|| "not found".to_string())?;
+        let bytes = characters::catalog::fetch_preview(&entry).map_err(|e| e.to_string())?;
+        Ok(bytes.map(|b| base64_png(&b)))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Minimal base64 (standard alphabet) for embedding a PNG preview as a data URL.
+fn base64_png(bytes: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::from("data:image/png;base64,");
+    for chunk in bytes.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = *chunk.get(1).unwrap_or(&0) as u32;
+        let b2 = *chunk.get(2).unwrap_or(&0) as u32;
+        let n = (b0 << 16) | (b1 << 8) | b2;
+        out.push(T[((n >> 18) & 63) as usize] as char);
+        out.push(T[((n >> 12) & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { T[((n >> 6) & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+/// Download, hash-check, validate, and install one catalog entry by id. The
+/// full entry is re-fetched+verified so the frontend cannot inject a forged
+/// url/hash — it only passes an id.
+#[tauri::command]
+pub async fn catalog_install(
+    app: AppHandle,
+    id: String,
+) -> Result<CharacterSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let entries = characters::catalog::fetch_index().map_err(|e| e.to_string())?;
+        let entry = entries
+            .into_iter()
+            .find(|e| e.id == id)
+            .ok_or_else(|| "that character is no longer in the catalog".to_string())?;
+        characters::catalog::install(&app, &entry).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Delete a pack from the library. If it was the active character, the active
 /// record is cleared to "no character" so nothing points at a deleted folder.
 #[tauri::command]

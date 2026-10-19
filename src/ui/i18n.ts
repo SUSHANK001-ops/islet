@@ -172,6 +172,18 @@ const en: Strings = {
   "settings.character.exportFile": "Export a character",
   "settings.character.importFile": "Import file…",
   "settings.character.exported": "Exported “{name}”.",
+  "settings.character.browse": "Browse online",
+  "settings.credits": "Credits",
+
+  "browse.intro":
+    "Browse free characters from the Islet catalog. Nothing is downloaded until you choose Install.",
+  "browse.open": "Browse characters",
+  "browse.notConfigured": "Catalog not set up yet. You can still import a character from a file.",
+  "browse.empty": "No characters in the catalog yet.",
+  "browse.retry": "Try again",
+  "browse.install": "Install",
+  "browse.installing": "Installing…",
+  "browse.installed": "Installed",
 };
 
 const locales: Record<Locale, Strings> = { en };

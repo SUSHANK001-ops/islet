@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "validate-character": "node scripts/validate-character.mjs",
     "character-preview": "node scripts/character-preview.mjs",
+    "import-sheet": "node scripts/import-sheet.mjs",
+    "catalog-build": "node scripts/catalog-build.mjs",
     "size-report": "node scripts/size-report.mjs",
     "check-no-dev": "node scripts/check-no-dev.mjs",
     "release": "tauri build && node scripts/check-no-dev.mjs && node scripts/size-report.mjs"

@@ -452,6 +452,44 @@ fn unique_suffix() -> String {
         .unwrap_or_else(|_| "tmp".into())
 }
 
+/// Locate the read-only source folder holding the built-in pack(s).
+///
+/// WHY this tries several roots: `bundle.resources` in `tauri.conf.json` is
+/// only copied next to the executable by `tauri build`. Under `tauri dev`
+/// nothing is copied, so `resource_dir()/packs/characters` does NOT exist and
+/// the default character silently never appears. The debug-only fallbacks read
+/// the pack straight out of the repo so dev matches a real install.
+fn builtin_source_root(app: &AppHandle) -> Option<PathBuf> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+
+    // Bundled install: resources sit beside the executable.
+    if let Ok(res_dir) = app.path().resource_dir() {
+        candidates.push(res_dir.join("packs").join("characters"));
+    }
+
+    // Dev only: read from the working tree. CARGO_MANIFEST_DIR is baked in at
+    // compile time, so it is correct for `tauri dev` and irrelevant in release.
+    #[cfg(debug_assertions)]
+    {
+        candidates.push(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("packs")
+                .join("characters"),
+        );
+        // `tauri dev` runs with the cwd at src-tauri/; cover a plain `cargo run`
+        // from the repo root too.
+        if let Ok(cwd) = std::env::current_dir() {
+            candidates.push(cwd.join("..").join("packs").join("characters"));
+            candidates.push(cwd.join("packs").join("characters"));
+        }
+    }
+
+    candidates
+        .into_iter()
+        .find(|p| p.join(BUILTIN_ID).join("sheet.png").exists())
+}
+
 /// Copy the bundled built-in pack(s) into app data on first run so the user
 /// always has a default character. Built-ins ship read-only under the app's
 /// resource dir (`packs/characters/<id>`); user packs live only in app data.
@@ -464,15 +502,14 @@ pub fn ensure_builtin(app: &AppHandle) {
     let Ok(dest_root) = characters_dir(app) else {
         return;
     };
-    // Resolve the bundled packs dir from Tauri resources. In dev this resolves
-    // under the resource dir; `tauri.conf.json` bundles `packs/` as a resource.
-    let Ok(res_dir) = app.path().resource_dir() else {
+    let Some(src_root) = builtin_source_root(app) else {
+        eprintln!(
+            "islet: no built-in character source found; the default character \
+             will not appear. Looked under the resource dir and, in dev, the \
+             repo's packs/characters."
+        );
         return;
     };
-    let src_root = res_dir.join("packs").join("characters");
-    if !src_root.exists() {
-        return;
-    }
     for id in [BUILTIN_ID] {
         let src = src_root.join(id);
         let dest = dest_root.join(id);

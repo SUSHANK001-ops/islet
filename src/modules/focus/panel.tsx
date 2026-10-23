@@ -79,11 +79,12 @@ export default function FocusPanel() {
     <div class="islet-focus">
       <div class="islet-focus-phase">{phaseLabel(state.phase)}</div>
 
-      <div class="islet-focus-ring">
+      <div class={`islet-focus-ring${running ? " running" : ""}`}>
         <svg width="150" height="150" viewBox="0 0 150 150">
           <defs>
             <linearGradient id="islet-grad" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stop-color="#7c9cff" />
+              <stop offset="48%" stop-color="#8f93ff" />
               <stop offset="100%" stop-color="#a78bfa" />
             </linearGradient>
           </defs>

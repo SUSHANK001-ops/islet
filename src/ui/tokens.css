@@ -22,8 +22,17 @@
   --islet-border: rgba(255, 255, 255, 0.10);
   --islet-divider: rgba(255, 255, 255, 0.07);
 
-  /* A subtle brand gradient used sparingly (pill accent, active states). */
-  --islet-grad: linear-gradient(135deg, #7c9cff 0%, #a78bfa 100%);
+  /* A subtle brand gradient used sparingly (pill accent, active states).
+     Three stops give the accent a touch more depth than a flat two-stop ramp. */
+  --islet-grad: linear-gradient(135deg, #7c9cff 0%, #8f93ff 48%, #a78bfa 100%);
+  /* Soft colored glow derived from the accent, for focus/active emphasis. */
+  --islet-glow: 0 0 0 3px color-mix(in srgb, var(--islet-accent) 42%, transparent);
+  /* A faint top highlight for "lit from above" surfaces (pill, buttons). */
+  --islet-sheen: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0) 55%
+  );
 
   --islet-radius: 16px;
   --islet-radius-sm: 10px;
@@ -31,8 +40,12 @@
   --islet-gap: 8px;
   --islet-pad: 16px;
   --islet-font: system-ui, "Segoe UI", sans-serif;
-  --islet-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --islet-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  /* Layered elevation. Two stacked shadows (ambient + direct) read as real
+     depth without a single heavy blur, staying within the perf rules. */
+  --islet-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.22);
+  --islet-shadow: 0 2px 6px rgba(0, 0, 0, 0.28), 0 12px 28px rgba(0, 0, 0, 0.4);
+  /* Highest surface (open panel): a little more lift + a hairline ring. */
+  --islet-shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.3), 0 20px 48px rgba(0, 0, 0, 0.46);
   --islet-transition: 140ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Motion system (Spec 12). All motion uses transform/opacity only (GPU
@@ -58,6 +71,12 @@
   --islet-border: rgba(0, 0, 0, 0.12);
   --islet-divider: rgba(0, 0, 0, 0.07);
 
-  --islet-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  --islet-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.10);
+  --islet-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --islet-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 12px 28px rgba(0, 0, 0, 0.14);
+  --islet-shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.1), 0 20px 48px rgba(0, 0, 0, 0.18);
+  --islet-sheen: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 55%
+  );
 }

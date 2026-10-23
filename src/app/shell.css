@@ -54,13 +54,27 @@ body {
   background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
   border-radius: var(--islet-radius-pill);
   box-shadow: var(--islet-shadow-sm);
-  transition: width var(--islet-transition), height var(--islet-transition),
-    background var(--islet-transition), box-shadow var(--islet-transition);
+  /* Spring-eased size changes so hover/open feel tactile, not linear. */
+  transition: width var(--islet-dur) var(--islet-ease-spring),
+    height var(--islet-dur) var(--islet-ease-spring),
+    background var(--islet-transition), box-shadow var(--islet-dur) var(--islet-ease-out);
   cursor: pointer;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Top sheen: a faint "lit from above" highlight so the pill reads as a real
+   tactile object rather than a flat rectangle. Pointer-transparent. */
+.islet-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--islet-sheen);
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 .islet-pill::after {
@@ -72,7 +86,10 @@ body {
   border-radius: 2px;
   background: var(--islet-grad);
   opacity: 0;
-  transition: opacity var(--islet-transition);
+  /* A soft colored glow makes the brand underline feel lit, not painted. */
+  box-shadow: 0 0 10px color-mix(in srgb, var(--islet-accent) 65%, transparent);
+  transition: opacity var(--islet-dur) var(--islet-ease-out),
+    width var(--islet-dur) var(--islet-ease-out);
 }
 
 .islet-pill:hover {
@@ -80,7 +97,8 @@ body {
   box-shadow: var(--islet-shadow);
 }
 .islet-pill:hover::after {
-  opacity: 0.9;
+  opacity: 0.95;
+  width: 60px;
 }
 
 .islet-pill.open {
@@ -127,7 +145,10 @@ body {
 @keyframes islet-spring-in {
   0% {
     opacity: 0;
-    transform: translateY(-10px) scale(0.96);
+    transform: translateY(-12px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
   }
   100% {
     opacity: 1;
@@ -154,7 +175,7 @@ body {
   background: var(--islet-bg-panel);
   border: 1px solid var(--islet-border);
   border-radius: var(--islet-radius);
-  box-shadow: var(--islet-shadow);
+  box-shadow: var(--islet-shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -162,6 +183,18 @@ body {
   transform-origin: top center;
   animation: islet-spring-in var(--islet-dur-slow) var(--islet-ease-spring);
   will-change: transform, opacity;
+  position: relative;
+}
+/* A hairline top sheen so the panel's top edge catches light like the pill. */
+.islet-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40%;
+  border-radius: var(--islet-radius) var(--islet-radius) 0 0;
+  background: var(--islet-sheen);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .islet-panel h1 {
@@ -220,7 +253,8 @@ body {
   background: var(--islet-control);
   color: var(--islet-fg);
   transition: background var(--islet-transition), transform var(--islet-transition),
-    border-color var(--islet-transition);
+    border-color var(--islet-transition), box-shadow var(--islet-transition),
+    filter var(--islet-transition);
 }
 .islet-btn:hover {
   background: var(--islet-control-hover);
@@ -236,6 +270,8 @@ body {
 }
 .islet-btn.primary:hover {
   filter: brightness(1.06);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--islet-accent) 40%, transparent),
+    0 4px 14px color-mix(in srgb, var(--islet-accent) 35%, transparent);
 }
 .islet-btn.danger {
   background: transparent;
@@ -288,15 +324,18 @@ body {
   cursor: pointer;
   position: relative;
   border-radius: 8px 8px 0 0;
-  transition: color var(--islet-transition);
+  transition: color var(--islet-transition), transform var(--islet-transition);
 }
 .islet-tab:hover {
   color: var(--islet-fg);
 }
+.islet-tab:active {
+  transform: scale(0.96);
+}
 .islet-tab.active {
   color: var(--islet-fg);
 }
-/* Gradient underline under the active tab. */
+/* Gradient underline under the active tab, with a soft lit glow. */
 .islet-tab.active::after {
   content: "";
   position: absolute;
@@ -306,6 +345,7 @@ body {
   height: 2px;
   border-radius: 2px;
   background: var(--islet-grad);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--islet-accent) 55%, transparent);
 }
 .islet-tab:focus-visible {
   outline: 2px solid var(--islet-accent);
@@ -489,11 +529,29 @@ body {
   stroke-width: 6;
   stroke-linecap: round;
   transition: stroke-dashoffset 1s linear;
+  /* A soft colored glow so the progress arc reads as "lit". drop-shadow on an
+     SVG stroke is GPU-composited and cheap (no layout). */
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--islet-accent) 60%, transparent));
+}
+/* While a round runs, the ring breathes gently so the hero screen feels alive.
+   Opacity-only on the whole ring box; disabled under reduced motion below. */
+.islet-focus-ring.running {
+  animation: islet-ring-breathe 3.2s ease-in-out infinite;
+}
+@keyframes islet-ring-breathe {
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 .islet-focus-clock {
-  font-size: 38px;
+  font-size: 40px;
   font-variant-numeric: tabular-nums;
-  font-weight: 300;
+  font-weight: 250;
+  letter-spacing: 0.01em;
   color: var(--islet-fg);
   line-height: 1;
 }
@@ -745,12 +803,20 @@ body {
   .islet-panel,
   .islet-perm,
   .islet-btn,
+  .islet-tab,
   .islet-tab-view,
   .islet-focus-ring .progress {
     transition: none;
     animation: none;
   }
   .islet-alert-dot {
+    animation: none;
+  }
+  .islet-pill.has-character:not(:hover)::after {
+    animation: none;
+    opacity: 0.5;
+  }
+  .islet-focus-ring.running {
     animation: none;
   }
   /* No overshoot/scale motion at all under reduced-motion. */
@@ -801,6 +867,23 @@ body {
 .islet-pill.has-character:hover {
   width: 168px;
   height: 46px;
+}
+/* Living-notch breathing: when a character is shown and the pill is at rest,
+   the brand underline gently breathes so the notch feels alive even closed.
+   Opacity-only (no layout), slow, and disabled under reduced motion. The hover
+   rule above overrides this, so it only breathes while idle. */
+.islet-pill.has-character:not(:hover)::after {
+  opacity: 0.5;
+  animation: islet-breathe 4s ease-in-out infinite;
+}
+@keyframes islet-breathe {
+  0%,
+  100% {
+    opacity: 0.32;
+  }
+  50% {
+    opacity: 0.72;
+  }
 }
 .islet-notch-canvas {
   position: absolute;

@@ -501,6 +501,57 @@ fn builtin_source_root(app: &AppHandle) -> Option<PathBuf> {
         .find(|p| p.join(BUILTIN_ID).join("sheet.png").exists())
 }
 
+/// Replace `dest` with a fresh copy of `src`, staging through a temp directory.
+///
+/// WHY NOT `remove_dir_all` then `copy_dir`: that leaves a window where the
+/// pack does not exist. If the process is killed or the copy fails in that
+/// window, the user's character is GONE and the app starts with no mascot. This
+/// was observed in practice during development: a restart landed between the
+/// delete and the copy and wiped the installed pack.
+///
+/// Copying into a sibling temp dir first means a failure leaves the existing
+/// pack untouched, and the swap itself is a rename (same directory, so same
+/// volume). Mirrors `store::write_json_atomic` and the `.islet-char` importer.
+fn reseed_pack(src: &Path, dest: &Path) -> Result<(), String> {
+    let parent = dest
+        .parent()
+        .ok_or_else(|| "pack destination has no parent directory".to_string())?;
+    let name = dest
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "pack".into());
+
+    let staging = parent.join(format!(".{name}.incoming-{}", unique_suffix()));
+
+    // Clear any leftover staging dir from an earlier interrupted run.
+    let _ = fs::remove_dir_all(&staging);
+    if let Err(e) = copy_dir(src, &staging) {
+        let _ = fs::remove_dir_all(&staging);
+        return Err(e);
+    }
+
+    // Swap: move the old copy aside, put the new one in place, then drop the
+    // old one. Ordered so `dest` is absent for as short a time as possible.
+    let retired = parent.join(format!(".{name}.old-{}", unique_suffix()));
+    let had_old = dest.exists();
+    if had_old {
+        fs::rename(dest, &retired)
+            .map_err(|e| format!("could not move the old pack aside: {e}"))?;
+    }
+    if let Err(e) = fs::rename(&staging, dest) {
+        // Put the original back rather than leaving the user with nothing.
+        if had_old {
+            let _ = fs::rename(&retired, dest);
+        }
+        let _ = fs::remove_dir_all(&staging);
+        return Err(format!("could not install the new pack: {e}"));
+    }
+    if had_old {
+        let _ = fs::remove_dir_all(&retired);
+    }
+    Ok(())
+}
+
 /// Copy the bundled built-in pack(s) into app data on first run so the user
 /// always has a default character. Built-ins ship read-only under the app's
 /// resource dir (`packs/characters/<id>`); user packs live only in app data.
@@ -538,8 +589,7 @@ pub fn ensure_builtin(app: &AppHandle) {
         let stale = pack_version(&src) != pack_version(&dest);
         let needs = !dest.exists() || !dest.join("sheet.png").exists() || stale;
         if src.exists() && needs {
-            let _ = fs::remove_dir_all(&dest);
-            if let Err(e) = copy_dir(&src, &dest) {
+            if let Err(e) = reseed_pack(&src, &dest) {
                 eprintln!("islet: failed to seed built-in character '{id}': {e}");
             }
         }

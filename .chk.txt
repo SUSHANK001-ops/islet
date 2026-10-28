@@ -1,10 +1,21 @@
-﻿L9: pub const MANIFEST_VERSION: u32 = 1;
-    
-    /// The five states every pack MUST define (CHARACTERS.md).
-    pub const REQUIRED_STATES: [&str; 5] = ["idle", "working", "celebrating", "sleeping", "sad"];
-    
-L12: pub const REQUIRED_STATES: [&str; 5] = ["idle", "working", "celebrating", "sleeping", "sad"];
-    
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-    #[serde(rename_all = "camelCase")]
-    pub struct SheetSpec {
+﻿L54: pub fn active(app: &AppHandle) -> ActiveCharacter {
+L62: pub fn set_active(app: &AppHandle, value: &ActiveCharacter) -> Result<(), CharError> {
+L127: fn characters_dir(app: &AppHandle) -> Result<PathBuf, CharError> {
+L133: fn pack_dir(app: &AppHandle, id: &str) -> Result<PathBuf, CharError> {
+L142: fn read_manifest(dir: &Path) -> Result<Manifest, CharError> {
+L151: fn png_dimensions(bytes: &[u8]) -> Option<(u32, u32)> {
+L163: fn validate_pack_dir(dir: &Path, manifest: &Manifest) -> Result<(), CharError> {
+L209: fn dir_size(dir: &Path) -> u64 {
+L225: pub fn list(app: &AppHandle) -> Result<Vec<CharacterSummary>, CharError> {
+L260: pub fn load(app: &AppHandle, id: &str) -> Result<LoadedCharacter, CharError> {
+L275: pub fn delete(app: &AppHandle, id: &str) -> Result<(), CharError> {
+L286: pub fn import_dir(app: &AppHandle, src: &Path) -> Result<CharacterSummary, CharError> {
+L312: fn copy_dir(src: &Path, dest: &Path) -> Result<(), String> {
+L334: pub fn export(app: &AppHandle, id: &str, dest: &Path) -> Result<(), CharError> {
+L389: pub fn import_file(app: &AppHandle, archive: &Path) -> Result<CharacterSummary, CharError> {
+L435: fn single_subdir_with_manifest(dir: &Path) -> Option<PathBuf> {
+L448: fn unique_suffix() -> String {
+L460: fn pack_version(dir: &Path) -> Option<String> {
+L473: fn builtin_source_root(app: &AppHandle) -> Option<PathBuf> {
+L515: fn reseed_pack(src: &Path, dest: &Path) -> Result<(), std::io::Error> {
+L572: pub fn ensure_builtin(app: &AppHandle) {

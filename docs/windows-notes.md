@@ -420,3 +420,79 @@ STILL REQUIRES REAL HARDWARE (cannot be done from the build machine):
   Spec 13 once the catalog is configured).
 - Multi-monitor + 100/125/150/200% DPI checks for the pill, flyouts, and handle.
 - Code-signing the installer.
+
+## Spec 8 (notch UX) notes
+
+### Per-region click-through: `SetWindowRgn` is the only option that works
+
+The island is ONE fixed 640x720 transparent window, but what the user can see
+is usually a ~170x46 notch. Without intervention that whole invisible rectangle
+swallows every click and hover at the top of the screen, so the desktop, title
+bars and app UI behind it stop responding.
+
+Three approaches were evaluated. Two do not work, and the reasons are API facts,
+not guesses:
+
+| Approach | Result |
+|---|---|
+| `set_ignore_cursor_events(true)` | WHOLE-window only, and it also kills hover, so the pill could never open. Already recorded under "Spec 1" above. |
+| `WM_NCHITTEST` -> `HTTRANSPARENT` | Fails twice. (1) `HTTRANSPARENT` only falls through to windows on the SAME THREAD - it never routes a click to another process's window. (2) In a Tauri window the WebView2 child HWND covers the entire client area, so the top-level window procedure is not consulted for those points at all. |
+| `SetWindowRgn` | WORKS. It changes the window's actual SHAPE, and the OS routes input outside the shape to whatever window is underneath, across processes. |
+
+Implementation: `src-tauri/src/window/hit_region.rs` + the `set_hit_regions`
+command, fed by `src/app/hit-regions.ts`, which measures every element carrying
+`data-islet-hit` and republishes on ResizeObserver / MutationObserver /
+transitionend.
+
+**The one real cost:** a window region clips PAINTING as well as hit testing.
+Any rect must therefore also cover that surface's CSS shadow/glow overflow, or
+the shadow gets sliced off. That is what the per-rect `pad` value is for
+(`data-islet-hit="14"` = 14px of shadow allowance). If a shadow ever looks cut,
+raise that number, do not remove the region.
+
+Two more gotchas worth knowing:
+- The region is in PHYSICAL pixels while the frontend measures in logical ones,
+  so a DPI change invalidates it. `on_window_event` re-applies the cached rects
+  on `ScaleFactorChanged`.
+- `SetWindowRgn` takes OWNERSHIP of the `HRGN` on success, so it must not be
+  deleted afterwards - only on failure.
+
+Verify with `scripts/check-hit-region.ps1` while the app is running. It calls
+`GetWindowRgnBox`, which returns 0 when a window has no region, so it states
+plainly whether the fix is live. Measured on this machine: window 640x720,
+region 84x24 => 0.4% of the window clickable, 99.6% passing through.
+
+### Battery saver vs simply running on battery
+
+`GetSystemPowerStatus` reports these as two different things and they must not
+be conflated: `ACLineStatus == 1` means plugged in, while
+`SystemStatusFlag == 1` means Windows Energy Saver is actually ON (Win10 1703+).
+
+The character animation gate originally used `!battery.charging` from the web
+Battery API as "battery saver", which froze the mascot on every unplugged
+laptop - it drew one static frame and looked broken. Only real saver mode is a
+hard stop now; merely being on battery halves the frame rate instead, which is
+what the AGENTS.md budget table asks for ("notch animation stops; panel
+animation slows") and matches its `(configurable)` note for on-battery.
+
+### `tauri dev` does not copy `bundle.resources`
+
+`bundle.resources` in `tauri.conf.json` is only copied next to the executable by
+`tauri build`. Under `tauri dev`, `resource_dir()/packs/characters` does not
+exist, so anything that reads a bundled resource silently finds nothing. This is
+why the built-in character never appeared in dev: `ensure_builtin` bailed out
+before copying, so no pack was ever seeded into app data.
+
+`builtin_source_root()` now tries the resource dir first and falls back, in
+debug builds only, to the repo's `packs/characters` via `CARGO_MANIFEST_DIR`.
+
+### CSP: `fetch()` and `<img>` are governed by DIFFERENT directives
+
+The asset-protocol URL (`http://asset.localhost/...`) is allow-listed under
+`img-src` in `tauri.conf.json`, but `fetch()` is checked against `connect-src`,
+which falls back to `default-src 'self'`. So loading a character sheet with
+`fetch()` is blocked while an `<img>` element loads the exact same URL fine.
+
+`decodeSheet()` therefore uses `new Image()` + `img.decode()` +
+`createImageBitmap(img)`. Do not switch it back to `fetch()` without also
+widening `connect-src` (which would mean listing the IPC origins too).

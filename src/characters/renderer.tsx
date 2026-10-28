@@ -9,6 +9,7 @@ import {
 import {
   activeCharacter,
   animationAllowed,
+  characterProblem,
   gateVersion,
   totalFocusMinutes,
 } from "./character-store";
@@ -111,8 +112,13 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
         if (animationAllowed()) engine.start();
         else engine.drawStatic();
       })
-      .catch(() => {
-        /* decode failed: leave the canvas blank, no crash */
+      .catch((err) => {
+        // Never fail silently here. A swallowed decode error is exactly how a
+        // blocked/missing sheet turns into an empty notch with nothing for the
+        // user (or us) to act on. Surface the state AND log the real cause.
+        if (!alive) return;
+        characterProblem.value = "character-unavailable";
+        console.error("islet: character sheet failed to decode", err);
       });
 
     return () => {

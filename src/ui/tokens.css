@@ -9,12 +9,21 @@
   --islet-fg: #f4f4f6;
   --islet-fg-dim: #9a9ab6;
 
-  /* Accents */
-  --islet-accent: #7c9cff;
-  --islet-accent-2: #a78bfa;
-  --islet-ok: #4ade80;
-  --islet-warn: #fbbf24;
-  --islet-danger: #f87171;
+  /* Accents.
+     ONE accent hue. There is deliberately no second decorative hue and no
+     violet: a two-hue indigo->purple ramp is the single biggest reason an
+     interface reads as generic/auto-generated, so it is banned here. Semantic
+     colors (ok/warn/danger) are the only other hues, and they are reserved for
+     meaning - never decoration. */
+  --islet-accent: #4d8df0;
+  --islet-accent-deep: #2f6fd0;
+  --islet-accent-soft: #8fb8f7;
+  /* Kept as a name so older call sites keep working, but it is the SAME hue
+     as the accent on purpose. Do not reintroduce a contrasting decorative hue. */
+  --islet-accent-2: var(--islet-accent);
+  --islet-ok: #3fbf7f;
+  --islet-warn: #e8a33d;
+  --islet-danger: #e8605d;
 
   /* Interactive surfaces (theme-aware) */
   --islet-control: #262630;
@@ -22,9 +31,14 @@
   --islet-border: rgba(255, 255, 255, 0.10);
   --islet-divider: rgba(255, 255, 255, 0.07);
 
-  /* A subtle brand gradient used sparingly (pill accent, active states).
-     Three stops give the accent a touch more depth than a flat two-stop ramp. */
-  --islet-grad: linear-gradient(135deg, #7c9cff 0%, #8f93ff 48%, #a78bfa 100%);
+  /* The accent fill for selected/primary surfaces.
+     A SINGLE-hue vertical ramp, light at the top, so a filled control reads as
+     a physical object lit from above. It is not a decorative colour blend: the
+     old 135deg three-stop indigo->violet ramp is what made every control look
+     auto-generated. Keep both stops in the accent family. */
+  --islet-grad: linear-gradient(180deg, var(--islet-accent-soft) 0%, var(--islet-accent-deep) 100%);
+  /* Text/icon colour that sits on top of an accent-filled surface. */
+  --islet-on-accent: #07121f;
   /* Soft colored glow derived from the accent, for focus/active emphasis. */
   --islet-glow: 0 0 0 3px color-mix(in srgb, var(--islet-accent) 42%, transparent);
   /* A faint top highlight for "lit from above" surfaces (pill, buttons). */

@@ -25,14 +25,21 @@ export type Surface = "notch" | "panel";
  * caller shares the returned bitmap between the notch and panel engines.
  */
 export async function decodeSheet(url: string): Promise<ImageBitmap> {
-  // fetch + createImageBitmap avoids an <img> element and decodes off the main
-  // thread where supported. The URL is the asset: protocol URL for the sheet.
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`sheet fetch failed: ${res.status}`);
-  const blob = await res.blob();
-  // Hint: keep pixel art crisp by not premultiplying/resizing here; scaling is
-  // done at draw time with imageSmoothing off.
-  return createImageBitmap(blob);
+  // WHY an <img> and not fetch(): fetch() is governed by the CSP's connect-src,
+  // which falls back to `default-src 'self'` in tauri.conf.json. The sheet lives
+  // at http://asset.localhost/... which is NOT 'self', so fetch() is blocked and
+  // the character silently never appears. That origin IS allowed under img-src,
+  // so an image element loads it. Do not switch this back to fetch() without
+  // also widening connect-src.
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+  // decode() rejects on a bad/missing file, which the caller turns into a
+  // visible "character unavailable" state rather than a blank canvas.
+  await img.decode();
+  // Scaling is done at draw time with imageSmoothing set from the pack's
+  // pixelArt flag, so no resizing happens here.
+  return createImageBitmap(img);
 }
 
 export class SpriteEngine {

@@ -308,51 +308,115 @@ body {
   background: transparent;
 }
 
-.islet-tabbar {
+/* ---- Navigation ----
+   An icon rail, NOT a row of words. The old bar rendered 12 text labels with
+   `flex-wrap: wrap` inside a 348px panel, so it stacked into a list. Icons fit
+   on one line at any enabled-tab count; the System group collapses its five
+   members onto a second, labelled row. */
+.islet-nav {
   flex: 0 0 auto;
-  display: flex;
-  gap: 2px;
   border-bottom: 1px solid var(--islet-divider);
-  padding: 12px 12px 0;
-  flex-wrap: wrap;
+}
+.islet-tabbar {
+  display: flex;
+  align-items: center;
+  /* `space-between` keeps the row balanced as the user enables/disables tabs,
+     instead of leaving a ragged gap on the right. */
+  justify-content: space-between;
+  gap: 2px;
+  padding: 10px 12px;
 }
 .islet-tab {
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 7px 11px 9px;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 30px;
+  display: grid;
+  place-items: center;
   border: none;
   background: transparent;
   color: var(--islet-fg-dim);
   cursor: pointer;
   position: relative;
-  border-radius: 8px 8px 0 0;
-  transition: color var(--islet-transition), transform var(--islet-transition);
+  border-radius: 9px;
+  transition: color var(--islet-dur-fast) var(--islet-ease-out),
+    background var(--islet-dur-fast) var(--islet-ease-out),
+    transform var(--islet-dur-fast) var(--islet-ease-out);
 }
 .islet-tab:hover {
   color: var(--islet-fg);
+  background: var(--islet-control);
 }
 .islet-tab:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
 }
+/* Active tab: a filled chip. A solid shape survives at 18px where a 2px
+   underline under an icon is almost invisible. */
 .islet-tab.active {
   color: var(--islet-fg);
+  background: color-mix(in srgb, var(--islet-accent) 20%, transparent);
 }
-/* Gradient underline under the active tab, with a soft lit glow. */
 .islet-tab.active::after {
   content: "";
   position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: -1px;
+  bottom: -10px;
+  left: 50%;
+  translate: -50% 0;
+  width: 16px;
   height: 2px;
-  border-radius: 2px;
-  background: var(--islet-grad);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--islet-accent) 55%, transparent);
+  border-radius: 2px 2px 0 0;
+  background: var(--islet-accent);
 }
 .islet-tab:focus-visible {
   outline: 2px solid var(--islet-accent);
-  outline-offset: -2px;
+  outline-offset: 1px;
+}
+
+/* System group members. Labelled, since these glyphs are less familiar than
+   the feature set, and horizontally scrollable so they never wrap either. */
+.islet-tabbar.sub {
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 0 10px 9px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.islet-tabbar.sub::-webkit-scrollbar {
+  display: none;
+}
+.islet-subtab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--islet-radius-pill);
+  background: var(--islet-control);
+  color: var(--islet-fg-dim);
+  cursor: pointer;
+  transition: color var(--islet-dur-fast) var(--islet-ease-out),
+    background var(--islet-dur-fast) var(--islet-ease-out),
+    transform var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-subtab:hover {
+  background: var(--islet-control-hover);
+  color: var(--islet-fg);
+}
+.islet-subtab:active {
+  transform: scale(0.96);
+}
+.islet-subtab.active {
+  color: var(--islet-fg);
+  background: color-mix(in srgb, var(--islet-accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--islet-accent) 45%, transparent);
+}
+.islet-subtab:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
 }
 
 /* ---- Empty / loading ---- */
@@ -917,9 +981,13 @@ body {
   );
 }
 .islet-panel-canvas {
-  width: 96px;
-  height: 96px;
-  image-rendering: pixelated;
+  width: 104px;
+  height: 104px;
+  /* Smooth by default to match the built-in mascot. Pixel-art packs get crisp
+     edges from the engine instead (it floors the draw scale to an integer and
+     disables image smoothing when the manifest sets pixelArt). Forcing
+     `pixelated` here made the smooth default character look ragged. */
+  image-rendering: auto;
 }
 .islet-panel-character-name {
   font-size: 11px;

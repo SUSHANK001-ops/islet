@@ -23,6 +23,7 @@ const en: Strings = {
   "tab.quick": "Quick settings",
   "tab.notifications": "Notifications",
   "tab.system": "System",
+  "tab.nav": "Sections",
 
   "notch.collapse": "Collapse",
   "settings.moveUp": "Move up",

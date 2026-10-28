@@ -1,0 +1,13 @@
+﻿pub struct SYSTEM_POWER_STATUS {
+    pub ACLineStatus: u8,
+    pub BatteryFlag: u8,
+    pub BatteryLifePercent: u8,
+    pub SystemStatusFlag: u8,
+    pub BatteryLifeTime: u32,
+    pub BatteryFullLifeTime: u32,
+}
+pub const SYS_BUTTON_LID: u32 = 4u32;
+pub const SYS_BUTTON_LID_CHANGED: u32 = 524288u32;
+pub const SYS_BUTTON_LID_CLOSED: u32 = 131072u32;
+pub const SYS_BUTTON_LID_INITIAL: u32 = 262144u32;
+pub const SYS_BUTTON_LID_OPEN: u32 = 65536u32;

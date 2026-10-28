@@ -24,7 +24,15 @@ export type IconName =
   | "cast"
   | "captions"
   | "project"
-  | "accessibility";
+  | "accessibility"
+  // Feature-tab glyphs. The tab bar is icon-first: 12 wrapped text labels
+  // turned the panel header into a stacked list.
+  | "timer"
+  | "checklist"
+  | "note"
+  | "music"
+  | "grid"
+  | "chart";
 
 // Each glyph is the INNER markup of a 24x24 viewBox using stroke=currentColor.
 const PATHS: Record<IconName, JSX.Element> = {
@@ -127,6 +135,55 @@ const PATHS: Record<IconName, JSX.Element> = {
     <g>
       <circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none" />
       <path d="M5 9 h14 M12 9 v6 M12 15 l-3 5 M12 15 l3 5" />
+    </g>
+  ),
+  // Focus: a stopwatch. The stem reads as "timer" at 20px where a bare clock
+  // face would be indistinguishable from the clock glyph.
+  timer: (
+    <g>
+      <circle cx="12" cy="13.5" r="7.5" />
+      <path d="M12 13.5 V9.5" />
+      <path d="M9.5 2.5 h5" />
+      <path d="M12 2.5 v3.5" />
+    </g>
+  ),
+  checklist: (
+    <g>
+      <polyline points="3 7 5 9 9 5" />
+      <polyline points="3 17 5 19 9 15" />
+      <line x1="12" y1="7" x2="21" y2="7" />
+      <line x1="12" y1="17" x2="21" y2="17" />
+    </g>
+  ),
+  note: (
+    <g>
+      <path d="M5 3.5 h9 L19 8.5 V20.5 H5 Z" />
+      <polyline points="14 3.5 14 9 19 9" />
+      <line x1="8.5" y1="13" x2="15.5" y2="13" />
+      <line x1="8.5" y1="16.5" x2="13" y2="16.5" />
+    </g>
+  ),
+  music: (
+    <g>
+      <circle cx="7" cy="17.5" r="2.5" />
+      <circle cx="17.5" cy="15" r="2.5" />
+      <path d="M9.5 17.5 V7 L20 5 v10" />
+    </g>
+  ),
+  grid: (
+    <g>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.8" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.8" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.8" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.8" />
+    </g>
+  ),
+  chart: (
+    <g>
+      <line x1="4" y1="20" x2="20" y2="20" />
+      <rect x="5.5" y="12" width="3.6" height="5" rx="1.2" />
+      <rect x="10.2" y="8" width="3.6" height="9" rx="1.2" />
+      <rect x="14.9" y="4.5" width="3.6" height="12.5" rx="1.2" />
     </g>
   ),
 };

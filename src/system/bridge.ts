@@ -14,6 +14,8 @@ export interface PowerState {
   hasBattery: boolean;
   percent: number; // 0..100
   charging: boolean;
+  /** Windows "Energy Saver" is active. Distinct from simply being unplugged. */
+  saver: boolean;
   overlay: "efficiency" | "balanced" | "performance" | "unknown";
   overlaySupported: boolean;
 }

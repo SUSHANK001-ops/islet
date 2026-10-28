@@ -12,6 +12,13 @@ pub struct PowerState {
     pub has_battery: bool,
     pub percent: u8,
     pub charging: bool,
+    /// True when Windows "Energy Saver" / battery saver is ACTIVE.
+    ///
+    /// WHY this is separate from `charging`: being unplugged is not the same as
+    /// asking the OS to conserve power. The animation gate treats real saver
+    /// mode as a hard stop but merely running on battery as "animate slower",
+    /// so conflating the two freezes the character on every laptop.
+    pub saver: bool,
     /// "efficiency" | "balanced" | "performance" | "unknown".
     pub overlay: String,
     pub overlay_supported: bool,
@@ -71,11 +78,14 @@ mod imp {
         let has_battery = ok && (s.BatteryFlag & 128) == 0;
         let percent = if s.BatteryLifePercent == 255 { 0 } else { s.BatteryLifePercent };
         let charging = s.ACLineStatus == 1;
+        // SystemStatusFlag == 1 means battery saver is on (Win10 1703+).
+        let saver = ok && s.SystemStatusFlag == 1;
         let (overlay, overlay_supported) = read_overlay();
         PowerState {
             has_battery,
             percent,
             charging,
+            saver,
             overlay,
             overlay_supported,
         }
@@ -113,6 +123,7 @@ pub fn get() -> PowerState {
         has_battery: false,
         percent: 0,
         charging: true,
+        saver: false,
         overlay: "unknown".into(),
         overlay_supported: false,
     }

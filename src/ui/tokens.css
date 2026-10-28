@@ -51,6 +51,10 @@
   --islet-radius: 16px;
   --islet-radius-sm: 10px;
   --islet-radius-pill: 999px;
+  /* The notch silhouette: square at the top where it meets the screen edge,
+     softly rounded underneath. A fully-round pill read as a floating button
+     rather than part of the display bezel. */
+  --islet-notch-radius: 15px;
   --islet-gap: 8px;
   --islet-pad: 16px;
   --islet-font: system-ui, "Segoe UI", sans-serif;

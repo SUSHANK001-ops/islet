@@ -82,10 +82,12 @@ export default function FocusPanel() {
       <div class={`islet-focus-ring${running ? " running" : ""}`}>
         <svg width="150" height="150" viewBox="0 0 150 150">
           <defs>
-            <linearGradient id="islet-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#7c9cff" />
-              <stop offset="48%" stop-color="#8f93ff" />
-              <stop offset="100%" stop-color="#a78bfa" />
+            {/* Single-hue accent ramp, top-to-bottom. Pulls its stops from the
+                design tokens so the ring can never drift out of the palette
+                (it used to hardcode an indigo->violet blend). */}
+            <linearGradient id="islet-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="var(--islet-accent-soft)" />
+              <stop offset="100%" stop-color="var(--islet-accent-deep)" />
             </linearGradient>
           </defs>
           <circle class="track" cx="75" cy="75" r="67" />

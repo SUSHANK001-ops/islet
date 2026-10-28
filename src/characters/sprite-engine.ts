@@ -56,6 +56,9 @@ export class SpriteEngine {
   private lastTs = 0;
   private rafId = 0;
   private running = false;
+  // Frame-rate multiplier (<=1). Lets the gate slow animation down instead of
+  // stopping it outright, e.g. while the machine runs on battery.
+  private rateScale = 1;
   // Device-pixel scale so the canvas is crisp on HiDPI without reflowing CSS.
   private dpr = 1;
 
@@ -91,7 +94,11 @@ export class SpriteEngine {
     return this.manifest.states[name] ?? this.manifest.states["idle"];
   }
 
-  /** Effective fps for this surface, clamped by the surface cap. */
+  /**
+   * Effective fps for this surface: the pack's rate, clamped by the surface cap,
+   * then scaled down by `rateScale` (used to slow animation on battery).
+   * Never below 1 fps, so a scaled-down state still moves.
+   */
   private fpsFor(state: StateSpec): number {
     const cap =
       this.surface === "notch"
@@ -99,7 +106,16 @@ export class SpriteEngine {
         : this.stateName === "idle"
           ? FPS_CAP.panelIdle
           : FPS_CAP.panelActive;
-    return Math.max(1, Math.min(state.fps, cap));
+    const capped = Math.min(state.fps, cap);
+    return Math.max(1, capped * this.rateScale);
+  }
+
+  /**
+   * Scale the frame rate (1 = full, 0.5 = half). Applied on top of the surface
+   * cap so the budget can never be exceeded, only undercut.
+   */
+  setRateScale(scale: number) {
+    this.rateScale = Math.max(0.05, Math.min(1, scale));
   }
 
   /** Switch to a new state (resets the frame cursor if it actually changed). */

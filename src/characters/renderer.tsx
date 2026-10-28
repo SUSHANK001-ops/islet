@@ -10,6 +10,7 @@ import {
   activeCharacter,
   animationAllowed,
   characterProblem,
+  fpsScale,
   gateVersion,
   totalFocusMinutes,
 } from "./character-store";
@@ -109,6 +110,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
         const engine = new SpriteEngine(canvas, char, bitmap, surface);
         engineRef.current = engine;
         engine.setState(stateName);
+        engine.setRateScale(fpsScale());
         if (animationAllowed()) engine.start();
         else engine.drawStatic();
       })
@@ -133,6 +135,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
     const engine = engineRef.current;
     if (!engine) return;
     engine.setState(stateName);
+    engine.setRateScale(fpsScale());
     if (animationAllowed()) {
       engine.start();
     } else {

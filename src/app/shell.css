@@ -47,12 +47,14 @@ body {
 /* Stays dark in both themes (mimics a hardware notch). A thin gradient accent
    line sits under it so it reads as "Islet", not just a black bar. */
 .islet-pill {
-  margin-top: 8px;
-  height: 26px;
-  width: 140px;
+  /* Flush with the very top edge: the notch should look like part of the
+     display bezel, not a chip hovering below it. */
+  margin-top: 0;
+  height: 32px;
+  width: 164px;
   /* Opacity is user-adjustable (transparency setting); default fully opaque. */
   background: rgba(10, 10, 13, var(--islet-pill-opacity, 1));
-  border-radius: var(--islet-radius-pill);
+  border-radius: 0 0 var(--islet-notch-radius) var(--islet-notch-radius);
   box-shadow: var(--islet-shadow-sm);
   /* Spring-eased size changes so hover/open feel tactile, not linear. */
   transition: width var(--islet-dur) var(--islet-ease-spring),
@@ -93,7 +95,8 @@ body {
 }
 
 .islet-pill:hover {
-  width: 162px;
+  width: 188px;
+  height: 36px;
   box-shadow: var(--islet-shadow);
 }
 .islet-pill:hover::after {
@@ -102,8 +105,8 @@ body {
 }
 
 .islet-pill.open {
-  width: 180px;
-  height: 26px;
+  width: 200px;
+  height: 30px;
 }
 
 .islet-pill.has-alert {
@@ -861,12 +864,12 @@ body {
    sprite, so it is clearly visible (not a thin bar). The canvas is centered and
    never catches pointer events. */
 .islet-pill.has-character {
-  height: 44px;
-  width: 148px;
+  height: 46px;
+  width: 176px;
 }
 .islet-pill.has-character:hover {
-  width: 168px;
-  height: 46px;
+  width: 200px;
+  height: 50px;
 }
 /* Living-notch breathing: when a character is shown and the pill is at rest,
    the brand underline gently breathes so the notch feels alive even closed.

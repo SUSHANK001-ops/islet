@@ -1,5 +1,6 @@
 import { signal } from "@preact/signals";
 import { listen } from "@tauri-apps/api/event";
+import { powerGet } from "../system/bridge";
 import {
   characterGetActive,
   characterLoadActive,
@@ -41,12 +42,21 @@ export const characterProblem = signal<string | null>(null);
 const pageHidden = signal(false);
 const reducedMotion = signal(false);
 const fullscreenApp = signal(false);
+/** Windows "Energy Saver" is actually ON. A hard stop. */
 const batterySaver = signal(false);
+/** Merely running unplugged. NOT a hard stop - it slows animation down. */
+const onBattery = signal(false);
 
 /**
  * May the character animate at all right now? When false, surfaces draw a
  * single static frame instead of running a loop (closed == cheap; respect the
  * user's system preferences).
+ *
+ * WHY being on battery is NOT in this list: it used to be, via
+ * `batterySaver = !battery.charging`, which froze the character on every
+ * unplugged laptop. AGENTS.md marks on-battery as a `(configurable)` stop and
+ * its budget table says battery makes animation SLOW, not stop - only real
+ * battery saver is a hard stop. See `fpsScale()` for the slowdown.
  */
 export function animationAllowed(): boolean {
   return (
@@ -55,6 +65,14 @@ export function animationAllowed(): boolean {
     !fullscreenApp.value &&
     !batterySaver.value
   );
+}
+
+/**
+ * Multiplier applied to a state's fps. Running unplugged halves the frame rate
+ * so the character still feels alive while costing about half the CPU.
+ */
+export function fpsScale(): number {
+  return onBattery.value ? 0.5 : 1;
 }
 
 /** A monotonically changing token the renderer watches to re-evaluate gates. */
@@ -92,9 +110,33 @@ export function initCharacterGate(): void {
     onMq();
   }
 
-  // Battery saver: pause animation while on battery / in saver mode where the
-  // API exists. Treated as best-effort (not all platforms expose it).
-  type BatteryLike = { charging: boolean; addEventListener?: (t: string, cb: () => void) => void };
+  // Power state. Rust is the source of truth: GetSystemPowerStatus reports
+  // whether Energy Saver is genuinely ON, which the web Battery API cannot.
+  //
+  // Event-driven, no polling (AGENTS.md): we read once at startup and again on
+  // the browser's free `chargingchange` event, which fires on plug/unplug. A
+  // saver toggle that happens without a power-source change is therefore picked
+  // up on the next plug/unplug or restart - acceptable, and cheaper than a poll.
+  const refreshPower = () => {
+    void powerGet()
+      .then((p) => {
+        batterySaver.value = p.saver;
+        onBattery.value = p.hasBattery && !p.charging;
+        bumpGate();
+      })
+      .catch(() => {
+        // Outside Tauri / command unavailable: never block animation on a
+        // failed power read, or the character silently freezes again.
+        batterySaver.value = false;
+        onBattery.value = false;
+        bumpGate();
+      });
+  };
+  refreshPower();
+
+  type BatteryLike = {
+    addEventListener?: (t: string, cb: () => void) => void;
+  };
   const navAny = navigator as unknown as {
     getBattery?: () => Promise<BatteryLike>;
   };
@@ -102,12 +144,7 @@ export function initCharacterGate(): void {
     navAny
       .getBattery()
       .then((b) => {
-        const onBatt = () => {
-          batterySaver.value = !b.charging;
-          bumpGate();
-        };
-        b.addEventListener?.("chargingchange", onBatt);
-        onBatt();
+        b.addEventListener?.("chargingchange", refreshPower);
       })
       .catch(() => {});
   }

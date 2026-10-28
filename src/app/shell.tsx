@@ -145,9 +145,13 @@ export function Shell() {
   }, []);
 
   // Fullscreen app appeared: hide the panel (event-driven, not polling).
+  //
+  // The backend now emits this unconditionally, because a fullscreen app is a
+  // hard stop for character animation regardless of settings. Hiding the PANEL
+  // is the game-mode behaviour, so that part stays behind the setting.
   useEffect(() => {
     const un = listen<boolean>("islet://fullscreen-changed", (e) => {
-      if (e.payload === true) {
+      if (e.payload === true && settings.value.gameMode) {
         setOpen(false);
         setPinned(false);
       }

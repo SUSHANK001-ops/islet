@@ -1,2 +1,18 @@
-﻿flyouts-host.tsx:87  class="islet-flyout-host"
-status-bar.tsx:137  class="islet-statusbar"
+﻿L149
+  }, []);
+
+  // Fullscreen app appeared: hide the panel (event-driven, not polling).
+  useEffect(() => {
+    const un = listen<boolean>("islet://fullscreen-changed", (e) => {
+      if (e.payload === true) {
+        setOpen(false);
+        setPinned(false);
+      }
+    });
+    return () => void un.then((f) => f());
+  }, []);
+
+  // Esc closes the panel (unless a permission is pending).
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {

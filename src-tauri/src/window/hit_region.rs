@@ -28,7 +28,8 @@
 use std::sync::Mutex;
 
 use serde::Deserialize;
-use tauri::WebviewWindow;
+// `Manager` brings `try_state` into scope for WebviewWindow.
+use tauri::{Manager, WebviewWindow};
 
 /// One interactive surface, in LOGICAL pixels relative to the webview's
 /// top-left (which is what `getBoundingClientRect()` gives the frontend).
@@ -69,7 +70,17 @@ pub fn set(window: &WebviewWindow, rects: Vec<HitRect>) -> Result<(), String> {
             *guard = rects.clone();
         }
     }
-    apply(window, &rects)
+    match apply(window, &rects) {
+        Ok(()) => Ok(()),
+        Err(e) => {
+            // Fail OPEN, never closed. A half-applied or rejected region could
+            // leave the UI unreachable, so drop the shape entirely: the window
+            // goes back to catching clicks everywhere, which is the bug this
+            // module fixes but still a usable app.
+            clear(window);
+            Err(e)
+        }
+    }
 }
 
 /// Re-apply the cached rects. Called after a DPI/scale change, where the
@@ -178,7 +189,7 @@ fn apply(window: &WebviewWindow, rects: &[HitRect]) -> Result<(), String> {
         // always deleted after the union; it is never handed to the OS.
         unsafe {
             CombineRgn(Some(combined), Some(combined), Some(piece), RGN_OR);
-            DeleteObject(HGDIOBJ(piece.0));
+            let _ = DeleteObject(HGDIOBJ(piece.0));
         }
     }
 
@@ -187,7 +198,7 @@ fn apply(window: &WebviewWindow, rects: &[HitRect]) -> Result<(), String> {
     let applied = unsafe { SetWindowRgn(hwnd, Some(combined), true) };
     if applied == 0 {
         unsafe {
-            DeleteObject(HGDIOBJ(combined.0));
+            let _ = DeleteObject(HGDIOBJ(combined.0));
         }
         return Err("SetWindowRgn failed".into());
     }

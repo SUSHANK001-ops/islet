@@ -452,6 +452,17 @@ fn unique_suffix() -> String {
         .unwrap_or_else(|_| "tmp".into())
 }
 
+/// Read just the `version` string out of a pack's manifest.
+///
+/// Used to decide whether a shipped built-in is newer than the installed copy.
+/// Deliberately tolerant: an unreadable or malformed manifest yields `None`,
+/// which compares unequal to a real version and so triggers a re-seed.
+fn pack_version(dir: &Path) -> Option<String> {
+    let raw = fs::read_to_string(dir.join("manifest.json")).ok()?;
+    let value: serde_json::Value = serde_json::from_str(&raw).ok()?;
+    value.get("version")?.as_str().map(str::to_owned)
+}
+
 /// Locate the read-only source folder holding the built-in pack(s).
 ///
 /// WHY this tries several roots: `bundle.resources` in `tauri.conf.json` is
@@ -495,9 +506,14 @@ fn builtin_source_root(app: &AppHandle) -> Option<PathBuf> {
 /// resource dir (`packs/characters/<id>`); user packs live only in app data.
 ///
 /// We copy rather than read in place so import/delete/switch all work uniformly
-/// against one directory, and so a future pack update can refresh the copy. A
-/// pack is re-copied only if it is missing in app data (never clobbers a user's
-/// customised copy, and costs nothing on later launches).
+/// against one directory. A pack is re-copied when it is missing, incomplete,
+/// or the shipped `version` differs from the installed one; otherwise this
+/// costs nothing on later launches.
+///
+/// NOTE: a version bump DOES overwrite the installed built-in, so local edits
+/// to a built-in pack are not preserved across an update. That is the intended
+/// trade-off - it is the only way shipped art fixes reach existing installs.
+/// Users who want to modify a built-in should copy it to a new id first.
 pub fn ensure_builtin(app: &AppHandle) {
     let Ok(dest_root) = characters_dir(app) else {
         return;
@@ -513,9 +529,14 @@ pub fn ensure_builtin(app: &AppHandle) {
     for id in [BUILTIN_ID] {
         let src = src_root.join(id);
         let dest = dest_root.join(id);
-        // Re-seed when the pack folder is missing OR incomplete (no sheet.png),
-        // which also recovers from an older/partial copy.
-        let needs = !dest.exists() || !dest.join("sheet.png").exists();
+        // Re-seed when the pack folder is missing, is incomplete (no sheet.png),
+        // or the shipped pack has a DIFFERENT version than the installed copy.
+        //
+        // The version check is what lets updated built-in art actually reach an
+        // existing install. Without it the first copy is permanent, so new
+        // artwork only ever showed up for brand-new users.
+        let stale = pack_version(&src) != pack_version(&dest);
+        let needs = !dest.exists() || !dest.join("sheet.png").exists() || stale;
         if src.exists() && needs {
             let _ = fs::remove_dir_all(&dest);
             if let Err(e) = copy_dir(&src, &dest) {

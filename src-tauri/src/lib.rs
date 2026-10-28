@@ -218,11 +218,16 @@ pub fn run() {
                 }
             }
 
-            // Game mode: watch for a foreground fullscreen app and emit
-            // islet://fullscreen-changed so the panel hides. Only when enabled.
-            if settings.game_mode {
-                platform::start_fullscreen_watch(handle.clone());
-            }
+            // Watch for a foreground fullscreen app and emit
+            // islet://fullscreen-changed.
+            //
+            // This runs ALWAYS, not only under game mode. A fullscreen app is
+            // one of AGENTS.md's hard-stop conditions for character animation,
+            // and gating the watcher on `game_mode` meant that with game mode
+            // off nothing ever emitted the event, so the hard stop never fired.
+            // Game mode decides what the FRONTEND does with the event (hide the
+            // panel + pause the timer); the signal itself is always needed.
+            platform::start_fullscreen_watch(handle.clone());
 
             // Toggle hotkey. A conflict is reported to the frontend, not fatal.
             match shortcut::register(handle) {

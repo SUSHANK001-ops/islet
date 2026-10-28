@@ -51,13 +51,15 @@ pub fn run() {
         .manage(window::MonitorChoice::default())
         .manage(window::NotchPositionState::default())
         .manage(window::FreePositionState::default())
-        .manage(window::InteractiveState::default())
+        .manage(window::PanelOpenState::default())
+        .manage(window::hit_region::HitRegionState::default())
         .manage(WriteDebouncer::default())
         .manage(Hub::default())
         .manage(Registry::default())
         .manage(Scheduler::default())
         .invoke_handler(tauri::generate_handler![
             commands::set_panel_open,
+            commands::set_hit_regions,
             commands::get_spike_report,
             commands::list_monitors,
             commands::set_monitor,
@@ -123,6 +125,17 @@ pub fn run() {
             commands::catalog_preview,
             commands::catalog_install
         ])
+        // A DPI change invalidates the window hit region, because a region is
+        // stored in PHYSICAL pixels while the frontend sends logical ones.
+        // Re-apply the cached rects at the new scale. Moving the window does
+        // not need this: the region is window-relative.
+        .on_window_event(|win, event| {
+            if let tauri::WindowEvent::ScaleFactorChanged { .. } = event {
+                if let Some(island) = win.get_webview_window(window::ISLAND_LABEL) {
+                    window::hit_region::reapply(&island);
+                }
+            }
+        })
         .setup(|app| {
             let handle = app.handle();
 
@@ -158,6 +171,11 @@ pub fn run() {
                 if let Err(e) = window::apply_closed_state(&win) {
                     eprintln!("islet: failed to apply closed window state: {e}");
                 }
+                // Shape the window to the notch right away. The frontend
+                // refines this with exact rects once it has measured, but
+                // without a seed the whole transparent canvas would block
+                // clicks for the first few frames.
+                window::seed_hit_region(&win);
             } else {
                 eprintln!("islet: island window '{}' not found", window::ISLAND_LABEL);
             }

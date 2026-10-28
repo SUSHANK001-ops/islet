@@ -11,6 +11,7 @@ import {
   setTaskbarProgress,
 } from "./window-bridge";
 import { settings, updateSettings } from "./settings-store";
+import { publishHitRegions, watchHitRegions } from "./hit-regions";
 import { pendingPermissions } from "./permission-store";
 import { PermissionPrompt } from "./permission-prompt";
 import { TabBar } from "./tab-bar";
@@ -249,6 +250,21 @@ export function Shell() {
   // System flyouts opened from the status-bar items (Spec 11).
   const flyoutCtrl = useFlyoutController();
 
+  // Keep the OS window shaped to whatever is actually visible, so the empty
+  // transparent area stops swallowing clicks meant for the apps behind it.
+  const stackRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const root = stackRef.current;
+    if (!root) return;
+    return watchHitRegions(root);
+  }, []);
+
+  // Re-measure whenever a surface appears, disappears or changes size for a
+  // reason the observers cannot see (open/collapse/style/character/tab swaps).
+  useEffect(() => {
+    publishHitRegions();
+  }, [open, collapsed, pillStyle.value, character, showInNotch, active, pending.length]);
+
   // ---- Place anywhere: drag the notch, persist where it lands ----
   const draggedRef = useRef(false);
 
@@ -291,7 +307,12 @@ export function Shell() {
     notifications.value.some((n) => !n.read) || focusRunning;
 
   return (
-    <div class="islet-stack" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+    <div
+      class="islet-stack"
+      ref={stackRef}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
       {collapsed && !open ? (
         <Handle dot={handleDot} onEnter={expandFromHandle} />
       ) : statusBarStyle && !open ? (
@@ -316,6 +337,9 @@ export function Shell() {
           class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
             character && showInNotch && !open ? " has-character" : ""
           }`}
+          // Hit region: pad covers the notch shadow + the accent underline that
+          // sits just below the box, so neither gets clipped by the shape.
+          data-islet-hit="14"
           onClick={handlePillClick}
           title={`${APP_NAME} · ${t("app.tagline")}`}
         >
@@ -350,7 +374,12 @@ export function Shell() {
       {hasAlert ? <PermissionPrompt /> : null}
 
       {!settings.value.pillStyleOffered && !hasAlert ? (
-        <div class="islet-perm islet-pill-offer" role="dialog" aria-label={t("pillStyle.offer.title")}>
+        <div
+          class="islet-perm islet-pill-offer"
+          role="dialog"
+          aria-label={t("pillStyle.offer.title")}
+          data-islet-hit="18"
+        >
           <span class="islet-perm-title">{t("pillStyle.offer.title")}</span>
           <p>{t("pillStyle.offer.body")}</p>
           <div class="islet-pill-offer-actions">
@@ -373,7 +402,12 @@ export function Shell() {
       ) : null}
 
       {open ? (
-        <div class="islet-panel" role="dialog" aria-label={APP_NAME}>
+        <div
+          class="islet-panel"
+          role="dialog"
+          aria-label={APP_NAME}
+          data-islet-hit="24"
+        >
           {character ? (
             <div class="islet-panel-character">
               <CharacterCanvas

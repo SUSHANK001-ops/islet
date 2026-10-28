@@ -31,7 +31,7 @@ pub struct SpikeReport {
     fullscreen_app_active: bool,
 }
 
-/// Open or close the panel. The window layer flips size + click-through.
+/// Open or close the panel. The window layer records the state and re-places.
 #[tauri::command]
 pub fn set_panel_open(window: WebviewWindow, open: bool) -> Result<(), String> {
     let result = if open {
@@ -40,6 +40,26 @@ pub fn set_panel_open(window: WebviewWindow, open: bool) -> Result<(), String> {
         window::apply_closed_state(&window)
     };
     result.map_err(|e| format!("failed to set panel state: {e}"))
+}
+
+/// Tell Rust which parts of the window are actually VISIBLE, so everything else
+/// passes clicks through to the apps behind it.
+///
+/// The island is one fixed oversized transparent window, so without this the
+/// whole 640x720 rectangle swallows clicks and hover even when all you can see
+/// is a small notch. Rects are in logical pixels relative to the webview's
+/// top-left (i.e. straight from `getBoundingClientRect()`); `pad` must cover
+/// that surface's CSS shadow because the window region clips painting too.
+///
+/// An empty list is ignored rather than applied: something is always on screen,
+/// so "no rects" means the frontend has not measured yet, and an empty region
+/// would make the window disappear.
+#[tauri::command]
+pub fn set_hit_regions(
+    window: WebviewWindow,
+    rects: Vec<window::hit_region::HitRect>,
+) -> Result<(), String> {
+    window::hit_region::set(&window, rects)
 }
 
 /// Gather the spike report. Read-only; safe to call any time the panel is open.

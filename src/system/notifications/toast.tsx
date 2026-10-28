@@ -12,7 +12,7 @@ export function Toast() {
   if (!n) return null;
 
   return (
-    <div class="islet-toast" role="status" aria-live="polite">
+    <div class="islet-toast" role="status" aria-live="polite" data-islet-hit="18">
       <span class="islet-toast-mark" aria-hidden="true">
         <Icon name="bell" size={18} />
       </span>

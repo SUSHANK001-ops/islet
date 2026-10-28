@@ -14,6 +14,8 @@ export function Handle({
     <button
       class="islet-handle"
       aria-label="Islet"
+      // Marks this as a clickable surface for the window hit region.
+      data-islet-hit="10"
       onMouseEnter={onEnter}
       onFocus={onEnter}
     >

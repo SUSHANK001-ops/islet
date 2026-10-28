@@ -12,6 +12,10 @@ use tauri::{LogicalPosition, LogicalSize, Manager, Monitor, WebviewWindow};
 
 use crate::app_config::PILL;
 
+/// Per-region hit testing, so the transparent part of the window does not
+/// swallow clicks meant for the apps behind it.
+pub mod hit_region;
+
 pub const ISLAND_LABEL: &str = "island";
 
 /// The monitor the user chose for the pill, by its OS name (e.g. "\\.\DISPLAY2").
@@ -116,10 +120,16 @@ pub fn set_monitor_choice(window: &WebviewWindow, name: Option<String>) -> tauri
 const WINDOW_W: f64 = 640.0;
 const WINDOW_H: f64 = 720.0;
 
-/// Tracks whether the frontend currently has something interactive showing
-/// (pill hovered / panel / flyout open). Drives click-through.
+/// Whether the panel is currently OPEN.
+///
+/// WHY this replaced the old `InteractiveState`: that flag was written as
+/// `!click_through`, and both `apply_open_state` and `apply_closed_state` called
+/// `set_click_through(window, false)`, so it was stuck at `true` forever.
+/// `toggle()` read it as "is the panel open", always saw `true`, and therefore
+/// always emitted "close" - which is why the tray icon and Ctrl+Shift+Space
+/// could never OPEN the island, only close it.
 #[derive(Default)]
-pub struct InteractiveState(pub Mutex<bool>);
+pub struct PanelOpenState(pub Mutex<bool>);
 
 /// Read the current notch position from app state (defaults to Center).
 fn notch_position(window: &WebviewWindow) -> NotchPosition {
@@ -151,13 +161,18 @@ pub fn place(window: &WebviewWindow) -> tauri::Result<()> {
     let side_gap = (WINDOW_W - pill_w) / 2.0;
     let edge = 24.0_f64;
 
-    let x = match free_position(window) {
+    let free = free_position(window);
+
+    let x = match free {
         Some(p) => {
             // p is the desired PILL top-left; shift left by side_gap so the pill
-            // (centered in the window) lands there. Clamp to keep on-screen.
+            // (centered in the window) lands there. Clamp against the PILL, not
+            // the oversized transparent window, so the notch can still be placed
+            // flush against either screen edge.
             let want = mon_pos.x + p.x - side_gap;
-            let max_x = mon_pos.x + (mon_size.width - WINDOW_W).max(-side_gap);
-            want.clamp(mon_pos.x - side_gap, max_x)
+            let min_x = mon_pos.x - side_gap;
+            let max_x = mon_pos.x + mon_size.width - pill_w - side_gap;
+            want.clamp(min_x, max_x.max(min_x))
         }
         None => match notch_position(window) {
             NotchPosition::Left => mon_pos.x + edge - side_gap,
@@ -165,7 +180,29 @@ pub fn place(window: &WebviewWindow) -> tauri::Result<()> {
             NotchPosition::Right => mon_pos.x + mon_size.width - pill_w - edge - side_gap,
         },
     };
-    let y = mon_pos.y + PILL.top_margin;
+
+    // Vertical placement. The pill sits at the TOP of the window (CSS
+    // margin-top: 0), so the window's y IS the pill's y.
+    //
+    // This used to be hardcoded to `mon_pos.y + PILL.top_margin`, which silently
+    // threw away the persisted Y: dragging the notch downwards appeared to work,
+    // saved a Y, and then snapped back to the top edge on the next placement.
+    let y = match free {
+        Some(p) => {
+            // Keep the whole window on-screen where the monitor is tall enough,
+            // so an opened panel is never clipped; on a short monitor fall back
+            // to keeping the pill itself visible.
+            let room = (mon_size.height - WINDOW_H).max(0.0);
+            let max_y = if room > 0.0 {
+                mon_pos.y + room
+            } else {
+                mon_pos.y + (mon_size.height - PILL.closed_height).max(0.0)
+            };
+            (mon_pos.y + p.y).clamp(mon_pos.y, max_y)
+        }
+        None => mon_pos.y + PILL.top_margin,
+    };
+
     window.set_position(LogicalPosition::new(x, y))?;
     Ok(())
 }
@@ -222,35 +259,60 @@ pub fn set_notch_position(window: &WebviewWindow, pos: NotchPosition) -> tauri::
     place(window)
 }
 
-/// Toggle whole-window click-through. The frontend calls `set_panel_open` with
-/// whether anything interactive is showing: when nothing is up, the whole
-/// transparent window passes clicks through to apps behind it; when the pill is
-/// hovered or a panel/flyout is open, it accepts clicks.
-pub fn set_click_through(window: &WebviewWindow, click_through: bool) -> tauri::Result<()> {
-    if let Some(state) = window.try_state::<InteractiveState>() {
+/// Record whether the panel is open. Read by `toggle()` (tray / hotkey).
+fn set_panel_open_flag(window: &WebviewWindow, open: bool) {
+    if let Some(state) = window.try_state::<PanelOpenState>() {
         if let Ok(mut g) = state.0.lock() {
-            *g = !click_through;
+            *g = open;
         }
     }
-    window.set_ignore_cursor_events(click_through)
 }
 
-/// Closed/idle state: window placed + on top. It stays INTERACTIVE so hover can
-/// open the pill (the known one-window hover-vs-clickthrough tradeoff); the
-/// transparent empty area is small relative to the pill at the top edge.
+/// Closed/idle state: window placed + on top.
+///
+/// The window stays a fixed, oversized transparent canvas; what stops it from
+/// swallowing clicks is the hit region (see `hit_region`), which the frontend
+/// keeps pinned to whatever is actually visible. Nothing here toggles
+/// whole-window click-through, because doing so also kills hover and the pill
+/// could never open.
 pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
     place(window)?;
-    set_click_through(window, false)?;
+    set_panel_open_flag(window, false);
     Ok(())
 }
 
-/// Open state: same fixed window, interactive, on top.
+/// Open state: same fixed window, on top.
 pub fn apply_open_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
     place(window)?;
-    set_click_through(window, false)?;
+    set_panel_open_flag(window, true);
     Ok(())
+}
+
+/// Apply a conservative starting hit region covering just the closed notch.
+///
+/// WHY: the frontend publishes exact rects, but only after it has mounted and
+/// measured. Until then the window would still be one big click-swallowing
+/// rectangle, so seed the notch footprint immediately at startup. Coordinates
+/// are window-relative logical px, matching what the frontend sends; the pill
+/// is centered horizontally by CSS and sits flush at the top.
+pub fn seed_hit_region(window: &WebviewWindow) {
+    let side_gap = (WINDOW_W - PILL.closed_width) / 2.0;
+    let rect = hit_region::HitRect {
+        x: side_gap,
+        y: 0.0,
+        w: PILL.closed_width,
+        h: PILL.closed_height,
+        radius: 16.0,
+        // Enough to keep the notch's drop shadow from being clipped.
+        pad: 14.0,
+    };
+    if let Err(e) = hit_region::set(window, vec![rect]) {
+        // Non-fatal: without a region the window is over-eager about clicks,
+        // which is worse UX but still a working app.
+        eprintln!("islet: could not seed the hit region: {e}");
+    }
 }
 
 /// Count of connected monitors, used by the spike report.
@@ -273,10 +335,10 @@ pub fn toggle<M: Manager<tauri::Wry>>(manager: &M) -> tauri::Result<()> {
     let Some(win) = island(manager) else {
         return Ok(());
     };
-    // The frontend owns the visual open state; read whether it is currently
-    // interactive/open from our state and flip it.
+    // The frontend owns the visual open state; read the last state we applied
+    // and flip it.
     let open_now = win
-        .try_state::<InteractiveState>()
+        .try_state::<PanelOpenState>()
         .and_then(|s| s.0.lock().ok().map(|g| *g))
         .unwrap_or(false);
     if !open_now {

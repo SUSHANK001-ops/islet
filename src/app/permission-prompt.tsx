@@ -15,7 +15,12 @@ export function PermissionPrompt() {
   const req: PermissionRequest = queue[0];
 
   return (
-    <div class="islet-perm" role="alertdialog" aria-labelledby="perm-title">
+    <div
+      class="islet-perm"
+      role="alertdialog"
+      aria-labelledby="perm-title"
+      data-islet-hit="18"
+    >
       <span id="perm-title" class="islet-perm-title">
         {req.title}
       </span>

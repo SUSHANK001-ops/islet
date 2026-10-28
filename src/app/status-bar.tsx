@@ -137,6 +137,7 @@ export function StatusBar({
       class="islet-statusbar"
       role="toolbar"
       aria-label="Islet status bar"
+      data-islet-hit="12"
       style={{ "--islet-pill-opacity": String(settings.value.notchOpacity) }}
     >
       {/* Character wing: the active character in its own left slot (design §6).

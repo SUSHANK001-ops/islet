@@ -26,10 +26,14 @@ pub const CATALOG_PUBLIC_KEY_HEX: &str =
 /// monitor edge) and the top margin. Visual sizes live in `src/app.config.ts`.
 pub struct PillGeometry {
     pub closed_width: f64,
+    /// Closed notch height, used only to keep a freely-dragged notch on-screen.
+    /// Keep roughly in step with `.islet-pill.has-character` in shell.css.
+    pub closed_height: f64,
     pub top_margin: f64,
 }
 
 pub const PILL: PillGeometry = PillGeometry {
     closed_width: 180.0,
+    closed_height: 46.0,
     top_margin: 0.0,
 };

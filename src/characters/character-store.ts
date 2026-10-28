@@ -1,6 +1,7 @@
 import { signal } from "@preact/signals";
 import { listen } from "@tauri-apps/api/event";
 import { powerGet } from "../system/bridge";
+import { progressSummary } from "../modules/progress/bridge";
 import {
   characterGetActive,
   characterLoadActive,
@@ -25,9 +26,31 @@ export const activeRecord = signal<ActiveCharacter>({
   showInNotch: true,
 });
 
-/** Lifetime focus minutes, drives the growth stage. Fed from progress later;
- *  starts at 0 so a brand-new user is at the first stage. */
+/** Lifetime focus minutes, drives the growth stage. Starts at 0 so a brand-new
+ *  user is at the first stage; `refreshFocusTotal()` fills it in from the
+ *  activity log. */
 export const totalFocusMinutes = signal(0);
+
+/**
+ * Recompute lifetime focus minutes from the activity log.
+ *
+ * Growth stages were dead before this existed: the signal was initialised to 0
+ * and never written, so `resolveStage()` always returned the first stage no
+ * matter how much the user had focused. Called at startup and whenever a focus
+ * round completes.
+ *
+ * The window is capped (two years) because the backend zero-fills every day in
+ * the range, so an unbounded span would grow the payload forever.
+ */
+export async function refreshFocusTotal(): Promise<void> {
+  try {
+    const days = await progressSummary(730);
+    totalFocusMinutes.value = days.reduce((sum, d) => sum + d.focusMinutes, 0);
+  } catch {
+    // Outside Tauri or the command failed: leave the previous total rather than
+    // resetting the character's growth stage to zero.
+  }
+}
 
 /** True while the character load is in flight (loading state in the UI). */
 export const characterLoading = signal(false);

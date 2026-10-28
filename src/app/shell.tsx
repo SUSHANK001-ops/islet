@@ -24,6 +24,7 @@ import {
   characterProblem,
   initCharacterGate,
   loadActiveCharacter,
+  refreshFocusTotal,
 } from "../characters/character-store";
 import {
   characterSignals,
@@ -73,6 +74,9 @@ export function Shell() {
     initCharacterGate();
     initCharacterSignals();
     void loadActiveCharacter();
+    // Lifetime focus minutes decide the growth stage, so read them before the
+    // first render of the character rather than waiting for a round to finish.
+    void refreshFocusTotal();
   }, []);
 
   // Drive the taskbar progress from the focus timer. The shell is always

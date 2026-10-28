@@ -2,6 +2,7 @@ import { signal } from "@preact/signals";
 import { listen } from "@tauri-apps/api/event";
 import type { FocusState } from "../modules/focus/bridge";
 import type { CharacterSignals } from "./state-machine";
+import { refreshFocusTotal } from "./character-store";
 
 // Produces the CharacterSignals the renderer reads, from app events. The
 // character reacts to the focus module via the activity/hub surface - it never
@@ -59,6 +60,10 @@ export function initCharacterSignals(): void {
       completeTimer = setTimeout(() => {
         justCompleted.value = false;
       }, 4000);
+      // A finished round is the only thing that moves lifetime focus minutes,
+      // so this is where the growth stage can change. Re-read the total from
+      // the activity log (Rust has just appended to it).
+      void refreshFocusTotal();
     }
     prevRoundsToday = st.roundsToday;
 

@@ -15,7 +15,7 @@ import {
   totalFocusMinutes,
 } from "./character-store";
 import { notchState, resolveState, type CharacterSignals } from "./state-machine";
-import { resolveStage } from "./mood";
+import { resolveStage, timingNudges } from "./mood";
 
 // Shared rendering hook. Decodes the active character's sheet ONCE and keeps a
 // SpriteEngine bound to a canvas. The notch and panel each call this with their
@@ -96,6 +96,21 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
       : resolveState(char.manifest, signals)
     : "idle";
 
+  /**
+   * Frame-rate multiplier for the engine: the gate's slowdown (battery) times
+   * the pack's personality nudge.
+   *
+   * `timingNudges().idleIntervalScale` was previously computed but never used,
+   * so a pack's personality had no runtime effect at all. It scales the idle
+   * INTERVAL, so it divides the rate, and it only applies to the idle state -
+   * a lazy character breathes slower but still celebrates at full speed.
+   */
+  function rateFor(name: string): number {
+    if (!char) return fpsScale();
+    const nudge = name === "idle" ? 1 / timingNudges(char.manifest).idleIntervalScale : 1;
+    return fpsScale() * nudge;
+  }
+
   // (Re)create the engine when the character or canvas changes.
   useEffect(() => {
     let alive = true;
@@ -110,7 +125,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
         const engine = new SpriteEngine(canvas, char, bitmap, surface);
         engineRef.current = engine;
         engine.setState(stateName);
-        engine.setRateScale(fpsScale());
+        engine.setRateScale(rateFor(stateName));
         if (animationAllowed()) engine.start();
         else engine.drawStatic();
       })
@@ -135,7 +150,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
     const engine = engineRef.current;
     if (!engine) return;
     engine.setState(stateName);
-    engine.setRateScale(fpsScale());
+    engine.setRateScale(rateFor(stateName));
     if (animationAllowed()) {
       engine.start();
     } else {

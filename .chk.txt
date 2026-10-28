@@ -1,18 +1,10 @@
-﻿L149
-  }, []);
-
-  // Fullscreen app appeared: hide the panel (event-driven, not polling).
-  useEffect(() => {
-    const un = listen<boolean>("islet://fullscreen-changed", (e) => {
-      if (e.payload === true) {
-        setOpen(false);
-        setPinned(false);
-      }
-    });
-    return () => void un.then((f) => f());
-  }, []);
-
-  // Esc closes the panel (unless a permission is pending).
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
+﻿L9: pub const MANIFEST_VERSION: u32 = 1;
+    
+    /// The five states every pack MUST define (CHARACTERS.md).
+    pub const REQUIRED_STATES: [&str; 5] = ["idle", "working", "celebrating", "sleeping", "sad"];
+    
+L12: pub const REQUIRED_STATES: [&str; 5] = ["idle", "working", "celebrating", "sleeping", "sad"];
+    
+    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SheetSpec {

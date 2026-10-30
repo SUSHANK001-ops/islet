@@ -739,3 +739,50 @@
 @media (prefers-reduced-motion: reduce) {
   .islet-toast { animation: none; }
 }
+
+/* 2026 craft pass: system tools share the notch's quiet, flat material. */
+.islet-flyout-chip {
+  background: #080a09;
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  color: #eef2ef;
+}
+.islet-flyout-card {
+  background: var(--islet-bg-panel);
+  border-radius: 20px;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45);
+}
+.islet-card {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--islet-divider);
+  border-radius: 0;
+  padding: 11px 0;
+}
+.islet-tile,
+.islet-tile-mini {
+  background: transparent;
+  border-color: var(--islet-divider);
+  border-radius: 11px;
+}
+.islet-tile:hover:not(:disabled),
+.islet-tile-mini:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--islet-bg-elev) 70%, transparent);
+}
+.islet-tile-badge {
+  border-radius: 10px;
+}
+.islet-tile.on .islet-tile-badge,
+.islet-switch.on,
+.islet-slider-fill,
+.islet-seg-highlight,
+.islet-cal-cell.today {
+  background: var(--islet-accent);
+  color: var(--islet-on-accent);
+}
+.islet-segmented {
+  border-radius: 10px;
+}
+.islet-seg-highlight {
+  border-radius: 7px;
+}

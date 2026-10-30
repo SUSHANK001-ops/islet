@@ -3,11 +3,11 @@
    kept modest. */
 :root {
   /* Surfaces */
-  --islet-bg: #0b0b0f;
-  --islet-bg-panel: #16161c;
-  --islet-bg-elev: #1e1e26;
-  --islet-fg: #f4f4f6;
-  --islet-fg-dim: #9a9ab6;
+  --islet-bg: #080909;
+  --islet-bg-panel: #111313;
+  --islet-bg-elev: #191c1b;
+  --islet-fg: #f3f5f1;
+  --islet-fg-dim: #929a95;
 
   /* Accents.
      ONE accent hue. There is deliberately no second decorative hue and no
@@ -15,9 +15,9 @@
      interface reads as generic/auto-generated, so it is banned here. Semantic
      colors (ok/warn/danger) are the only other hues, and they are reserved for
      meaning - never decoration. */
-  --islet-accent: #4d8df0;
-  --islet-accent-deep: #2f6fd0;
-  --islet-accent-soft: #8fb8f7;
+  --islet-accent: #75d9c7;
+  --islet-accent-deep: #52b9a8;
+  --islet-accent-soft: #a5eadf;
   /* Kept as a name so older call sites keep working, but it is the SAME hue
      as the accent on purpose. Do not reintroduce a contrasting decorative hue. */
   --islet-accent-2: var(--islet-accent);
@@ -26,19 +26,19 @@
   --islet-danger: #e8605d;
 
   /* Interactive surfaces (theme-aware) */
-  --islet-control: #262630;
-  --islet-control-hover: #32323e;
-  --islet-border: rgba(255, 255, 255, 0.10);
-  --islet-divider: rgba(255, 255, 255, 0.07);
+  --islet-control: #202422;
+  --islet-control-hover: #292e2b;
+  --islet-border: rgba(237, 244, 239, 0.11);
+  --islet-divider: rgba(237, 244, 239, 0.07);
 
   /* The accent fill for selected/primary surfaces.
      A SINGLE-hue vertical ramp, light at the top, so a filled control reads as
      a physical object lit from above. It is not a decorative colour blend: the
      old 135deg three-stop indigo->violet ramp is what made every control look
      auto-generated. Keep both stops in the accent family. */
-  --islet-grad: linear-gradient(180deg, var(--islet-accent-soft) 0%, var(--islet-accent-deep) 100%);
+  --islet-grad: var(--islet-accent);
   /* Text/icon colour that sits on top of an accent-filled surface. */
-  --islet-on-accent: #07121f;
+  --islet-on-accent: #071512;
   /* Soft colored glow derived from the accent, for focus/active emphasis. */
   --islet-glow: 0 0 0 3px color-mix(in srgb, var(--islet-accent) 42%, transparent);
   /* A faint top highlight for "lit from above" surfaces (pill, buttons). */

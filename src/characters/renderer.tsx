@@ -115,7 +115,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
   useEffect(() => {
     let alive = true;
     const canvas = canvasRef.current;
-    engineRef.current?.stop();
+    engineRef.current?.dispose();
     engineRef.current = null;
     if (!char || !canvas) return;
 
@@ -140,7 +140,7 @@ export function CharacterCanvas({ surface, signals, class: className }: Characte
 
     return () => {
       alive = false;
-      engineRef.current?.stop();
+      engineRef.current?.dispose();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [char?.manifest.id, surface, stageId]);

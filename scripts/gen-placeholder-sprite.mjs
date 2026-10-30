@@ -31,15 +31,19 @@ const SW = W * SS;
 const SH = H * SS;
 
 // ---- Palette. Single accent family, matching src/ui/tokens.css. ----
-const BODY_TOP = [0x7a, 0xb0, 0xf8, 255];
+// Pip v2: a rounder, softer blob buddy. Warmer highlight, deeper base, a soft
+// contact shadow for depth, and bigger expressive eyes. Still ONE accent hue.
+const BODY_TOP = [0x8c, 0xbd, 0xff, 255];
+const BODY_MID = [0x5c, 0x97, 0xf2, 255];
 const BODY_BOT = [0x2f, 0x6f, 0xd0, 255];
-const BODY_EDGE = [0x1e, 0x4e, 0x9c, 255];
-const EYE_WHITE = [0xf7, 0xfa, 0xff, 255];
-const PUPIL = [0x12, 0x1a, 0x2b, 255];
-const GLINT = [255, 255, 255, 235];
-const MOUTH = [0x14, 0x1d, 0x30, 255];
-const BLUSH = [0xff, 0x92, 0x9b, 110];
-const SHEEN = [255, 255, 255, 46];
+const BODY_EDGE = [0x24, 0x56, 0xa4, 255];
+const SHADOW = [0x10, 0x18, 0x2c, 70]; // soft contact shadow under the body
+const EYE_WHITE = [0xf8, 0xfb, 0xff, 255];
+const PUPIL = [0x15, 0x1d, 0x30, 255];
+const GLINT = [255, 255, 255, 240];
+const MOUTH = [0x12, 0x1b, 0x2e, 255];
+const BLUSH = [0xff, 0x8f, 0x9a, 120];
+const SHEEN = [255, 255, 255, 60];
 
 // Supersampled RGBA buffer.
 const buf = new Uint8ClampedArray(SW * SH * 4);
@@ -96,6 +100,29 @@ function roundRect(ox, oy, x, y, w, h, r, cTop, cBot = cTop) {
   }
 }
 
+/**
+ * Filled rounded rectangle with a THREE-stop vertical gradient (top -> mid ->
+ * bottom). Gives the blob body a soft "lit from above, deep at the base" look
+ * that a two-stop ramp cannot, without any blur.
+ */
+function roundRect3(ox, oy, x, y, w, h, r, cTop, cMid, cBot) {
+  const X = (ox + x) * SS;
+  const Y = (oy + y) * SS;
+  const WW = w * SS;
+  const HH = h * SS;
+  const R = Math.min(r * SS, Math.min(WW, HH) / 2);
+  for (let py = 0; py < HH; py++) {
+    const t = HH <= 1 ? 0 : py / (HH - 1);
+    const col = t < 0.5 ? mixColor(cTop, cMid, t * 2) : mixColor(cMid, cBot, (t - 0.5) * 2);
+    for (let px = 0; px < WW; px++) {
+      const dx = px < R ? R - px : px > WW - R - 1 ? px - (WW - R - 1) : 0;
+      const dy = py < R ? R - py : py > HH - R - 1 ? py - (HH - R - 1) : 0;
+      if (dx > 0 && dy > 0 && dx * dx + dy * dy > R * R) continue;
+      blend(X + px, Y + py, col);
+    }
+  }
+}
+
 /** Filled ellipse in FRAME-local units. */
 function ellipse(ox, oy, cx, cy, rx, ry, c) {
   const CX = (ox + cx) * SS;
@@ -141,92 +168,109 @@ function drawPip(col, row, pose = {}) {
   const bob = pose.bob ?? 0;
   const tilt = pose.tilt ?? 0;
 
-  const bodyW = 30;
-  const bodyH = 29;
+  // Rounder, chunkier body than v1 — more "blob buddy", less "box".
+  const bodyW = 32;
+  const bodyH = 30;
   const bx = (FRAME - bodyW) / 2 + tilt;
   const by = 9 + bob;
   const cx = FRAME / 2 + tilt;
+  const radius = 14; // large radius => soft rounded silhouette
+
+  // Soft contact shadow on the ground. Shrinks a little as the body lifts (bob
+  // is negative when it hops up), which sells the float.
+  const lift = Math.max(0, -bob);
+  ellipse(ox, oy, FRAME / 2, by + bodyH + 4.5, 12 - lift * 0.8, 3 - lift * 0.3, SHADOW);
 
   // Feet first so the body overlaps them.
-  ellipse(ox, oy, cx - 7, by + bodyH + 1.5, 4, 2.6, BODY_BOT);
-  ellipse(ox, oy, cx + 7, by + bodyH + 1.5, 4, 2.6, BODY_BOT);
+  ellipse(ox, oy, cx - 7, by + bodyH + 0.5, 4.2, 2.8, BODY_BOT);
+  ellipse(ox, oy, cx + 7, by + bodyH + 0.5, 4.2, 2.8, BODY_BOT);
 
   // Arms: little nubs. Raised when celebrating.
   if (pose.armsUp) {
     // Keep raised arms BESIDE the body, not above its top edge: any higher and
     // the nubs clear the silhouette and read as horns instead of arms.
-    ellipse(ox, oy, bx - 3.5, by + 9, 2.8, 5.5, BODY_BOT);
-    ellipse(ox, oy, bx + bodyW + 3.5, by + 9, 2.8, 5.5, BODY_BOT);
+    ellipse(ox, oy, bx - 3, by + 8, 3, 5.5, BODY_MID);
+    ellipse(ox, oy, bx + bodyW + 3, by + 8, 3, 5.5, BODY_MID);
   } else {
-    ellipse(ox, oy, bx - 2.5, by + 15, 3, 5, BODY_BOT);
-    ellipse(ox, oy, bx + bodyW + 2.5, by + 15, 3, 5, BODY_BOT);
+    ellipse(ox, oy, bx - 2, by + 16, 3.2, 5.2, BODY_MID);
+    ellipse(ox, oy, bx + bodyW + 2, by + 16, 3.2, 5.2, BODY_MID);
   }
 
-  // Body: soft outline, then the gradient face plate on top.
-  roundRect(ox, oy, bx - 1, by - 1, bodyW + 2, bodyH + 2, 10, BODY_EDGE);
-  roundRect(ox, oy, bx, by, bodyW, bodyH, 9, BODY_TOP, BODY_BOT);
+  // Body: soft dark outline, then the 3-stop gradient face plate on top.
+  roundRect(ox, oy, bx - 1.2, by - 1.2, bodyW + 2.4, bodyH + 2.4, radius + 1, BODY_EDGE);
+  roundRect3(ox, oy, bx, by, bodyW, bodyH, radius, BODY_TOP, BODY_MID, BODY_BOT);
   // Top sheen so the body reads as lit from above rather than flat.
-  roundRect(ox, oy, bx + 2.5, by + 2, bodyW - 5, 9, 5, SHEEN);
+  roundRect(ox, oy, bx + 3, by + 2, bodyW - 6, 10, 7, SHEEN);
 
-  // Eyes.
-  const eyeY = by + 11;
-  const eyeDX = 6.5;
+  // Eyes — bigger and set a touch higher for a friendlier, cuter face.
+  const eyeY = by + 12;
+  const eyeDX = 7;
   const look = pose.look ?? 0;
   if (pose.sleep) {
-    arc(ox, oy, cx - eyeDX, eyeY, 3.2, Math.PI * 0.15, Math.PI * 0.85, 1.6, PUPIL);
-    arc(ox, oy, cx + eyeDX, eyeY, 3.2, Math.PI * 0.15, Math.PI * 0.85, 1.6, PUPIL);
+    arc(ox, oy, cx - eyeDX, eyeY, 3.4, Math.PI * 0.15, Math.PI * 0.85, 1.7, PUPIL);
+    arc(ox, oy, cx + eyeDX, eyeY, 3.4, Math.PI * 0.15, Math.PI * 0.85, 1.7, PUPIL);
   } else if (pose.blink) {
-    arc(ox, oy, cx - eyeDX, eyeY, 3.2, Math.PI * 0.1, Math.PI * 0.9, 1.7, PUPIL);
-    arc(ox, oy, cx + eyeDX, eyeY, 3.2, Math.PI * 0.1, Math.PI * 0.9, 1.7, PUPIL);
+    arc(ox, oy, cx - eyeDX, eyeY, 3.4, Math.PI * 0.1, Math.PI * 0.9, 1.8, PUPIL);
+    arc(ox, oy, cx + eyeDX, eyeY, 3.4, Math.PI * 0.1, Math.PI * 0.9, 1.8, PUPIL);
   } else {
-    const eyeR = pose.wide ? 5.2 : 4.6;
-    ellipse(ox, oy, cx - eyeDX, eyeY, eyeR, eyeR + 0.4, EYE_WHITE);
-    ellipse(ox, oy, cx + eyeDX, eyeY, eyeR, eyeR + 0.4, EYE_WHITE);
-    const pr = pose.wide ? 2.5 : 2.2;
+    const eyeR = pose.wide ? 5.6 : 5.0;
+    ellipse(ox, oy, cx - eyeDX, eyeY, eyeR, eyeR + 0.5, EYE_WHITE);
+    ellipse(ox, oy, cx + eyeDX, eyeY, eyeR, eyeR + 0.5, EYE_WHITE);
+    const pr = pose.wide ? 2.8 : 2.5;
     ellipse(ox, oy, cx - eyeDX + look, eyeY + (pose.lookDown ?? 0), pr, pr, PUPIL);
     ellipse(ox, oy, cx + eyeDX + look, eyeY + (pose.lookDown ?? 0), pr, pr, PUPIL);
     // Specular glint: the single detail that makes the eyes feel alive.
-    ellipse(ox, oy, cx - eyeDX + look - 0.9, eyeY - 1.4, 0.9, 0.9, GLINT);
-    ellipse(ox, oy, cx + eyeDX + look - 0.9, eyeY - 1.4, 0.9, 0.9, GLINT);
+    ellipse(ox, oy, cx - eyeDX + look - 1, eyeY - 1.6, 1.1, 1.1, GLINT);
+    ellipse(ox, oy, cx + eyeDX + look - 1, eyeY - 1.6, 1.1, 1.1, GLINT);
+    // A tiny secondary glint sells the glossy, rounded eye.
+    ellipse(ox, oy, cx - eyeDX + look + 1.4, eyeY + 1.2, 0.5, 0.5, [255, 255, 255, 150]);
+    ellipse(ox, oy, cx + eyeDX + look + 1.4, eyeY + 1.2, 0.5, 0.5, [255, 255, 255, 150]);
   }
 
   if (pose.blush) {
-    ellipse(ox, oy, cx - 11, eyeY + 5.5, 3.2, 2, BLUSH);
-    ellipse(ox, oy, cx + 11, eyeY + 5.5, 3.2, 2, BLUSH);
+    ellipse(ox, oy, cx - 12, eyeY + 5.5, 3.4, 2.1, BLUSH);
+    ellipse(ox, oy, cx + 12, eyeY + 5.5, 3.4, 2.1, BLUSH);
   }
 
   // Mouth.
-  const my = by + 21;
+  const my = by + 22;
   switch (pose.mouth ?? "smile") {
     case "open":
-      ellipse(ox, oy, cx, my + 0.5, 3.4, 3.2, MOUTH);
-      ellipse(ox, oy, cx, my + 1.8, 2.2, 1.6, [0xff, 0x9f, 0xb0, 255]);
+      ellipse(ox, oy, cx, my + 0.5, 3.6, 3.4, MOUTH);
+      ellipse(ox, oy, cx, my + 1.9, 2.3, 1.7, [0xff, 0x9f, 0xb0, 255]);
       break;
     case "frown":
-      arc(ox, oy, cx, my + 3.4, 3.2, Math.PI * 1.15, Math.PI * 1.85, 1.5, MOUTH);
+      arc(ox, oy, cx, my + 3.6, 3.4, Math.PI * 1.15, Math.PI * 1.85, 1.6, MOUTH);
       break;
     case "flat":
-      arc(ox, oy, cx, my, 0.1, 0, Math.PI * 2, 1.5, MOUTH);
-      ellipse(ox, oy, cx, my, 2.6, 0.75, MOUTH);
+      ellipse(ox, oy, cx, my, 2.8, 0.8, MOUTH);
       break;
     default: // smile
-      arc(ox, oy, cx, my - 1.2, 3.1, Math.PI * 0.18, Math.PI * 0.82, 1.5, MOUTH);
+      arc(ox, oy, cx, my - 1.2, 3.3, Math.PI * 0.16, Math.PI * 0.84, 1.6, MOUTH);
   }
 
   // Celebration sparkles.
   if (pose.sparkle) {
-    const s = [0xff, 0xd9, 0x6b, 240];
-    ellipse(ox, oy, 8, by + 3, 1.5, 1.5, s);
-    ellipse(ox, oy, FRAME - 8, by + 6, 1.2, 1.2, s);
-    ellipse(ox, oy, 11, by + 14, 1, 1, s);
+    const s = [0xff, 0xd9, 0x6b, 245];
+    sparkle(ox, oy, 7, by + 2, 2);
+    sparkle(ox, oy, FRAME - 7, by + 5, 1.6);
+    sparkle(ox, oy, 10, by + 15, 1.3);
+    void s;
   }
 
   // Sleep "z"s.
   if (pose.sleep) {
-    const z = [0xd7, 0xe4, 0xff, 225];
-    ellipse(ox, oy, FRAME - 10, by + 2 + (pose.zOff ?? 0), 1.3, 1.3, z);
-    ellipse(ox, oy, FRAME - 6, by - 3 + (pose.zOff ?? 0), 1, 1, z);
+    const z = [0xd7, 0xe4, 0xff, 230];
+    ellipse(ox, oy, FRAME - 9, by + 1 + (pose.zOff ?? 0), 1.4, 1.4, z);
+    ellipse(ox, oy, FRAME - 5, by - 4 + (pose.zOff ?? 0), 1.1, 1.1, z);
   }
+}
+
+/** A four-point sparkle (two crossed ellipses) — nicer than a plain dot. */
+function sparkle(ox, oy, x, y, r) {
+  const c = [0xff, 0xe2, 0x8a, 245];
+  ellipse(ox, oy, x, y, r, r * 0.35, c);
+  ellipse(ox, oy, x, y, r * 0.35, r, c);
 }
 
 /** Place a frame by its manifest index. */

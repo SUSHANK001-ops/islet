@@ -58,9 +58,8 @@ export function Shell() {
   const showInNotch = activeRecord.value.showInNotch;
   const charProblem = characterProblem.value;
 
-  // Auto-hide (Spec 12). `collapsed` true = showing only the thin handle.
-  // Visibility modes: always (never collapse), autoHide (collapse on leave),
-  // hidden (stay collapsed until the hotkey toggles open).
+  // Visibility remains user-controlled, but the safe native hit region means
+  // a collapsed notch no longer leaves an invisible click-blocking window.
   const visibility = settings.value.pillVisibility;
   const [collapsed, setCollapsed] = useState(
     settings.value.pillVisibility !== "always"
@@ -121,11 +120,9 @@ export function Shell() {
   useEffect(() => {
     const un = listen<boolean>("islet://toggle-open", (e) => {
       const next = e.payload;
-      // A deliberate toggle (tray/hotkey) always un-collapses the handle so the
-      // pill is usable even in "hidden" mode.
       if (next) setCollapsed(false);
       setOpen(next);
-      setPinned(next); // a deliberate toggle pins/unpins
+      setPinned(next);
     });
     return () => void un.then((f) => f());
   }, []);
@@ -182,51 +179,58 @@ export function Shell() {
     else void closePanel();
   }, [open]);
 
-  // Re-apply the collapsed state when the visibility setting changes.
   useEffect(() => {
-    setCollapsed(visibility !== "always");
+    if (!open) setCollapsed(visibility !== "always");
   }, [visibility]);
 
-  // Expand from the handle (hover/focus). Cancels any pending collapse.
   function expandFromHandle() {
     if (collapseTimer.current) clearTimeout(collapseTimer.current);
     setCollapsed(false);
   }
 
-  // Collapse back to the handle after the configured delay, unless the panel is
-  // open/pinned or a permission is pending. "always" never collapses.
   function scheduleCollapse() {
-    if (visibility === "always") return;
-    if (open || pinned || pending.length > 0) return;
+    if (visibility === "always" || open || pinned || pending.length > 0) return;
     if (collapseTimer.current) clearTimeout(collapseTimer.current);
-    collapseTimer.current = setTimeout(() => {
-      setCollapsed(true);
-    }, settings.value.autohideDelayMs);
+    collapseTimer.current = setTimeout(
+      () => setCollapsed(true),
+      visibility === "hidden" ? 0 : settings.value.autohideDelayMs
+    );
   }
 
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleEnter() {
-    // Cancel any pending close from a previous leave.
     if (leaveTimer.current) clearTimeout(leaveTimer.current);
-    // Status-bar style never opens the whole panel on hover — its items open
-    // their own flyouts. Only the Notch pill grows on hover.
-    if (pillStyle.value === "statusBar") return;
-    // Hover opens a PREVIEW; it does NOT pin. Clicking pins (see handlePillClick).
-    if (!open) setOpen(true);
+    if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    // Hover opening is opt-in. The old unconditional behavior repeatedly
+    // mounted and unmounted the panel while crossing the screen edge, causing
+    // visual flicker and needless native hit-region churn.
+    if (!open && !statusBarStyle && settings.value.openOnHover) {
+      setOpen(true);
+    }
   }
 
   function handleLeave() {
-    // Auto-hide: start the collapse countdown when the pointer leaves.
-    scheduleCollapse();
-    // In status-bar style the strip stays put; nothing to close on leave.
-    if (pillStyle.value === "statusBar") return;
-    // Pinned (user clicked) or a pending permission keeps it open.
+    if (statusBarStyle) {
+      scheduleCollapse();
+      return;
+    }
     if (pinned || pending.length > 0) return;
-    // Otherwise close after a short grace so moving the mouse across the small
-    // gap between pill and panel does not flicker it shut.
-    if (leaveTimer.current) clearTimeout(leaveTimer.current);
-    leaveTimer.current = setTimeout(() => setOpen(false), 180);
+
+    if (open && settings.value.openOnHover) {
+      if (leaveTimer.current) clearTimeout(leaveTimer.current);
+      leaveTimer.current = setTimeout(() => {
+        setOpen(false);
+        if (visibility !== "always") {
+          collapseTimer.current = setTimeout(
+            () => setCollapsed(true),
+            visibility === "hidden" ? 0 : settings.value.autohideDelayMs
+          );
+        }
+      }, 220);
+      return;
+    }
+    scheduleCollapse();
   }
 
   function handlePillClick() {
@@ -245,9 +249,6 @@ export function Shell() {
     }
   }
 
-  // On-notch quick toggle for showing the character in the closed pill. Writes
-  // through the backend, then refreshes the active-character store so the notch
-  // updates live. The persisted active record is the source of truth.
   function toggleCharacterInNotch() {
     const next = !activeRecord.value.showInNotch;
     void characterSetActive(activeRecord.value.id, next)
@@ -310,13 +311,12 @@ export function Shell() {
 
   const hasAlert = pending.length > 0;
   const statusBarStyle = pillStyle.value === "statusBar";
-  // The handle shows a single dot when a timer runs OR there are unread notifs.
   const handleDot =
     notifications.value.some((n) => !n.read) || focusRunning;
 
   return (
     <div
-      class="islet-stack"
+      class={`islet-stack${open ? " open" : ""}`}
       ref={stackRef}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -344,11 +344,20 @@ export function Shell() {
         <div
           class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
             character && showInNotch && !open ? " has-character" : ""
-          }`}
-          // Hit region: pad covers the notch shadow + the accent underline that
-          // sits just below the box, so neither gets clipped by the shape.
-          data-islet-hit="14"
+          }${focusRunning ? " focus-active" : ""}`}
+          // Hit region: pad covers the notch shadow without claiming a large
+          // invisible strip over the app underneath.
+          data-islet-hit="8"
+          role="button"
+          tabIndex={0}
+          aria-expanded={open}
           onClick={handlePillClick}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handlePillClick();
+            }
+          }}
           title={`${APP_NAME} · ${t("app.tagline")}`}
         >
           {hasAlert && !open ? <span class="islet-alert-dot" /> : null}
@@ -381,40 +390,12 @@ export function Shell() {
 
       {hasAlert ? <PermissionPrompt /> : null}
 
-      {!settings.value.pillStyleOffered && !hasAlert ? (
-        <div
-          class="islet-perm islet-pill-offer"
-          role="dialog"
-          aria-label={t("pillStyle.offer.title")}
-          data-islet-hit="18"
-        >
-          <span class="islet-perm-title">{t("pillStyle.offer.title")}</span>
-          <p>{t("pillStyle.offer.body")}</p>
-          <div class="islet-pill-offer-actions">
-            <button
-              class="islet-btn"
-              onClick={() => updateSettings({ pillStyleOffered: true })}
-            >
-              {t("pillStyle.offer.keep")}
-            </button>
-            <button
-              class="islet-btn primary"
-              onClick={() =>
-                updateSettings({ pillStyle: "statusBar", pillStyleOffered: true })
-              }
-            >
-              {t("pillStyle.offer.try")}
-            </button>
-          </div>
-        </div>
-      ) : null}
-
       {open ? (
         <div
           class="islet-panel"
           role="dialog"
           aria-label={APP_NAME}
-          data-islet-hit="24"
+          data-islet-hit="10"
         >
           {character ? (
             <div class="islet-panel-character">
@@ -424,19 +405,19 @@ export function Shell() {
                 class="islet-panel-canvas"
               />
               <div class="islet-panel-character-row">
+                <span class="islet-companion-presence" aria-hidden="true" />
                 <span class="islet-panel-character-name">
                   {character.manifest.name}
                 </span>
-                {/* On-notch quick control: toggle whether the character shows
-                    in the closed pill, without opening Settings. */}
                 <button
-                  class={`islet-toggle small${showInNotch ? " on" : ""}`}
+                  class={`islet-character-visibility${showInNotch ? " on" : ""}`}
                   role="switch"
                   aria-checked={showInNotch}
                   title={t("settings.character.inNotch")}
-                  onClick={() => toggleCharacterInNotch()}
+                  onClick={toggleCharacterInNotch}
                 >
-                  {t("settings.character.inNotch")}
+                  <span aria-hidden="true" />
+                  {showInNotch ? t("common.on") : t("common.off")}
                 </button>
               </div>
             </div>

@@ -95,8 +95,8 @@ body {
 }
 
 .islet-pill:hover {
-  width: 188px;
-  height: 36px;
+  width: 180px;
+  height: 34px;
   box-shadow: var(--islet-shadow);
 }
 .islet-pill:hover::after {
@@ -784,6 +784,101 @@ body {
   color: var(--islet-danger);
   background: color-mix(in srgb, var(--islet-danger) 14%, transparent);
 }
+.islet-icon-btn .islet-icon {
+  display: block;
+}
+
+/* Add row: input + a dedicated add button. The button is the fix for the old
+   "no way to add" bug (notes had only a textarea and no submit affordance). */
+.islet-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.islet-add-row-notes {
+  align-items: flex-start;
+}
+.islet-add-btn {
+  flex: 0 0 auto;
+  width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--islet-on-accent);
+  background: var(--islet-grad);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: var(--islet-shadow-sm);
+  transition: transform var(--islet-dur-fast) var(--islet-ease-out),
+    filter var(--islet-dur-fast) var(--islet-ease-out),
+    opacity var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-add-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.islet-add-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+.islet-add-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.islet-add-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--islet-glow);
+}
+
+/* A small hint line under the notes add box (Enter to add, etc). */
+.islet-input-hint {
+  margin: -4px 0 0;
+  font-size: 11px;
+  color: var(--islet-fg-dim);
+  opacity: 0.8;
+}
+
+/* Footer under the task list: remaining count + clear-completed. */
+.islet-list-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--islet-fg-dim);
+  padding: 2px 2px 0;
+}
+.islet-text-btn {
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  color: var(--islet-accent);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: background var(--islet-transition);
+}
+.islet-text-btn:hover {
+  background: color-mix(in srgb, var(--islet-accent) 14%, transparent);
+}
+.islet-text-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--islet-glow);
+}
+
+/* Right-hand column of a note row: delete + the transient "Saved" flag. */
+.islet-note-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.islet-saved-flag {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--islet-ok);
+  animation: islet-fade-in 140ms var(--islet-ease-out);
+}
 
 /* ---- Media ---- */
 .islet-media {
@@ -954,13 +1049,20 @@ body {
 }
 .islet-notch-canvas {
   position: absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: calc(100% - 4px);
+  /* A fixed SQUARE centered in the pill. The sprite frame is square (48x48),
+     so a square box keeps its aspect ratio no matter how the pill resizes on
+     hover/open. Previously this filled the pill (a wide rectangle that also
+     grew on hover), which rescaled + recentred the sprite every hover — the
+     "swishing" the character appeared to do. Centre it and let it keep shape. */
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
   pointer-events: none;
+  /* Keep the canvas itself transparent; the dark pill shows through. Never give
+     it a background or the notch flashes white when the backing store resizes. */
+  background: transparent;
   /* The default mascot is smooth (not pixel art); let the browser interpolate
      so it scales cleanly inside the notch. Pixel-art packs set their own flag. */
   image-rendering: auto;
@@ -1392,4 +1494,394 @@ body {
   align-items: center;
   justify-content: space-between;
   font-size: 12px;
+}
+
+/* ==========================================================================
+   2026 craft pass: one bezel-attached object, restrained materials, flat rows.
+   The silhouette and motion are original; the interaction borrows only the
+   general compact-to-expanded notch pattern used by edge utilities.
+   ========================================================================== */
+
+.islet-stack {
+  gap: 5px;
+  perspective: 900px;
+}
+
+/* The notch is the signature object. Keep the top fused to the display edge,
+   and reserve the rounded capsule shape for actual switches. */
+.islet-pill {
+  width: 148px;
+  height: 36px;
+  isolation: isolate;
+  background: rgba(3, 5, 5, var(--islet-pill-opacity, 1));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.025) inset,
+    0 7px 18px rgba(0, 0, 0, 0.34);
+  transition: transform var(--islet-dur) var(--islet-ease-spring),
+    width var(--islet-dur) var(--islet-ease-spring),
+    height var(--islet-dur) var(--islet-ease-spring),
+    box-shadow var(--islet-dur) var(--islet-ease-out);
+}
+.islet-pill::before {
+  inset: 0 12px auto;
+  height: 1px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 0.45;
+}
+.islet-pill::after {
+  right: 15px;
+  bottom: 13px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--islet-fg-dim);
+  box-shadow: none;
+  opacity: 0.38;
+  transition: opacity var(--islet-dur) var(--islet-ease-out),
+    transform var(--islet-dur) var(--islet-ease-spring),
+    background var(--islet-dur) var(--islet-ease-out);
+}
+.islet-pill:hover {
+  width: 158px;
+  height: 39px;
+  transform: translateY(1px);
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.035) inset,
+    0 10px 24px rgba(0, 0, 0, 0.42);
+}
+.islet-pill:hover::after,
+.islet-pill.focus-active::after {
+  width: 4px;
+  opacity: 1;
+  background: var(--islet-accent);
+  transform: scale(1.15);
+}
+.islet-pill.open {
+  width: 116px;
+  height: 22px;
+  transform: none;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+}
+.islet-pill.open::after {
+  bottom: 8px;
+}
+.islet-pill:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 2px;
+}
+.islet-pill.has-alert {
+  background: color-mix(in srgb, var(--islet-warn) 28%, #030505);
+}
+
+.islet-pill.has-character {
+  width: 158px;
+  height: 44px;
+}
+.islet-pill.has-character:hover {
+  width: 168px;
+  height: 47px;
+}
+.islet-pill.has-character:not(:hover)::after {
+  animation: none;
+  opacity: 0.46;
+}
+.islet-notch-canvas {
+  width: 34px;
+  height: 34px;
+}
+.islet-notch-grip {
+  right: 7px;
+  width: 14px;
+  height: 20px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: var(--islet-fg-dim);
+  opacity: 0;
+  background: transparent;
+}
+.islet-notch-grip:hover {
+  background: transparent;
+}
+
+/* Stable native hit bounds: the panel itself does not scale. Its children
+   slide into the already-measured sheet, avoiding SetWindowRgn clipping. */
+@keyframes islet-sheet-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes islet-sheet-content-in {
+  from { opacity: 0; transform: translateY(-7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.islet-panel {
+  width: 376px;
+  max-height: calc(100vh - 34px);
+  background: var(--islet-bg-panel);
+  border: 1px solid var(--islet-border);
+  border-radius: 22px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.035) inset,
+    0 18px 42px rgba(0, 0, 0, 0.48);
+  animation: islet-sheet-in 150ms var(--islet-ease-out);
+  transform: none;
+  will-change: opacity;
+}
+.islet-panel::before {
+  height: 1px;
+  inset: 0 24px auto;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+.islet-panel > .islet-panel-character,
+.islet-panel > .islet-nav,
+.islet-panel > .islet-panel-body {
+  animation: islet-sheet-content-in var(--islet-dur-slow) var(--islet-ease-out) both;
+}
+.islet-panel > .islet-nav { animation-delay: 28ms; }
+.islet-panel > .islet-panel-body { animation-delay: 52ms; }
+
+/* Pip is part of the header, rather than a mascot floating over a dashboard. */
+.islet-panel-character {
+  gap: 0;
+  padding: 9px 18px 7px;
+  background: none;
+  border-bottom: 1px solid var(--islet-divider);
+}
+.islet-panel-canvas {
+  width: 82px;
+  height: 82px;
+}
+.islet-panel-character-row {
+  min-height: 22px;
+  gap: 7px;
+  margin-top: -2px;
+}
+.islet-companion-presence {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--islet-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--islet-accent) 12%, transparent);
+}
+.islet-panel-character-name {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.035em;
+  color: var(--islet-fg);
+  text-transform: none;
+}
+.islet-character-visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 10px;
+  color: var(--islet-fg-dim);
+  background: transparent;
+  border: 0;
+  padding: 3px 5px;
+  cursor: pointer;
+}
+.islet-character-visibility > span {
+  width: 12px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--islet-control-hover);
+  position: relative;
+}
+.islet-character-visibility > span::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  left: 1px;
+  top: 1px;
+  border-radius: 50%;
+  background: var(--islet-fg-dim);
+  transition: transform var(--islet-dur-fast) var(--islet-ease-spring),
+    background var(--islet-dur-fast) var(--islet-ease-out);
+}
+.islet-character-visibility.on > span::after {
+  transform: translateX(5px);
+  background: var(--islet-accent);
+}
+.islet-character-visibility:focus-visible {
+  outline: 2px solid var(--islet-accent);
+  outline-offset: 1px;
+}
+
+/* A quiet tool rail: one active marker, not a chip plus underline. */
+.islet-nav {
+  border-bottom: 1px solid var(--islet-divider);
+}
+.islet-tabbar {
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 14px;
+}
+.islet-tab {
+  width: 36px;
+  height: 32px;
+  border-radius: 11px;
+}
+.islet-tab:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+.islet-tab.active {
+  color: var(--islet-accent-soft);
+  background: transparent;
+}
+.islet-tab.active::after {
+  bottom: -9px;
+  width: 18px;
+  height: 2px;
+  background: var(--islet-accent);
+}
+.islet-tabbar.sub {
+  justify-content: center;
+  padding: 0 12px 9px;
+}
+.islet-subtab {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 5px 7px;
+}
+.islet-subtab.active {
+  color: var(--islet-accent-soft);
+  background: color-mix(in srgb, var(--islet-accent) 9%, transparent);
+  border-color: transparent;
+}
+
+.islet-panel-body {
+  padding: 16px 18px 18px;
+}
+.islet-tab-view {
+  animation: islet-tab-in 180ms var(--islet-ease-out);
+}
+
+/* Flat content gives each module room to breathe and stops the nested-card
+   look. Elevation is reserved for the notch, panel, and true overlays. */
+.islet-input {
+  background: transparent;
+  border-color: var(--islet-divider);
+  border-radius: 10px;
+  transition: border-color var(--islet-transition),
+    background var(--islet-transition);
+}
+.islet-input:hover,
+.islet-input:focus-visible {
+  background: color-mix(in srgb, var(--islet-bg-elev) 65%, transparent);
+}
+.islet-items {
+  gap: 0;
+}
+.islet-item {
+  min-height: 38px;
+  padding: 8px 4px;
+  border-radius: 0;
+  border-bottom: 1px solid var(--islet-divider);
+  background: transparent;
+  transition: opacity var(--islet-transition),
+    transform var(--islet-transition), color var(--islet-transition);
+}
+.islet-item:hover {
+  background: transparent;
+  transform: translateX(2px);
+}
+.islet-item.done {
+  opacity: 0.58;
+}
+.islet-note {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--islet-divider);
+}
+.islet-note .islet-input {
+  border-color: transparent;
+  border-radius: 7px;
+  padding-left: 6px;
+}
+.islet-checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border-width: 1px;
+}
+.islet-add-btn {
+  background: var(--islet-accent);
+  color: var(--islet-on-accent);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.islet-btn.primary,
+.islet-toggle.on,
+.islet-check input:checked + .islet-checkbox,
+.islet-char-badge,
+.islet-media-btn.big {
+  background: var(--islet-accent);
+  color: var(--islet-on-accent);
+  box-shadow: none;
+}
+.islet-settings h1 {
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.islet-field {
+  min-height: 34px;
+  padding: 8px 2px;
+}
+.islet-tabs-editor li,
+.islet-char-row,
+.islet-launcher-launch,
+.islet-browse-card {
+  background: transparent;
+  border-bottom: 1px solid var(--islet-divider);
+  border-radius: 0;
+}
+.islet-char-row:hover:not(:disabled),
+.islet-launcher-launch:hover {
+  background: color-mix(in srgb, var(--islet-bg-elev) 68%, transparent);
+}
+
+/* Status mode still belongs to the display bezel rather than floating below it. */
+.islet-statusbar {
+  margin-top: 0;
+  min-height: 38px;
+  height: 38px;
+  padding: 0 10px;
+  background: rgba(3, 5, 5, var(--islet-pill-opacity, 1));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 0;
+  border-radius: 0 0 17px 17px;
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.34);
+}
+.islet-sb-clock {
+  background: transparent;
+  border-radius: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.islet-sb-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-panel > .islet-panel-character,
+  .islet-panel > .islet-nav,
+  .islet-panel > .islet-panel-body,
+  .islet-item,
+  .islet-character-visibility > span::after,
+  .islet-add-btn,
+  .islet-saved-flag {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
 }

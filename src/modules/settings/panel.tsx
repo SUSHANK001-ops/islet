@@ -129,19 +129,17 @@ export default function SettingsPanel() {
         </select>
       </label>
 
-      {s.pillStyle === "statusBar" ? (
-        <label class="islet-field">
-          <span>{t("settings.openOnHover")}</span>
-          <button
-            class={`islet-toggle${s.openOnHover ? " on" : ""}`}
-            role="switch"
-            aria-checked={s.openOnHover}
-            onClick={() => updateSettings({ openOnHover: !s.openOnHover })}
-          >
-            {s.openOnHover ? t("common.on") : t("common.off")}
-          </button>
-        </label>
-      ) : null}
+      <label class="islet-field">
+        <span>{t("settings.openOnHover")}</span>
+        <button
+          class={`islet-toggle${s.openOnHover ? " on" : ""}`}
+          role="switch"
+          aria-checked={s.openOnHover}
+          onClick={() => updateSettings({ openOnHover: !s.openOnHover })}
+        >
+          {s.openOnHover ? t("common.on") : t("common.off")}
+        </button>
+      </label>
 
       <label class="islet-field">
         <span>{t("settings.visibility")}</span>

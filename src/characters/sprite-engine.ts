@@ -61,6 +61,19 @@ export class SpriteEngine {
   private rateScale = 1;
   // Device-pixel scale so the canvas is crisp on HiDPI without reflowing CSS.
   private dpr = 1;
+  private canvasEl: HTMLCanvasElement;
+  // Continuous smooth-float state (panel only). Amplitude is in FRAME pixels
+  // (scaled at draw time); phase advances by bobSpeed rad/sec. Notch keeps
+  // amplitude 0 so it stays strictly frame-stepped within the closed budget.
+  private bobPhase = Math.random() * Math.PI * 2;
+  private bobAmplitude = 0;
+  private bobSpeed = 2.0;
+  private floatAccum = 0;
+  // The pill grows on hover/open, so the canvas CSS box changes size AFTER the
+  // engine is built. A ResizeObserver keeps the backing store in sync and
+  // forces a redraw; without it the frame was sized once and the newly exposed
+  // area was never cleared (the "white flash" when the notch animated/grew).
+  private resizeObs: ResizeObserver | null = null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -68,17 +81,32 @@ export class SpriteEngine {
     bitmap: ImageBitmap,
     surface: Surface
   ) {
+    // Keep the alpha backing store explicit. The low animation rates do not
+    // benefit from desynchronized presentation, which can expose transient
+    // compositor surfaces on some WebView2/transparent-window combinations.
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) throw new Error("no 2d context");
     this.ctx = ctx;
+    this.canvasEl = canvas;
     this.bitmap = bitmap;
     this.manifest = char.manifest;
     this.surface = surface;
     this.state = this.resolve("idle");
     this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     this.sizeCanvas(canvas);
+    // Only the panel floats smoothly (its budget allows up to 24fps). The notch
+    // must stay frame-stepped at <=6fps per the closed-CPU budget, so it gets no
+    // continuous float (amplitude 0 => the tick never forces an extra redraw).
+    this.bobAmplitude = surface === "panel" ? 1.4 : 0;
     // Pixel art: keep edges hard. Smooth art: let the browser interpolate.
     this.ctx.imageSmoothingEnabled = !this.manifest.sheet.pixelArt;
+
+    // Re-size + redraw whenever the canvas box changes (pill hover/open grow,
+    // DPI change). Guarded for environments without ResizeObserver (tests).
+    if (typeof ResizeObserver !== "undefined") {
+      this.resizeObs = new ResizeObserver(() => this.handleResize());
+      this.resizeObs.observe(canvas);
+    }
   }
 
   /** Size the backing store to the CSS box times DPR for a crisp draw. */
@@ -88,6 +116,22 @@ export class SpriteEngine {
     const h = Math.max(1, Math.round(rect.height * this.dpr));
     if (canvas.width !== w) canvas.width = w;
     if (canvas.height !== h) canvas.height = h;
+    // Resizing a canvas resets its context state, so re-apply smoothing.
+    this.ctx.imageSmoothingEnabled = !this.manifest.sheet.pixelArt;
+  }
+
+  /** CSS box changed: resync the backing store and repaint the current frame
+   *  immediately so no stale/empty area is ever shown. */
+  private handleResize() {
+    const before = `${this.canvasEl.width}x${this.canvasEl.height}`;
+    this.sizeCanvas(this.canvasEl);
+    const after = `${this.canvasEl.width}x${this.canvasEl.height}`;
+    // Only force a redraw if the backing store actually changed (avoids
+    // redundant draws from sub-pixel observer callbacks).
+    if (before !== after) {
+      this.lastDrawn = -1;
+      this.drawFrame(this.state.frames[this.frameIdx] ?? 0);
+    }
   }
 
   private resolve(name: string): StateSpec {
@@ -143,6 +187,14 @@ export class SpriteEngine {
     this.rafId = 0;
   }
 
+  /** Full teardown: stop the loop AND drop the resize observer. Call when the
+   *  engine is discarded (character/surface change) so no observer leaks. */
+  dispose() {
+    this.stop();
+    this.resizeObs?.disconnect();
+    this.resizeObs = null;
+  }
+
   /** Draw exactly one frame right now (used for a static, non-animating draw). */
   drawStatic() {
     this.drawFrame(this.state.frames[this.frameIdx] ?? 0);
@@ -159,7 +211,8 @@ export class SpriteEngine {
     this.accum += dt;
 
     // Advance only when enough time has elapsed for the next frame. This keeps
-    // the effective draw rate at the capped fps even though rAF runs at 60.
+    // the sprite SWAP rate at the capped fps even though rAF runs at 60.
+    let frameChanged = false;
     if (this.accum >= frameDur) {
       this.accum %= frameDur;
       const count = this.state.frames.length;
@@ -168,10 +221,30 @@ export class SpriteEngine {
       } else if (this.frameIdx < count - 1) {
         this.frameIdx += 1;
       }
+      frameChanged = true;
+    }
+
+    // Smooth idle float: a gentle sub-pixel vertical bob driven by a continuous
+    // phase, independent of the sprite-swap cap. This is what makes the panel
+    // character feel alive and SMOOTH instead of a choppy few-frame swap. It is
+    // THROTTLED to the panel-active cap (<=24fps) so it never exceeds the perf
+    // budget, and only looping states float (one-shots keep authored motion).
+    const wantsFloat = this.state.loop && this.bobAmplitude > 0;
+    let floatTick = false;
+    if (wantsFloat) {
+      this.bobPhase += (dt / 1000) * this.bobSpeed;
+      this.floatAccum += dt;
+      const floatDur = 1000 / FPS_CAP.panelActive; // cap smooth draws at 24fps
+      if (this.floatAccum >= floatDur) {
+        this.floatAccum %= floatDur;
+        floatTick = true;
+      }
     }
 
     const frame = this.state.frames[this.frameIdx] ?? 0;
-    if (frame !== this.lastDrawn) {
+    // Redraw when the sprite frame changed OR when a throttled float tick is due
+    // OR when the frame index moved. Static states draw once and then idle.
+    if (frameChanged || floatTick || frame !== this.lastDrawn) {
       this.drawFrame(frame);
       this.lastDrawn = frame;
     }
@@ -197,7 +270,15 @@ export class SpriteEngine {
     const dw = fw * scale;
     const dh = fh * scale;
     const dx = Math.round((cw - dw) / 2);
-    const dy = Math.round((ch - dh) / 2);
+    // Smooth vertical float, applied only on the panel (the notch stays strictly
+    // frame-stepped to honor the closed-CPU budget). The sprite already encodes
+    // a per-frame bob; this adds a continuous sub-pixel sine on top so the idle
+    // breathing reads as fluid rather than a 4-frame step.
+    const bob =
+      this.state.loop && this.bobAmplitude > 0
+        ? Math.sin(this.bobPhase) * this.bobAmplitude * scale
+        : 0;
+    const dy = Math.round((ch - dh) / 2 + bob);
 
     this.ctx.drawImage(this.bitmap, sx, sy, fw, fh, dx, dy, dw, dh);
   }

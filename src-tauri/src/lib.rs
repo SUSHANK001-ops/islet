@@ -59,6 +59,7 @@ pub fn run() {
         .manage(Scheduler::default())
         .invoke_handler(tauri::generate_handler![
             commands::set_panel_open,
+            commands::show_island_ready,
             commands::set_hit_regions,
             commands::get_spike_report,
             commands::list_monitors,

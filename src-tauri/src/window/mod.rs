@@ -268,24 +268,19 @@ fn set_panel_open_flag(window: &WebviewWindow, open: bool) {
     }
 }
 
-/// Closed/idle state: window placed + on top.
-///
-/// The window stays a fixed, oversized transparent canvas; what stops it from
-/// swallowing clicks is the hit region (see `hit_region`), which the frontend
-/// keeps pinned to whatever is actually visible. Nothing here toggles
-/// whole-window click-through, because doing so also kills hover and the pill
-/// could never open.
+/// Closed/idle state. Geometry is deliberately untouched here: reapplying the
+/// fixed size and position during every close caused avoidable DWM/WebView2
+/// redraws, which could appear as a bright frame on transparent windows.
 pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
-    place(window)?;
     set_panel_open_flag(window, false);
     Ok(())
 }
 
-/// Open state: same fixed window, on top.
+/// Open state. The frontend animates inside the already-positioned fixed
+/// canvas, so the native window only needs its logical state updated.
 pub fn apply_open_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
-    place(window)?;
     set_panel_open_flag(window, true);
     Ok(())
 }
@@ -341,10 +336,15 @@ pub fn toggle<M: Manager<tauri::Wry>>(manager: &M) -> tauri::Result<()> {
         .try_state::<PanelOpenState>()
         .and_then(|s| s.0.lock().ok().map(|g| *g))
         .unwrap_or(false);
-    if !open_now {
+    let next = !open_now;
+    // Update the native source of truth before emitting. Rapid tray/hotkey
+    // presses can otherwise read the same stale value and emit the same action
+    // twice while the frontend command is still in flight.
+    set_panel_open_flag(&win, next);
+    if next {
         let _ = win.set_focus();
     }
     use tauri::Emitter;
-    let _ = win.emit("islet://toggle-open", !open_now);
+    let _ = win.emit("islet://toggle-open", next);
     Ok(())
 }

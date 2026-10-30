@@ -496,3 +496,38 @@ which falls back to `default-src 'self'`. So loading a character sheet with
 `decodeSheet()` therefore uses `new Image()` + `img.decode()` +
 `createImageBitmap(img)`. Do not switch it back to `fetch()` without also
 widening `connect-src` (which would mean listing the IPC origins too).
+
+## 2026 notch stability and compositor pass — hardware verification pending
+
+Code inspection found two concrete failure paths behind the reported bright
+frames and inaccessible screen area:
+
+- The transparent 640×720 WebView was configured `visible: true`, so WebView2
+  could present its default backing surface before CSS and the first transparent
+  frame were ready. The window now starts hidden and is shown only after saved
+  settings, theme, two compositor frames, and the first hit region are ready.
+- A failed `SetWindowRgn` update cleared the last region, making the full
+  transparent always-on-top window interactive. Region replacement now keeps
+  the last successfully applied shape on error, and frontend updates are sent
+  serially with latest-wins queuing so an old panel region cannot overwrite a
+  newer closed-notch region.
+
+Opening and closing no longer reapplies the unchanged native size and position.
+The panel's native hit element now fades without a scale transform; child
+content moves inside stable measured bounds so the Win32 region does not clip a
+mid-spring frame. Hover opening is opt-in rather than unconditional, reducing
+rapid mount/unmount and region churn at the top screen edge.
+
+These changes compile and pass automated tests, but the following behavior must
+be confirmed visually on Windows hardware before marking it PASS:
+
+- Cold-launch repeatedly in dark and light themes: no white/bright frame before
+  the notch appears.
+- Rapidly click the notch and use Ctrl+Shift+Space: no clipped panel frame and no
+  stale open/closed state.
+- With the notch closed, click and drag in every transparent area around and
+  below it: Explorer, browser title bars, screenshot tools, and screen-selection
+  overlays remain accessible.
+- Exercise auto-hide, hidden mode, the thin handle, status-bar flyouts, a toast,
+  and the permission surface. Only each visible surface should receive input.
+- Repeat at 100%, 125%, 150%, and 200% scale and on a second monitor.

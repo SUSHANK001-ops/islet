@@ -31,7 +31,9 @@ pub struct SpikeReport {
     fullscreen_app_active: bool,
 }
 
-/// Open or close the panel. The window layer records the state and re-places.
+/// Open or close the panel. The fixed window stays in place; only the logical
+/// state changes. Keeping geometry out of this hot path avoids WebView2/DWM
+/// redraws during every visual transition.
 #[tauri::command]
 pub fn set_panel_open(window: WebviewWindow, open: bool) -> Result<(), String> {
     let result = if open {
@@ -40,6 +42,16 @@ pub fn set_panel_open(window: WebviewWindow, open: bool) -> Result<(), String> {
         window::apply_closed_state(&window)
     };
     result.map_err(|e| format!("failed to set panel state: {e}"))
+}
+
+/// Reveal the island only after the frontend has loaded settings, committed its
+/// first styled frame, and published a hit region. The configured window starts
+/// hidden so WebView2's default white backing surface is never presented.
+#[tauri::command]
+pub fn show_island_ready(window: WebviewWindow) -> Result<(), String> {
+    window
+        .show()
+        .map_err(|e| format!("failed to show the island: {e}"))
 }
 
 /// Tell Rust which parts of the window are actually VISIBLE, so everything else

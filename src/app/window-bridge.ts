@@ -24,6 +24,11 @@ export function closePanel(): Promise<void> {
   return invoke("set_panel_open", { open: false });
 }
 
+/** Reveal the native window after the first styled and shaped frame is ready. */
+export function showIslandReady(): Promise<void> {
+  return invoke("show_island_ready");
+}
+
 /** One-shot snapshot used by the status view and docs/perf-results.md. */
 export function getSpikeReport(): Promise<SpikeReport> {
   return invoke("get_spike_report");

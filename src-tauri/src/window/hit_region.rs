@@ -65,22 +65,18 @@ pub fn set(window: &WebviewWindow, rects: Vec<HitRect>) -> Result<(), String> {
     if rects.is_empty() {
         return Ok(());
     }
+
+    // Apply before replacing the cache. If Windows rejects a new region, the
+    // last good shape remains active instead of exposing the full 640x720
+    // transparent window and blocking the apps underneath it.
+    apply(window, &rects)?;
+
     if let Some(state) = window.try_state::<HitRegionState>() {
         if let Ok(mut guard) = state.0.lock() {
-            *guard = rects.clone();
+            *guard = rects;
         }
     }
-    match apply(window, &rects) {
-        Ok(()) => Ok(()),
-        Err(e) => {
-            // Fail OPEN, never closed. A half-applied or rejected region could
-            // leave the UI unreachable, so drop the shape entirely: the window
-            // goes back to catching clicks everywhere, which is the bug this
-            // module fixes but still a usable app.
-            clear(window);
-            Err(e)
-        }
-    }
+    Ok(())
 }
 
 /// Re-apply the cached rects. Called after a DPI/scale change, where the
@@ -96,28 +92,6 @@ pub fn reapply(window: &WebviewWindow) {
     if let Err(e) = apply(window, &cached) {
         eprintln!("islet: re-applying the hit region failed: {e}");
     }
-}
-
-/// Drop the shape entirely, making the whole window hit-testable again.
-///
-/// This is the fail-safe: a fully-interactive window is annoying (it is the bug
-/// this module fixes) but it is still a working app, whereas a wrong region can
-/// hide the UI. Used on teardown and whenever applying a region errors.
-pub fn clear(window: &WebviewWindow) {
-    #[cfg(windows)]
-    {
-        use windows::Win32::Foundation::HWND;
-        use windows::Win32::Graphics::Gdi::SetWindowRgn;
-        if let Ok(h) = window.hwnd() {
-            // SAFETY: `h` is this process's live top-level window. Passing None
-            // removes any region, which is always valid.
-            unsafe {
-                SetWindowRgn(HWND(h.0 as *mut _), None, true);
-            }
-        }
-    }
-    #[cfg(not(windows))]
-    let _ = window;
 }
 
 #[cfg(windows)]

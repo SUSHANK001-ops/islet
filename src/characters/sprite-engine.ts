@@ -55,6 +55,7 @@ export class SpriteEngine {
   private accum = 0;
   private lastTs = 0;
   private rafId = 0;
+  private timerId = 0;
   private running = false;
   // Frame-rate multiplier (<=1). Lets the gate slow animation down instead of
   // stopping it outright, e.g. while the machine runs on battery.
@@ -172,18 +173,29 @@ export class SpriteEngine {
     this.lastDrawn = -1; // force a redraw of the first frame
   }
 
+  /** Schedule one compositor-aligned frame at the actual drawing rate. */
+  private schedule(delayMs: number) {
+    if (!this.running) return;
+    this.timerId = window.setTimeout(() => {
+      this.timerId = 0;
+      this.rafId = requestAnimationFrame(this.tick);
+    }, delayMs);
+  }
+
   /** Start the animation loop. Safe to call repeatedly. */
   start() {
     if (this.running) return;
     this.running = true;
     this.lastTs = 0;
-    this.rafId = requestAnimationFrame(this.tick);
+    this.schedule(0);
   }
 
-  /** Stop the loop completely. No ticking while stopped (closed == cheap). */
+  /** Stop all scheduling completely. */
   stop() {
     this.running = false;
+    if (this.timerId) clearTimeout(this.timerId);
     if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.timerId = 0;
     this.rafId = 0;
   }
 
@@ -249,7 +261,17 @@ export class SpriteEngine {
       this.lastDrawn = frame;
     }
 
-    this.rafId = requestAnimationFrame(this.tick);
+    // Schedule at the real presentation rate instead of waking at the monitor's
+    // 60-240Hz refresh rate merely to skip most frames. Keep a one-hertz watch
+    // after a one-shot finishes so state changes remain cheap and responsive.
+    const oneShotDone = !this.state.loop && this.frameIdx >= this.state.frames.length - 1;
+    const drawFps = oneShotDone
+      ? 1
+      : wantsFloat
+        ? FPS_CAP.panelActive
+        : fps;
+    this.rafId = 0;
+    this.schedule(1000 / drawFps);
   };
 
   /** Draw one sheet frame centered + contained in the canvas box. */

@@ -124,9 +124,12 @@ export class SpriteEngine {
   /** CSS box changed: resync the backing store and repaint the current frame
    *  immediately so no stale/empty area is ever shown. */
   private handleResize() {
-    const before = `${this.canvasEl.width}x${this.canvasEl.height}`;
+    const before = `${this.canvasEl.width}x${this.canvasEl.height}@${this.dpr}`;
+    // Moving between monitors can change DPR without changing the canvas CSS
+    // box. Refresh it here so the next frame is neither stretched nor blurry.
+    this.dpr = Math.min(window.devicePixelRatio || 1, 3);
     this.sizeCanvas(this.canvasEl);
-    const after = `${this.canvasEl.width}x${this.canvasEl.height}`;
+    const after = `${this.canvasEl.width}x${this.canvasEl.height}@${this.dpr}`;
     // Only force a redraw if the backing store actually changed (avoids
     // redundant draws from sub-pixel observer callbacks).
     if (before !== after) {
@@ -215,7 +218,7 @@ export class SpriteEngine {
   private tick = (ts: number) => {
     if (!this.running) return;
     if (this.lastTs === 0) this.lastTs = ts;
-    const dt = ts - this.lastTs;
+    const dt = Math.min(ts - this.lastTs, 250);
     this.lastTs = ts;
 
     const fps = this.fpsFor(this.state);

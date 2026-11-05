@@ -2165,3 +2165,24 @@ body {
 .islet-panel-character-row {
   min-height: 18px;
 }
+
+/* Stable hover geometry prevents pointer-boundary oscillation and canvas
+   resizes. Feedback uses opacity/color only. */
+.islet-pill {
+  transition: background var(--islet-transition),
+    box-shadow var(--islet-transition);
+}
+.islet-pill:hover {
+  width: 82px;
+  height: 28px;
+  transform: none;
+}
+.islet-pill.has-character:hover {
+  width: 96px;
+  height: 32px;
+  transform: none;
+}
+.islet-pill.open:hover {
+  width: 72px;
+  height: 12px;
+}

@@ -162,19 +162,10 @@ export default function SettingsPanel() {
       </label>
 
       {s.pillVisibility === "autoHide" ? (
-        <label class="islet-field">
+        <div class="islet-field">
           <span>{t("settings.autohideDelay")}</span>
-          <input
-            type="range"
-            min={100}
-            max={2000}
-            step={100}
-            value={s.autohideDelayMs}
-            onInput={(e) =>
-              updateSettings({ autohideDelayMs: Number(e.currentTarget.value) })
-            }
-          />
-        </label>
+          <span class="islet-dim">{t("settings.autohideFiveSeconds")}</span>
+        </div>
       ) : null}
 
       <label class="islet-field">

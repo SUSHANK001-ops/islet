@@ -39,6 +39,8 @@ import { Toast } from "../system/notifications/toast";
 import { notifications } from "../system/notifications/store";
 import { Handle } from "./handle";
 
+const AUTO_HIDE_DELAY_MS = 5000;
+
 /**
  * Spec 1 shell.
  * - Closed = pill. Hover opens a preview; click pins it open.
@@ -195,8 +197,24 @@ export function Shell() {
   }, [open]);
 
   useEffect(() => {
-    if (!open) setCollapsed(visibility !== "always");
-  }, [visibility]);
+    if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    if (open || visibility === "always") {
+      if (visibility === "always") setCollapsed(false);
+      return;
+    }
+    if (visibility === "hidden") {
+      setCollapsed(true);
+      return;
+    }
+    // Auto-hide always gives the user five seconds after close/leave.
+    collapseTimer.current = setTimeout(
+      () => setCollapsed(true),
+      AUTO_HIDE_DELAY_MS
+    );
+    return () => {
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    };
+  }, [open, visibility]);
 
   function expandFromHandle() {
     if (collapseTimer.current) clearTimeout(collapseTimer.current);
@@ -208,7 +226,7 @@ export function Shell() {
     if (collapseTimer.current) clearTimeout(collapseTimer.current);
     collapseTimer.current = setTimeout(
       () => setCollapsed(true),
-      visibility === "hidden" ? 0 : settings.value.autohideDelayMs
+      visibility === "hidden" ? 0 : AUTO_HIDE_DELAY_MS
     );
   }
 
@@ -226,23 +244,29 @@ export function Shell() {
   }
 
   function handleLeave() {
+    if (pending.length > 0) return;
+
+    // Auto-hide is predictable: leaving any open or closed surface starts one
+    // five-second countdown, even if a click pinned the panel open.
+    if (visibility === "autoHide") {
+      if (leaveTimer.current) clearTimeout(leaveTimer.current);
+      leaveTimer.current = setTimeout(() => {
+        setOpen(false);
+        setPinned(false);
+        setCollapsed(true);
+      }, AUTO_HIDE_DELAY_MS);
+      return;
+    }
+
     if (statusBarStyle) {
       scheduleCollapse();
       return;
     }
-    if (pinned || pending.length > 0) return;
+    if (pinned) return;
 
     if (open && settings.value.openOnHover) {
       if (leaveTimer.current) clearTimeout(leaveTimer.current);
-      leaveTimer.current = setTimeout(() => {
-        setOpen(false);
-        if (visibility !== "always") {
-          collapseTimer.current = setTimeout(
-            () => setCollapsed(true),
-            visibility === "hidden" ? 0 : settings.value.autohideDelayMs
-          );
-        }
-      }, 220);
+      leaveTimer.current = setTimeout(() => setOpen(false), 220);
       return;
     }
     scheduleCollapse();

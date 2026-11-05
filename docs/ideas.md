@@ -51,3 +51,21 @@ short record of the decision; the real spec is in `AGENTS.md`.
   the user added through a picker, launched by id, re-validated in Rust.
 - **What it would need:** a very different trust model and a dedicated security
   review. Not planned.
+
+## Coding-agent session companion and cloud command center
+
+- **Idea:** Show what local coding agents such as Claude Code, Codex, Cursor,
+  Gemini CLI, or Antigravity are reading/editing/running; surface their approval
+  requests in the notch; optionally connect GitHub, Vercel, n8n, Stripe, Notion,
+  and similar services.
+- **Why out of v2 scope:** v2 explicitly forbids AI, accounts, servers, reading
+  another app's content, and remote integrations. Approval actions are
+  security-sensitive because they can authorize file edits and process runs.
+  Cloud services also require OAuth/token storage and expand the one-host
+  network policy far beyond the signed character catalog exception.
+- **What a future spec would need:** separate opt-in integrations, an
+  authenticated local IPC protocol per supported agent, strict event and
+  permission schemas, least-privilege OAuth scopes, encrypted credential
+  storage, per-action confirmation, audit history, revocation, threat modeling,
+  and new reviewed network/performance budgets. It must never scrape terminals,
+  inject clicks, or silently approve requests.

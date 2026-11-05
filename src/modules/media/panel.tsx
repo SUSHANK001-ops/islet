@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   mediaNowPlaying,
   mediaControl,
@@ -48,8 +49,9 @@ export default function MediaPanel() {
 
   const openButton = (
     <div class="islet-media-open">
-      <button class="islet-btn primary" onClick={() => void openYoutubeMusic()}>
-        ♪ {t("media.openYtMusic")}
+      <button class="islet-btn primary islet-btn-with-icon" onClick={() => void openYoutubeMusic()}>
+        <Icon name="music" size={15} />
+        <span>{t("media.openYtMusic")}</span>
       </button>
     </div>
   );
@@ -63,7 +65,7 @@ export default function MediaPanel() {
     return (
       <div class="islet-media">
         <div class="islet-media-art" aria-hidden="true">
-          ♪
+          <Icon name="music" size={30} />
         </div>
         <div class="islet-media-meta">
           <div class="islet-media-title">{t("media.nothing")}</div>
@@ -77,7 +79,7 @@ export default function MediaPanel() {
   return (
     <div class="islet-media">
       <div class="islet-media-art" aria-hidden="true">
-        {np.playing ? "♫" : "♪"}
+        <Icon name="music" size={30} />
       </div>
       <div class="islet-media-meta">
         <div class="islet-media-title" title={np.title}>
@@ -93,21 +95,21 @@ export default function MediaPanel() {
           aria-label={t("media.previous")}
           onClick={() => void act("previous")}
         >
-          ⏮
+          <Icon name="previous" size={20} />
         </button>
         <button
           class="islet-media-btn big"
           aria-label={t("media.playPause")}
           onClick={() => void act("playPause")}
         >
-          {np.playing ? "⏸" : "▶"}
+          <Icon name={np.playing ? "pause" : "play"} size={23} />
         </button>
         <button
           class="islet-media-btn"
           aria-label={t("media.next")}
           onClick={() => void act("next")}
         >
-          ⏭
+          <Icon name="next" size={20} />
         </button>
       </div>
       {openButton}

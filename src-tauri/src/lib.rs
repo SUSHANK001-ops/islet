@@ -130,12 +130,20 @@ pub fn run() {
         // stored in PHYSICAL pixels while the frontend sends logical ones.
         // Re-apply the cached rects at the new scale. Moving the window does
         // not need this: the region is window-relative.
-        .on_window_event(|win, event| {
-            if let tauri::WindowEvent::ScaleFactorChanged { .. } = event {
+        .on_window_event(|win, event| match event {
+            tauri::WindowEvent::ScaleFactorChanged { .. } => {
                 if let Some(island) = win.get_webview_window(window::ISLAND_LABEL) {
                     window::hit_region::reapply(&island);
                 }
             }
+            tauri::WindowEvent::Focused(false) => {
+                // Clicking another app is outside the shaped island window.
+                // Tell the frontend to close its panel/flyouts instead of
+                // polling the global cursor or installing keyboard hooks.
+                use tauri::Emitter;
+                let _ = win.emit("islet://window-blurred", ());
+            }
+            _ => {}
         })
         .setup(|app| {
             let handle = app.handle();
@@ -149,6 +157,13 @@ pub fn run() {
 
             // Apply saved monitor choice + notch position before showing the pill.
             if let Some(win) = window::island(handle) {
+                // `transparent: true` creates the transparent host window, but
+                // WebView2 also owns a default background color. Set that layer
+                // explicitly before first show; otherwise some WebView2/GPU
+                // combinations clear the shaped area white.
+                if let Err(e) = win.set_background_color(Some(tauri::webview::Color(0, 0, 0, 0))) {
+                    eprintln!("islet: failed to set transparent webview background: {e}");
+                }
                 if settings.monitor_name.is_some() {
                     let _ = window::set_monitor_choice(&win, settings.monitor_name.clone());
                 }

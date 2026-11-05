@@ -86,7 +86,6 @@ export function SystemFlyouts({ ctrl }: { ctrl: FlyoutController }) {
     <div
       class="islet-flyout-host"
       style={{ position: "fixed", left: `${left}px`, top: `${top}px` }}
-      data-islet-hit="20"
       ref={cardRef}
     >
       <FlyoutShell chip={t(FLYOUT_LABEL[open])} label={t(FLYOUT_LABEL[open])}>

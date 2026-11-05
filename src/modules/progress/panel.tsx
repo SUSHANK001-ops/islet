@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import { progressSummary, type DaySummary } from "./bridge";
 import { currentStreak, longestStreak, totalMinutes, heatLevel } from "./streak";
 import { totalFocusMinutes } from "../../characters/character-store";
@@ -35,7 +36,7 @@ export default function ProgressPanel() {
   if (days.every((d) => d.focusCount === 0)) {
     return (
       <div class="islet-empty">
-        <span class="islet-empty-icon">🌱</span>
+        <Icon name="chart" size={24} class="islet-empty-icon" />
         <span>{t("progress.empty")}</span>
       </div>
     );

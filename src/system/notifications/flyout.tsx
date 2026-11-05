@@ -17,7 +17,7 @@ export default function NotificationsFlyout() {
   if (items.length === 0) {
     return (
       <div class="islet-empty">
-        <span class="islet-empty-icon" aria-hidden="true">·</span>
+        <Icon name="bell" size={22} class="islet-empty-icon" />
         <span>{t("notif.empty")}</span>
       </div>
     );

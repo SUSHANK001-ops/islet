@@ -15,9 +15,9 @@
      interface reads as generic/auto-generated, so it is banned here. Semantic
      colors (ok/warn/danger) are the only other hues, and they are reserved for
      meaning - never decoration. */
-  --islet-accent: #75d9c7;
-  --islet-accent-deep: #52b9a8;
-  --islet-accent-soft: #a5eadf;
+  --islet-accent: #efc75e;
+  --islet-accent-deep: #c99f35;
+  --islet-accent-soft: #f7dfa0;
   /* Kept as a name so older call sites keep working, but it is the SAME hue
      as the accent on purpose. Do not reintroduce a contrasting decorative hue. */
   --islet-accent-2: var(--islet-accent);
@@ -38,7 +38,7 @@
      auto-generated. Keep both stops in the accent family. */
   --islet-grad: var(--islet-accent);
   /* Text/icon colour that sits on top of an accent-filled surface. */
-  --islet-on-accent: #071512;
+  --islet-on-accent: #1a1405;
   /* Soft colored glow derived from the accent, for focus/active emphasis. */
   --islet-glow: 0 0 0 3px color-mix(in srgb, var(--islet-accent) 42%, transparent);
   /* A faint top highlight for "lit from above" surfaces (pill, buttons). */

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   launcherList,
   launcherAdd,
@@ -85,7 +86,7 @@ export default function LauncherPanel() {
 
       {entries.length === 0 ? (
         <div class="islet-empty">
-          <span class="islet-empty-icon">🚀</span>
+          <Icon name="grid" size={24} class="islet-empty-icon" />
           <span>{t("launcher.empty")}</span>
         </div>
       ) : (
@@ -106,7 +107,7 @@ export default function LauncherPanel() {
                 onClick={() => remove(e.id)}
                 disabled={busy}
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </li>
           ))}

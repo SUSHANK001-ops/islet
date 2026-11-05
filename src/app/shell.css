@@ -744,11 +744,12 @@ body {
   border-color: transparent;
 }
 .islet-check input:checked + .islet-checkbox::after {
-  content: "✓";
-  font-size: 12px;
-  font-weight: 700;
-  color: #0a0a1f;
-  line-height: 1;
+  content: "";
+  width: 7px;
+  height: 3px;
+  border-left: 1.75px solid var(--islet-on-accent);
+  border-bottom: 1.75px solid var(--islet-on-accent);
+  transform: translateY(-1px) rotate(-45deg);
 }
 .islet-check input:focus-visible + .islet-checkbox {
   outline: 2px solid var(--islet-accent);
@@ -1361,36 +1362,45 @@ body {
 }
 
 /* ---- Auto-hide handle (Spec 12) ---- */
-/* A thin bar at the pill's position. Hovering it expands the pill/status bar.
-   Animation is width + opacity only (nothing heavier), reduced-motion safe. */
+/* Paint the whole native hit target. A 4px line with a padded SetWindowRgn
+   exposed WebView2's white backing around it on Windows. */
 .islet-handle {
-  margin-top: 8px;
-  width: 64px;
-  height: 4px;
-  border: none;
+  margin-top: 0;
+  width: 82px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-top: 0;
   padding: 0;
-  border-radius: 999px;
-  background: rgba(120, 120, 140, 0.55);
+  border-radius: 0 0 12px 12px;
+  background: #030505;
   cursor: pointer;
   position: relative;
-  transition: width var(--islet-dur) var(--islet-ease-out),
-    opacity var(--islet-dur) var(--islet-ease-out),
-    background var(--islet-dur) var(--islet-ease-out);
+  display: grid;
+  place-items: center;
+  transition: width var(--islet-dur) var(--islet-ease-spring),
+    height var(--islet-dur) var(--islet-ease-spring);
 }
-.islet-handle:hover {
-  width: 84px;
-  background: rgba(150, 150, 170, 0.8);
+.islet-handle:hover,
+.islet-handle:focus-visible {
+  width: 96px;
+  height: 22px;
 }
 .islet-handle:focus-visible {
   outline: 2px solid var(--islet-accent);
-  outline-offset: 3px;
+  outline-offset: 1px;
+}
+.islet-handle-grip {
+  width: 32px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.38);
 }
 .islet-handle-dot {
   position: absolute;
-  top: -3px;
-  right: -2px;
-  width: 6px;
-  height: 6px;
+  top: 7px;
+  right: 10px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--islet-accent);
 }
@@ -1884,4 +1894,148 @@ body {
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* Screenshot-led corrections: every shaped pixel is painted, the open shell is
+   one connected object, and approved content-heavy tabs widen deliberately. */
+.islet-stack.open {
+  gap: 0;
+}
+.islet-stack.open .islet-pill {
+  z-index: 2;
+}
+.islet-stack.open .islet-panel {
+  margin-top: -1px;
+  border-radius: 18px 18px 24px 24px;
+}
+.islet-panel.stretch {
+  width: min(520px, calc(100vw - 24px));
+  min-width: 376px;
+  max-width: 560px;
+}
+.islet-panel-character {
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px 8px;
+}
+.islet-panel-canvas {
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+}
+.islet-panel-character-row {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-top: 0;
+}
+.islet-media-meta {
+  width: min(100%, 440px);
+}
+.islet-panel.stretch .islet-media-title,
+.islet-panel.stretch .islet-media-artist {
+  text-align: center;
+}
+.islet-panel.stretch .islet-launcher-path {
+  max-width: 430px;
+}
+.islet-btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+/* SetWindowRgn now follows painted bounds exactly, so external shadows would
+   be clipped. Use inset depth instead of reserving unpainted native pixels. */
+.islet-pill,
+.islet-panel,
+.islet-statusbar,
+.islet-handle,
+.islet-perm,
+.islet-flyout-card,
+.islet-toast {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.28) inset;
+}
+
+/* Final screenshot corrections: no translucent stock capsule or bright border. */
+.islet-pill,
+.islet-statusbar {
+  background: #030404;
+  border: 0;
+}
+.islet-panel {
+  border: 0;
+}
+.islet-handle {
+  margin-top: 3px;
+  width: 58px;
+  height: 3px;
+  min-height: 3px;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(28, 30, 29, 0.78);
+  box-shadow: none;
+}
+.islet-handle:hover,
+.islet-handle:focus-visible {
+  width: 72px;
+  height: 3px;
+  background: rgba(46, 49, 47, 0.92);
+}
+.islet-handle-grip {
+  display: none;
+}
+.islet-handle-dot {
+  top: 0;
+  right: 2px;
+  width: 3px;
+  height: 3px;
+}
+/* System destinations stay semantic tabs, but visually become a compact icon
+   dock instead of the long text bar shown in the screenshot. */
+.islet-tabbar.sub {
+  gap: 8px;
+  padding: 5px 12px 9px;
+}
+.islet-subtab {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.islet-subtab > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.islet-subtab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--islet-accent);
+}
+/* The wider Settings sheet uses its width instead of presenting one very long
+   generic form column. Character and tab management retain full width. */
+.islet-panel.stretch .islet-settings {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 22px;
+  align-items: start;
+}
+.islet-panel.stretch .islet-settings > h1,
+.islet-panel.stretch .islet-char-settings,
+.islet-panel.stretch .islet-tabs-editor {
+  grid-column: 1 / -1;
 }

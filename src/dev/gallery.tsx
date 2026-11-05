@@ -109,7 +109,7 @@ export function DevGallery() {
         <div class="islet-flyout-card">
           <div class="islet-browse-card">
             <div class="islet-browse-prev">
-              <span class="islet-browse-prev-ph">·</span>
+              <Icon name="image" size={20} />
             </div>
             <div class="islet-browse-meta">
               <span class="islet-browse-name">Sample Pal</span>

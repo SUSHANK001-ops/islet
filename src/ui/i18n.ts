@@ -151,7 +151,7 @@ const en: Strings = {
   "tasks.error": "Couldn’t load your tasks. Try reopening the panel.",
   "tasks.clearDone": "Clear completed",
   "tasks.remaining": "{n} left",
-  "tasks.allDone": "All done 🎉",
+  "tasks.allDone": "All done",
 
   "notes.add": "Write a quick note…",
   "notes.addAction": "Add note",

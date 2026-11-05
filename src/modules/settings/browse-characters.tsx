@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   catalogIsConfigured,
   catalogFetch,
@@ -122,7 +123,7 @@ export function BrowseCharacters() {
                 {previews[e.id] ? (
                   <img src={previews[e.id]} alt="" width={64} height={64} />
                 ) : (
-                  <span class="islet-browse-prev-ph" aria-hidden="true">·</span>
+                  <Icon name="image" size={20} />
                 )}
               </div>
               <div class="islet-browse-meta">

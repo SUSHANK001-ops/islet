@@ -18,8 +18,12 @@ export function FlyoutShell({
 }) {
   return (
     <div class="islet-flyout" role="dialog" aria-label={label}>
-      {chip ? <div class="islet-flyout-chip">{chip}</div> : null}
-      <div class="islet-flyout-card">{children}</div>
+      {chip ? (
+        <div class="islet-flyout-chip" data-islet-hit="0">
+          {chip}
+        </div>
+      ) : null}
+      <div class="islet-flyout-card" data-islet-hit="0">{children}</div>
     </div>
   );
 }

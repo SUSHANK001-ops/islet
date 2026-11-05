@@ -19,7 +19,7 @@ export function PermissionPrompt() {
       class="islet-perm"
       role="alertdialog"
       aria-labelledby="perm-title"
-      data-islet-hit="18"
+      data-islet-hit="0"
     >
       <span id="perm-title" class="islet-perm-title">
         {req.title}

@@ -31,7 +31,7 @@ export default function SoundFlyout() {
   if (!state.supported) {
     return (
       <div class="islet-empty">
-        <span class="islet-empty-icon" aria-hidden="true">·</span>
+        <Icon name="speaker-mute" size={22} class="islet-empty-icon" />
         <span>{t("sound.unsupported")}</span>
       </div>
     );

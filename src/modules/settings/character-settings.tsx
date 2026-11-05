@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   charactersList,
   characterSetActive,
@@ -196,7 +197,7 @@ export function CharacterSettings() {
                 onClick={() => doExport(c.id, c.name || c.id)}
                 disabled={busy}
               >
-                ⤓
+                <Icon name="download" size={16} />
               </button>
               <button
                 class="islet-icon-btn"
@@ -204,7 +205,7 @@ export function CharacterSettings() {
                 onClick={() => doDelete(c.id)}
                 disabled={busy}
               >
-                ×
+                <Icon name="close" size={16} />
               </button>
             </li>
           ))}

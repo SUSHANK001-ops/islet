@@ -32,7 +32,16 @@ export type IconName =
   | "note"
   | "music"
   | "grid"
-  | "chart";
+  | "chart"
+  | "play"
+  | "pause"
+  | "previous"
+  | "next"
+  | "download"
+  | "grip"
+  | "arrow-up"
+  | "arrow-down"
+  | "image";
 
 // Each glyph is the INNER markup of a 24x24 viewBox using stroke=currentColor.
 const PATHS: Record<IconName, JSX.Element> = {
@@ -184,6 +193,61 @@ const PATHS: Record<IconName, JSX.Element> = {
       <rect x="5.5" y="12" width="3.6" height="5" rx="1.2" />
       <rect x="10.2" y="8" width="3.6" height="9" rx="1.2" />
       <rect x="14.9" y="4.5" width="3.6" height="12.5" rx="1.2" />
+    </g>
+  ),
+  play: <path d="M8 5 L19 12 L8 19 Z" fill="currentColor" stroke="none" />,
+  pause: (
+    <g>
+      <line x1="9" y1="6" x2="9" y2="18" stroke-width="2.5" />
+      <line x1="15" y1="6" x2="15" y2="18" stroke-width="2.5" />
+    </g>
+  ),
+  previous: (
+    <g>
+      <line x1="6" y1="6" x2="6" y2="18" />
+      <path d="M18 6 L8 12 L18 18 Z" fill="currentColor" stroke="none" />
+    </g>
+  ),
+  next: (
+    <g>
+      <line x1="18" y1="6" x2="18" y2="18" />
+      <path d="M6 6 L16 12 L6 18 Z" fill="currentColor" stroke="none" />
+    </g>
+  ),
+  download: (
+    <g>
+      <path d="M12 4 V15" />
+      <polyline points="8 11 12 15 16 11" />
+      <path d="M5 19 H19" />
+    </g>
+  ),
+  grip: (
+    <g fill="currentColor" stroke="none">
+      <circle cx="9" cy="7" r="1.2" />
+      <circle cx="15" cy="7" r="1.2" />
+      <circle cx="9" cy="12" r="1.2" />
+      <circle cx="15" cy="12" r="1.2" />
+      <circle cx="9" cy="17" r="1.2" />
+      <circle cx="15" cy="17" r="1.2" />
+    </g>
+  ),
+  "arrow-up": (
+    <g>
+      <polyline points="7 10 12 5 17 10" />
+      <line x1="12" y1="5" x2="12" y2="19" />
+    </g>
+  ),
+  "arrow-down": (
+    <g>
+      <polyline points="7 14 12 19 17 14" />
+      <line x1="12" y1="5" x2="12" y2="19" />
+    </g>
+  ),
+  image: (
+    <g>
+      <rect x="3.5" y="4" width="17" height="16" rx="2.5" />
+      <circle cx="9" cy="9" r="1.5" />
+      <path d="M5.5 17 L10 12.5 L13 15 L15.5 12.5 L18.5 16" />
     </g>
   ),
 };

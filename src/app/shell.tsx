@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { listen } from "@tauri-apps/api/event";
 import { APP_NAME } from "../app.config";
 import { t } from "../ui/i18n";
+import { Icon } from "../ui/controls/icon";
 import {
   openPanel,
   closePanel,
@@ -66,6 +67,7 @@ export function Shell() {
   );
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [focusRunning, setFocusRunning] = useState(false);
+  const flyoutCtrl = useFlyoutController();
 
   // Bring the character system up once: wire the animate/stop gate, the focus
   // signals, and load the active (default) character.
@@ -136,6 +138,19 @@ export function Shell() {
     });
     return () => void un.then((f) => f());
   }, []);
+
+  // A click in another application makes the shaped native window lose focus.
+  // Close the panel and any system flyout without global mouse polling. Keep a
+  // permission decision visible until the user answers it explicitly.
+  useEffect(() => {
+    const un = listen("islet://window-blurred", () => {
+      if (pending.length > 0) return;
+      setOpen(false);
+      setPinned(false);
+      flyoutCtrl.close();
+    });
+    return () => void un.then((f) => f());
+  }, [pending.length]);
 
   // Hotkey conflict: show a friendly, dismissible message (no crash).
   useEffect(() => {
@@ -256,8 +271,7 @@ export function Shell() {
       .catch(() => {});
   }
 
-  // System flyouts opened from the status-bar items (Spec 11).
-  const flyoutCtrl = useFlyoutController();
+  // System flyouts are controlled by the hook declared with the shell state.
 
   // Keep the OS window shaped to whatever is actually visible, so the empty
   // transparent area stops swallowing clicks meant for the apps behind it.
@@ -311,6 +325,15 @@ export function Shell() {
 
   const hasAlert = pending.length > 0;
   const statusBarStyle = pillStyle.value === "statusBar";
+  // Wider, content-heavy tabs get a deliberate 520px sheet. The fixed native
+  // canvas already allows 560px, and ResizeObserver updates its hit region.
+  const stretchPanel = [
+    "media",
+    "launcher",
+    "settings",
+    "sys-clock",
+    "sys-quick",
+  ].includes(active);
   const handleDot =
     notifications.value.some((n) => !n.read) || focusRunning;
 
@@ -345,9 +368,9 @@ export function Shell() {
           class={`islet-pill${open ? " open" : ""}${hasAlert ? " has-alert" : ""}${
             character && showInNotch && !open ? " has-character" : ""
           }${focusRunning ? " focus-active" : ""}`}
-          // Hit region: pad covers the notch shadow without claiming a large
-          // invisible strip over the app underneath.
-          data-islet-hit="8"
+          // Match the native region to painted pixels. Extra transparent
+          // padding exposed WebView2's white backing on this Windows setup.
+          data-islet-hit="0"
           role="button"
           tabIndex={0}
           aria-expanded={open}
@@ -379,7 +402,7 @@ export function Shell() {
             onPointerDown={handleDragStart}
             onClick={(e) => e.stopPropagation()}
           >
-            ⠿
+            <Icon name="grip" size={14} />
           </span>
         </div>
       )}
@@ -392,10 +415,10 @@ export function Shell() {
 
       {open ? (
         <div
-          class="islet-panel"
+          class={`islet-panel${stretchPanel ? " stretch" : ""}`}
           role="dialog"
           aria-label={APP_NAME}
-          data-islet-hit="10"
+          data-islet-hit="0"
         >
           {character ? (
             <div class="islet-panel-character">

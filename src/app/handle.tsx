@@ -1,8 +1,5 @@
-// Auto-hide handle (Spec 12). When pill visibility is "auto-hide", the pill
-// collapses to a thin handle; hovering it expands back to the pill/status bar.
-// A single dot shows when a timer is running or there are unread notifications
-// (nothing more). Animation is width + opacity only (reduced-motion safe in CSS).
-
+// Auto-hide handle. The full hit target is painted dark so an opaque WebView2
+// backing can never show around a tiny transparent bar on Windows.
 export function Handle({
   dot,
   onEnter,
@@ -14,11 +11,11 @@ export function Handle({
     <button
       class="islet-handle"
       aria-label="Islet"
-      // Marks this as a clickable surface for the window hit region.
-      data-islet-hit="10"
+      data-islet-hit="0"
       onMouseEnter={onEnter}
       onFocus={onEnter}
     >
+      <span class="islet-handle-grip" aria-hidden="true" />
       {dot ? <span class="islet-handle-dot" aria-hidden="true" /> : null}
     </button>
   );

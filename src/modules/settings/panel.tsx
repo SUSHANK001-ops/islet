@@ -1,5 +1,6 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   settings,
   updateSettings,
@@ -274,13 +275,13 @@ export default function SettingsPanel() {
                   aria-label={t("settings.moveUp")}
                   onClick={() => moveTab(tab.id, -1)}
                 >
-                  ↑
+                  <Icon name="arrow-up" size={15} />
                 </button>
                 <button
                   aria-label={t("settings.moveDown")}
                   onClick={() => moveTab(tab.id, 1)}
                 >
-                  ↓
+                  <Icon name="arrow-down" size={15} />
                 </button>
               </span>
             </li>

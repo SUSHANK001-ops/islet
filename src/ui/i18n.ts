@@ -147,6 +147,7 @@ const en: Strings = {
   "focus.todayCount": "{n} done today",
   "focus.minutes": "min",
   "focus.customMinutes": "Custom minutes",
+  "focus.customShort": "Minutes",
 
   "tasks.add": "Add a task…",
   "tasks.addAction": "Add task",

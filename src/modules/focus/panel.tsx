@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { listen } from "@tauri-apps/api/event";
 import { t } from "../../ui/i18n";
+import { Icon } from "../../ui/controls/icon";
 import {
   focusStart,
   focusPause,
@@ -10,7 +11,7 @@ import {
   type FocusState,
 } from "./bridge";
 
-const PRESETS = [5, 10, 25];
+const PRESETS = [15, 25, 50];
 const POMODORO_TOTAL = 4; // display only; engine owns the real cycle
 const RING = 2 * Math.PI * 67; // circumference for r=67
 
@@ -111,10 +112,11 @@ export default function FocusPanel() {
             {PRESETS.map((min) => (
               <button
                 key={min}
-                class="islet-btn"
+                class={`islet-focus-preset${min === 25 ? " recommended" : ""}`}
                 onClick={() => void focusStart(min).then(setState)}
               >
-                {t("focus.preset", { min })}
+                <span class="islet-focus-preset-num">{min}</span>
+                <span>{t("focus.minutes")}</span>
               </button>
             ))}
           </div>
@@ -129,14 +131,15 @@ export default function FocusPanel() {
               type="number"
               min={1}
               max={180}
-              placeholder="custom"
+              placeholder={t("focus.customShort")}
               value={custom}
               aria-label={t("focus.customMinutes")}
               onInput={(e) => setCustom(e.currentTarget.value)}
             />
             <span>{t("focus.minutes")}</span>
-            <button type="submit" class="islet-btn primary">
-              {t("focus.start")}
+            <button type="submit" class="islet-btn primary islet-btn-with-icon">
+              <Icon name="play" size={15} />
+              <span>{t("focus.start")}</span>
             </button>
           </form>
         </>
@@ -144,15 +147,17 @@ export default function FocusPanel() {
         <>
           <div class="islet-focus-controls">
             {running ? (
-              <button class="islet-btn" onClick={() => void focusPause().then(setState)}>
-                {t("focus.pause")}
+              <button class="islet-btn islet-btn-with-icon" onClick={() => void focusPause().then(setState)}>
+                <Icon name="pause" size={15} />
+                <span>{t("focus.pause")}</span>
               </button>
             ) : (
               <button
-                class="islet-btn primary"
+                class="islet-btn primary islet-btn-with-icon"
                 onClick={() => void focusResume().then(setState)}
               >
-                {t("focus.resume")}
+                <Icon name="play" size={15} />
+                <span>{t("focus.resume")}</span>
               </button>
             )}
             <button class="islet-btn danger" onClick={() => void focusReset().then(setState)}>

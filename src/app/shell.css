@@ -2039,3 +2039,84 @@ body {
 .islet-panel.stretch .islet-tabs-editor {
   grid-column: 1 / -1;
 }
+
+/* Focus is a compact instrument, not a generic ring-and-button template. */
+.islet-focus {
+  gap: 14px;
+}
+.islet-focus-phase {
+  color: var(--islet-fg);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+.islet-focus-ring {
+  width: 164px;
+  height: 164px;
+}
+.islet-focus-ring svg {
+  width: 164px;
+  height: 164px;
+}
+.islet-focus-ring .track {
+  stroke: color-mix(in srgb, var(--islet-fg) 10%, transparent);
+  stroke-width: 4;
+}
+.islet-focus-ring .progress {
+  stroke: var(--islet-accent);
+  stroke-width: 4;
+  filter: none;
+}
+.islet-focus-ring.running {
+  animation: none;
+}
+.islet-focus-clock {
+  font-size: 44px;
+  font-weight: 520;
+  letter-spacing: -0.045em;
+}
+.islet-focus-presets {
+  gap: 7px;
+  width: 100%;
+}
+.islet-focus-preset {
+  flex: 1;
+  min-width: 74px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 9px 8px 8px;
+  border: 1px solid var(--islet-divider);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--islet-fg-dim);
+  font: inherit;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: transform var(--islet-dur-fast) var(--islet-ease-out),
+    border-color var(--islet-transition);
+}
+.islet-focus-preset:hover {
+  border-color: var(--islet-accent);
+  transform: translateY(-2px);
+}
+.islet-focus-preset.recommended {
+  border-color: color-mix(in srgb, var(--islet-accent) 60%, transparent);
+}
+.islet-focus-preset-num {
+  color: var(--islet-fg);
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.islet-focus-custom {
+  width: 100%;
+  justify-content: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .islet-focus-preset { transition: none; }
+  .islet-focus-preset:hover { transform: none; }
+}

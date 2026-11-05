@@ -36,6 +36,11 @@ const en: Strings = {
   "clock.newEvent": "New event",
   "clock.save": "Save",
   "clock.deleteEvent": "Delete event",
+  "clock.completeEvent": "Complete event",
+  "clock.reopenEvent": "Mark event incomplete",
+  "clock.eventTime": "Event time",
+  "clock.addOnDate": "Add an event on this date",
+  "clock.eventCount": "{n} events",
 
   "sound.unsupported": "No audio device found",
   "sound.mute": "Mute",

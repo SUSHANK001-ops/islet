@@ -7,7 +7,7 @@ use tauri::AppHandle;
 use super::{read_json, write_json_atomic, StoreError};
 
 pub const EVENTS_FILE: &str = "events.json";
-pub const EVENTS_VERSION: u32 = 1;
+pub const EVENTS_VERSION: u32 = 2;
 const MAX_EVENTS: usize = 2000;
 const MAX_TITLE: usize = 120;
 
@@ -19,6 +19,8 @@ pub struct CalEvent {
     pub date: String,          // YYYY-MM-DD
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,  // HH:MM, optional
+    #[serde(default)]
+    pub completed: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -39,7 +41,15 @@ impl Default for EventList {
 
 pub fn load(app: &AppHandle) -> EventList {
     match read_json::<EventList>(app, EVENTS_FILE) {
-        Ok(Some(v)) if v.schema_version == EVENTS_VERSION => v,
+        Ok(Some(mut v)) if v.schema_version <= EVENTS_VERSION => {
+            // v1 events gain `completed: false` through serde(default). Persist
+            // the new version without discarding any existing local events.
+            if v.schema_version < EVENTS_VERSION {
+                v.schema_version = EVENTS_VERSION;
+                let _ = save(app, &v);
+            }
+            v
+        }
         _ => EventList::default(),
     }
 }
@@ -81,7 +91,17 @@ pub fn add(app: &AppHandle, title: &str, date: &str, time: Option<String>) -> Re
             title,
             date: date.to_string(),
             time: time.filter(|t| !t.is_empty()),
+            completed: false,
         });
+        save(app, &list)?;
+    }
+    Ok(list)
+}
+
+pub fn toggle(app: &AppHandle, id: &str) -> Result<EventList, StoreError> {
+    let mut list = load(app);
+    if let Some(event) = list.events.iter_mut().find(|event| event.id == id) {
+        event.completed = !event.completed;
         save(app, &list)?;
     }
     Ok(list)
@@ -102,7 +122,7 @@ pub fn next_event(app: &AppHandle, today: &str) -> Option<CalEvent> {
     let mut upcoming: Vec<CalEvent> = load(app)
         .events
         .into_iter()
-        .filter(|e| e.date.as_str() >= today)
+        .filter(|e| e.date.as_str() >= today && !e.completed)
         .collect();
     upcoming.sort_by(|a, b| a.date.cmp(&b.date));
     upcoming.into_iter().next()

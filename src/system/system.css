@@ -786,3 +786,70 @@
 .islet-seg-highlight {
   border-radius: 7px;
 }
+
+/* Date cells are direct actions; the selected date opens a compact local
+   event surface with completion controls. */
+button.islet-cal-cell {
+  font: inherit;
+  color: var(--islet-fg);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+button.islet-cal-cell.selected {
+  outline: 1px solid var(--islet-accent);
+  outline-offset: -1px;
+}
+.islet-day-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--islet-divider);
+}
+.islet-day-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 650;
+}
+.islet-event-copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.islet-event-copy time {
+  color: var(--islet-fg-dim);
+  font-size: 10px;
+}
+.islet-event.completed .islet-event-copy {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.islet-event-check {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--islet-border);
+  border-radius: 7px;
+  color: var(--islet-on-accent);
+  background: transparent;
+  cursor: pointer;
+}
+.islet-event-check.checked {
+  background: var(--islet-accent);
+  border-color: transparent;
+}
+.islet-event-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 94px auto;
+  gap: 7px;
+}
+.islet-event-time {
+  min-width: 0;
+  padding-inline: 7px;
+}

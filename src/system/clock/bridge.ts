@@ -7,6 +7,7 @@ export interface CalEvent {
   title: string;
   date: string; // YYYY-MM-DD
   time?: string | null; // HH:MM
+  completed: boolean;
 }
 
 export interface EventList {
@@ -25,6 +26,10 @@ export function eventAdd(
   time?: string
 ): Promise<EventList> {
   return invoke("event_add", { title, date, time: time ?? null });
+}
+
+export function eventToggle(id: string): Promise<EventList> {
+  return invoke("event_toggle", { id });
 }
 
 export function eventDelete(id: string): Promise<EventList> {

@@ -419,6 +419,17 @@ pub fn event_add(
     Ok(list)
 }
 #[tauri::command]
+pub fn event_toggle(
+    app: AppHandle,
+    hub: tauri::State<'_, Hub>,
+    id: String,
+) -> Result<EventList, String> {
+    let list = events::toggle(&app, &id).map_err(|e| e.to_string())?;
+    publish_next_event(&app, &hub);
+    Ok(list)
+}
+
+#[tauri::command]
 pub fn event_delete(
     app: AppHandle,
     hub: tauri::State<'_, Hub>,
@@ -432,7 +443,9 @@ pub fn event_delete(
 /// Publish the next upcoming event's label to the shared hub (Spec 11 Req 3.5).
 fn publish_next_event(app: &AppHandle, hub: &tauri::State<'_, Hub>) {
     let today = crate::store::activity::today();
-    let label = events::next_event(app, &today).map(|e| e.title);
+    let label = events::next_event(app, &today)
+        .filter(|event| !event.completed)
+        .map(|event| event.title);
     hub.update(|s| s.next_event = label);
 }
 

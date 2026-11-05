@@ -34,6 +34,7 @@ const en: Strings = {
   "clock.events": "Events · {date}",
   "clock.noEvents": "No events",
   "clock.newEvent": "New event",
+  "clock.eventNote": "Write the event or reminder…",
   "clock.save": "Save",
   "clock.deleteEvent": "Delete event",
   "clock.completeEvent": "Complete event",
@@ -84,6 +85,7 @@ const en: Strings = {
   "settings.visibility.autoHide": "Auto-hide",
   "settings.visibility.hidden": "Hidden (hotkey only)",
   "settings.autohideDelay": "Auto-hide delay",
+  "settings.autohideFiveSeconds": "5 seconds",
 
   "common.comingSoon": "Coming soon",
   "common.loading": "Loading…",

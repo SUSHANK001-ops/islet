@@ -29,7 +29,6 @@ export default function ClockFlyout() {
   const [events, setEvents] = useState<CalEvent[]>([]);
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
-  const [time, setTime] = useState("");
 
   // The seconds display exists only while this surface is mounted.
   useEffect(() => {
@@ -84,9 +83,8 @@ export default function ClockFlyout() {
   async function submit() {
     const trimmed = title.trim();
     if (!trimmed) return;
-    await eventAdd(trimmed, selectedDay, time || undefined).catch(() => null);
+    await eventAdd(trimmed, selectedDay).catch(() => null);
     setTitle("");
-    setTime("");
     setAdding(false);
     await refresh();
   }
@@ -160,22 +158,18 @@ export default function ClockFlyout() {
               </ul>
             ) : null}
             <form class="islet-event-add" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-              <input
-                class="islet-input"
+              <textarea
+                class="islet-input islet-event-notebook"
                 autoFocus
-                placeholder={t("clock.newEvent")}
+                rows={4}
+                maxLength={120}
+                placeholder={t("clock.eventNote")}
                 value={title}
                 onInput={(event) => setTitle(event.currentTarget.value)}
               />
-              <input
-                class="islet-input islet-event-time"
-                type="time"
-                value={time}
-                aria-label={t("clock.eventTime")}
-                onInput={(event) => setTime(event.currentTarget.value)}
-              />
-              <button type="submit" class="islet-btn primary" disabled={!title.trim()}>
+              <button type="submit" class="islet-btn primary islet-event-save" disabled={!title.trim()}>
                 <Icon name="plus" size={15} />
+                <span>{t("clock.save")}</span>
               </button>
             </form>
           </div>

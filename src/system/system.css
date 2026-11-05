@@ -926,3 +926,29 @@ button.islet-cal-cell.today {
   border-radius: 0;
   padding-inline: 0;
 }
+
+/* The date popover is a single notebook-like editor. */
+.islet-cal-popover .islet-event-add {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.islet-event-notebook {
+  min-height: 92px;
+  padding: 11px 12px;
+  resize: none;
+  line-height: 1.5;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 23px,
+      var(--islet-divider) 24px
+    );
+}
+.islet-event-save {
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

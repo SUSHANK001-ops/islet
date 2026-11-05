@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "id": "pixel-pal",
-  "name": "Pip",
-  "version": "1.2.0",
+  "name": "Block Pip",
+  "version": "2.0.0",
   "author": "Islet",
   "license": "CC0-1.0",
 
@@ -12,7 +12,7 @@
     "frameHeight": 48,
     "columns": 8,
     "scale": 2,
-    "pixelArt": false
+    "pixelArt": true
   },
 
   "states": {

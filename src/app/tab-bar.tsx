@@ -54,10 +54,10 @@ export function TabBar({
   const features: TabId[] = enabledTabs().map((tb) => tb.id);
   const systemActive = SYSTEM_SET.has(active);
 
-  // Keep the System group expanded while one of its members is showing.
+  // The secondary row exists only while a System destination is active.
   const [systemOpen, setSystemOpen] = useState(systemActive);
   useEffect(() => {
-    if (systemActive) setSystemOpen(true);
+    setSystemOpen(systemActive);
   }, [systemActive]);
 
   // The primary row. "system" is a group handle, not a tab id of its own.

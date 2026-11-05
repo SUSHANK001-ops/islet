@@ -331,7 +331,6 @@ export function Shell() {
     "media",
     "launcher",
     "settings",
-    "sys-clock",
     "sys-quick",
   ].includes(active);
   const handleDot =

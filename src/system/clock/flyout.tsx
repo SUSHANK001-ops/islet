@@ -101,27 +101,86 @@ export default function ClockFlyout() {
     await refresh();
   }
 
-  function cell(cellValue: DayCell) {
+  function cell(cellValue: DayCell, index: number) {
     const isToday = cellValue.date === today;
     const selected = cellValue.date === selectedDay;
     const count = events.filter((event) => event.date === cellValue.date).length;
+    const column = index % 7;
+    const row = Math.floor(index / 7);
+    const align = `${column < 2 ? " left" : column > 4 ? " right" : " center"}${
+      row > 3 ? " above" : ""
+    }`;
     return (
-      <button
-        key={cellValue.date}
-        type="button"
-        class={`islet-cal-cell${cellValue.inMonth ? "" : " muted"}${
-          isToday ? " today" : ""
-        }${selected ? " selected" : ""}`}
-        aria-pressed={selected}
-        title={count ? t("clock.eventCount", { n: count }) : t("clock.addOnDate")}
-        onClick={() => {
-          setSelectedDay(cellValue.date);
-          setAdding(true);
-        }}
-      >
-        <span class="islet-num">{cellValue.day}</span>
-        {count > 0 ? <span class="islet-cal-dot" aria-hidden="true" /> : null}
-      </button>
+      <div key={cellValue.date} class="islet-cal-slot">
+        <button
+          type="button"
+          class={`islet-cal-cell${cellValue.inMonth ? "" : " muted"}${
+            isToday ? " today" : ""
+          }${selected ? " selected" : ""}`}
+          aria-pressed={selected}
+          title={count ? t("clock.eventCount", { n: count }) : t("clock.addOnDate")}
+          onClick={() => {
+            setSelectedDay(cellValue.date);
+            setAdding(true);
+          }}
+        >
+          <span class="islet-num">{cellValue.day}</span>
+          {count > 0 ? <span class="islet-cal-dot" aria-hidden="true" /> : null}
+        </button>
+
+        {selected && adding ? (
+          <div class={`islet-cal-popover${align}`} role="dialog" aria-label={t("clock.events", { date: selectedDay })}>
+            <header class="islet-cal-popover-head">
+              <strong>{selectedDay}</strong>
+              <button class="islet-icon-btn" aria-label={t("notif.close")} onClick={() => setAdding(false)}>
+                <Icon name="close" size={14} />
+              </button>
+            </header>
+            {dayEvents.length > 0 ? (
+              <ul class="islet-event-list">
+                {dayEvents.map((event) => (
+                  <li key={event.id} class={`islet-event${event.completed ? " completed" : ""}`}>
+                    <button
+                      class={`islet-event-check${event.completed ? " checked" : ""}`}
+                      aria-label={t(event.completed ? "clock.reopenEvent" : "clock.completeEvent")}
+                      aria-pressed={event.completed}
+                      onClick={() => void toggle(event.id)}
+                    >
+                      {event.completed ? <Icon name="checklist" size={13} /> : null}
+                    </button>
+                    <span class="islet-event-copy">
+                      <span>{event.title}</span>
+                      {event.time ? <time>{event.time}</time> : null}
+                    </span>
+                    <button class="islet-icon-btn" aria-label={t("clock.deleteEvent")} onClick={() => void remove(event.id)}>
+                      <Icon name="close" size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <form class="islet-event-add" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+              <input
+                class="islet-input"
+                autoFocus
+                placeholder={t("clock.newEvent")}
+                value={title}
+                onInput={(event) => setTitle(event.currentTarget.value)}
+              />
+              <input
+                class="islet-input islet-event-time"
+                type="time"
+                value={time}
+                aria-label={t("clock.eventTime")}
+                onInput={(event) => setTime(event.currentTarget.value)}
+              />
+              <button type="submit" class="islet-btn primary" disabled={!title.trim()}>
+                <Icon name="plus" size={15} />
+              </button>
+            </form>
+          </div>
+        ) : null}
+      </div>
     );
   }
 
@@ -150,62 +209,6 @@ export default function ClockFlyout() {
         </div>
       </FlyoutSection>
 
-      <section class="islet-day-popover" aria-label={t("clock.events", { date: selectedDay })}>
-        <header class="islet-day-popover-head">
-          <span>{selectedDay}</span>
-          <button class="islet-sb-item" aria-label={t("clock.newEvent")} onClick={() => setAdding(true)}>
-            <Icon name="plus" size={16} />
-          </button>
-        </header>
-
-        {dayEvents.length > 0 ? (
-          <ul class="islet-event-list">
-            {dayEvents.map((event) => (
-              <li key={event.id} class={`islet-event${event.completed ? " completed" : ""}`}>
-                <button
-                  class={`islet-event-check${event.completed ? " checked" : ""}`}
-                  aria-label={t(event.completed ? "clock.reopenEvent" : "clock.completeEvent")}
-                  aria-pressed={event.completed}
-                  onClick={() => void toggle(event.id)}
-                >
-                  {event.completed ? <Icon name="checklist" size={14} /> : null}
-                </button>
-                <span class="islet-event-copy">
-                  <span>{event.title}</span>
-                  {event.time ? <time>{event.time}</time> : null}
-                </span>
-                <button class="islet-icon-btn" aria-label={t("clock.deleteEvent")} onClick={() => void remove(event.id)}>
-                  <Icon name="close" size={15} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : !adding ? (
-          <p class="islet-dim">{t("clock.noEvents")}</p>
-        ) : null}
-
-        {adding ? (
-          <form class="islet-event-add" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-            <input
-              class="islet-input"
-              autoFocus
-              placeholder={t("clock.newEvent")}
-              value={title}
-              onInput={(event) => setTitle(event.currentTarget.value)}
-            />
-            <input
-              class="islet-input islet-event-time"
-              type="time"
-              value={time}
-              aria-label={t("clock.eventTime")}
-              onInput={(event) => setTime(event.currentTarget.value)}
-            />
-            <button type="submit" class="islet-btn primary" disabled={!title.trim()}>
-              {t("clock.save")}
-            </button>
-          </form>
-        ) : null}
-      </section>
     </div>
   );
 }

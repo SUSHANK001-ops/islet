@@ -853,3 +853,76 @@ button.islet-cal-cell.selected {
   min-width: 0;
   padding-inline: 7px;
 }
+
+/* Keep the transparent native range above its visual track so dragging works
+   across the full width. The drawn track must never intercept the pointer. */
+.islet-slider-input {
+  z-index: 2;
+  touch-action: none;
+}
+.islet-slider-track,
+.islet-slider-fill,
+.islet-slider-thumb {
+  pointer-events: none;
+}
+
+/* Calendar stays compact. Event creation is anchored to the clicked date. */
+.islet-cal-grid {
+  position: relative;
+  gap: 3px;
+}
+.islet-cal-slot {
+  position: relative;
+  min-width: 0;
+}
+button.islet-cal-cell {
+  width: 100%;
+  height: 32px;
+  aspect-ratio: auto;
+  border-radius: 8px;
+  background: transparent;
+}
+button.islet-cal-cell:hover {
+  background: var(--islet-control);
+}
+button.islet-cal-cell.today {
+  background: var(--islet-accent);
+  color: var(--islet-on-accent);
+}
+.islet-cal-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 5px);
+  width: 258px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #111313;
+  border: 1px solid var(--islet-border);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.46);
+}
+.islet-cal-popover.left { left: 0; }
+.islet-cal-popover.right { right: 0; }
+.islet-cal-popover.center { left: 50%; transform: translateX(-50%); }
+.islet-cal-popover.above {
+  top: auto;
+  bottom: calc(100% + 5px);
+}
+.islet-cal-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.islet-cal-popover .islet-event-add {
+  grid-template-columns: minmax(0, 1fr) 84px 32px;
+}
+.islet-cal-popover .islet-event {
+  background: transparent;
+  border-bottom: 1px solid var(--islet-divider);
+  border-radius: 0;
+  padding-inline: 0;
+}

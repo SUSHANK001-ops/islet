@@ -40,10 +40,15 @@ export function Slider({
         value={value}
         aria-label={label}
         onPointerDown={() => (dragging.current = true)}
-        onPointerUp={() => {
+        onPointerUp={(e) => {
           dragging.current = false;
-          onChange?.(value);
+          onChange?.(Number(e.currentTarget.value));
         }}
+        onPointerCancel={(e) => {
+          dragging.current = false;
+          onChange?.(Number(e.currentTarget.value));
+        }}
+        onKeyUp={(e) => onChange?.(Number(e.currentTarget.value))}
         onInput={(e) => onInput(Number(e.currentTarget.value))}
       />
       <div class="islet-slider-track" aria-hidden="true">

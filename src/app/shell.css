@@ -2127,3 +2127,41 @@ body {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 7px;
 }
+
+/* Compact camera-sized notch proportions from hardware-style island UX. */
+.islet-pill {
+  width: 82px;
+  height: 28px;
+  border-radius: 0 0 14px 14px;
+}
+.islet-pill:hover {
+  width: 92px;
+  height: 31px;
+}
+.islet-pill.has-character {
+  width: 96px;
+  height: 32px;
+}
+.islet-pill.has-character:hover {
+  width: 106px;
+  height: 35px;
+}
+.islet-pill.open {
+  width: 72px;
+  height: 12px;
+  border-radius: 0 0 9px 9px;
+}
+.islet-notch-canvas {
+  width: 26px;
+  height: 26px;
+}
+.islet-panel-character {
+  padding: 6px 14px;
+}
+.islet-panel-canvas {
+  width: 38px;
+  height: 38px;
+}
+.islet-panel-character-row {
+  min-height: 18px;
+}

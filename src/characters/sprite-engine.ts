@@ -98,7 +98,8 @@ export class SpriteEngine {
     // Only the panel floats smoothly (its budget allows up to 24fps). The notch
     // must stay frame-stepped at <=6fps per the closed-CPU budget, so it gets no
     // continuous float (amplitude 0 => the tick never forces an extra redraw).
-    this.bobAmplitude = surface === "panel" ? 1.4 : 0;
+    this.bobAmplitude =
+      surface === "panel" && !this.manifest.sheet.pixelArt ? 1.4 : 0;
     // Pixel art: keep edges hard. Smooth art: let the browser interpolate.
     this.ctx.imageSmoothingEnabled = !this.manifest.sheet.pixelArt;
 

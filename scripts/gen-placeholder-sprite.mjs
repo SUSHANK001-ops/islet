@@ -1,4 +1,4 @@
-// Generates the original block-built mascot "Pip" as character-pack data.
+// Generates the original voxel ranger "Rook" as character-pack data.
 // The design uses a voxel-like visual language but does not copy a Minecraft
 // character, texture, model, palette, or asset. No runtime code changes are
 // needed to replace it because characters remain images + JSON.
@@ -65,7 +65,7 @@ function sparkle(ox, oy, x, y) {
   rect(ox, oy, x, y + 2, 6, 2, C.gold);
 }
 
-/** Draw one original voxel desk buddy. All coordinates are whole pixels. */
+/** Draw one original voxel ranger. All coordinates are whole pixels. */
 function drawPip(index, pose = {}) {
   const ox = (index % COLS) * FRAME;
   const oy = Math.floor(index / COLS) * FRAME;

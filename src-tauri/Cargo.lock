@@ -1914,6 +1914,7 @@ dependencies = [
  "tauri-plugin-opener",
  "time",
  "ureq",
+ "webview2-com",
  "windows",
  "zip",
 ]

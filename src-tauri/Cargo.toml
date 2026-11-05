@@ -56,6 +56,10 @@ sha2 = "0.10"
 
 # Windows-only APIs for fullscreen / foreground-window detection (platform/).
 [target.'cfg(windows)'.dependencies]
+# Already present through Wry. We name it directly only to ask WebView2 to use
+# its documented low-memory target while the panel is closed; no new runtime
+# binary or network behavior is added.
+webview2-com = "0.39.1"
 # Pinned to 0.62 to match the version Tauri's dependency tree already compiles,
 # so there is a single consistent windows-core (avoids trait-version clashes).
 windows = { version = "0.62", features = [

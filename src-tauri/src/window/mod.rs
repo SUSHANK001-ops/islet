@@ -268,12 +268,43 @@ fn set_panel_open_flag(window: &WebviewWindow, open: bool) {
     }
 }
 
+/// Ask modern WebView2 to prefer a smaller working set while only the closed
+/// notch is visible. The hint is reversible and unsupported runtimes simply
+/// ignore it; the page stays alive so hover and hotkeys remain responsive.
+#[cfg(windows)]
+fn set_webview_low_memory(window: &WebviewWindow, low: bool) {
+    use webview2_com::Microsoft::Web::WebView2::Win32::{
+        ICoreWebView2_19, COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW,
+        COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL,
+    };
+    use windows::core::Interface;
+
+    let _ = window.with_webview(move |webview| unsafe {
+        let Ok(core) = webview.controller().CoreWebView2() else {
+            return;
+        };
+        let Ok(core19) = core.cast::<ICoreWebView2_19>() else {
+            return;
+        };
+        let level = if low {
+            COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW
+        } else {
+            COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL
+        };
+        let _ = core19.SetMemoryUsageTargetLevel(level);
+    });
+}
+
+#[cfg(not(windows))]
+fn set_webview_low_memory(_window: &WebviewWindow, _low: bool) {}
+
 /// Closed/idle state. Geometry is deliberately untouched here: reapplying the
 /// fixed size and position during every close caused avoidable DWM/WebView2
 /// redraws, which could appear as a bright frame on transparent windows.
 pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
     set_panel_open_flag(window, false);
+    set_webview_low_memory(window, true);
     Ok(())
 }
 
@@ -282,6 +313,7 @@ pub fn apply_closed_state(window: &WebviewWindow) -> tauri::Result<()> {
 pub fn apply_open_state(window: &WebviewWindow) -> tauri::Result<()> {
     window.set_always_on_top(true)?;
     set_panel_open_flag(window, true);
+    set_webview_low_memory(window, false);
     Ok(())
 }
 

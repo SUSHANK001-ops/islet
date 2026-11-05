@@ -246,14 +246,22 @@ export function Shell() {
   function handleLeave() {
     if (pending.length > 0) return;
 
-    // Auto-hide is predictable: leaving any open or closed surface starts one
-    // five-second countdown, even if a click pinned the panel open.
+    // A pinned (clicked-open) panel must stay open until the user clicks it
+    // again, presses Esc, or clicks another app. Merely moving the pointer off
+    // the panel never closes it — that was the bug where the big screen
+    // collapsed on hover-out. Clicking away is handled by islet://window-blurred.
+    if (open && pinned) return;
+
     if (visibility === "autoHide") {
+      // Not pinned: a hover preview closes, then the pill collapses to the
+      // handle five seconds later. The timer is cancelled if the pointer
+      // returns (handleEnter) so it never hides while in use.
       if (leaveTimer.current) clearTimeout(leaveTimer.current);
       leaveTimer.current = setTimeout(() => {
-        setOpen(false);
-        setPinned(false);
-        setCollapsed(true);
+        if (!pinned) {
+          setOpen(false);
+          setCollapsed(true);
+        }
       }, AUTO_HIDE_DELAY_MS);
       return;
     }
@@ -262,11 +270,12 @@ export function Shell() {
       scheduleCollapse();
       return;
     }
-    if (pinned) return;
 
     if (open && settings.value.openOnHover) {
       if (leaveTimer.current) clearTimeout(leaveTimer.current);
-      leaveTimer.current = setTimeout(() => setOpen(false), 220);
+      leaveTimer.current = setTimeout(() => {
+        if (!pinned) setOpen(false);
+      }, 220);
       return;
     }
     scheduleCollapse();

@@ -2120,3 +2120,10 @@ body {
   .islet-focus-preset { transition: none; }
   .islet-focus-preset:hover { transform: none; }
 }
+
+.islet-launcher-rename {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+}

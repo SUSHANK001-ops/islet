@@ -5,6 +5,7 @@ import {
   launcherList,
   launcherAdd,
   launcherRemove,
+  launcherRename,
   launcherLaunch,
   type LauncherEntry,
 } from "./bridge";
@@ -16,6 +17,8 @@ export default function LauncherPanel() {
   const [entries, setEntries] = useState<LauncherEntry[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   async function refresh() {
     try {
@@ -50,6 +53,22 @@ export default function LauncherPanel() {
     } catch (e) {
       // Re-validation failed (file moved/deleted/became a script): tell the user.
       setError(String(e));
+    }
+  }
+
+  async function rename() {
+    const name = editingName.trim();
+    if (!editingId || !name) return;
+    setBusy(true);
+    try {
+      const list = await launcherRename(editingId, name);
+      setEntries(list.entries);
+      setEditingId(null);
+      setEditingName("");
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -91,20 +110,47 @@ export default function LauncherPanel() {
         </div>
       ) : (
         <ul class="islet-launcher-list">
-          {entries.map((e) => (
-            <li key={e.id} class="islet-launcher-item">
+          {entries.map((entry) => (
+            <li key={entry.id} class="islet-launcher-item">
+              {editingId === entry.id ? (
+                <form class="islet-launcher-rename" onSubmit={(event) => { event.preventDefault(); void rename(); }}>
+                  <input
+                    class="islet-input"
+                    autoFocus
+                    value={editingName}
+                    maxLength={60}
+                    aria-label={t("launcher.renamePlaceholder")}
+                    onInput={(event) => setEditingName(event.currentTarget.value)}
+                  />
+                  <button class="islet-btn primary" type="submit" disabled={!editingName.trim() || busy}>
+                    {t("launcher.saveName")}
+                  </button>
+                </form>
+              ) : (
+                <button
+                  class="islet-launcher-launch"
+                  onClick={() => launch(entry.id)}
+                  title={entry.path}
+                >
+                  <span class="islet-launcher-name">{entry.name}</span>
+                  <span class="islet-launcher-path">{entry.path}</span>
+                </button>
+              )}
               <button
-                class="islet-launcher-launch"
-                onClick={() => launch(e.id)}
-                title={e.path}
+                class="islet-icon-btn"
+                aria-label={t("launcher.rename")}
+                onClick={() => {
+                  setEditingId(entry.id);
+                  setEditingName(entry.name);
+                }}
+                disabled={busy}
               >
-                <span class="islet-launcher-name">{e.name}</span>
-                <span class="islet-launcher-path">{e.path}</span>
+                <Icon name="edit" size={16} />
               </button>
               <button
                 class="islet-icon-btn"
                 aria-label={t("launcher.remove")}
-                onClick={() => remove(e.id)}
+                onClick={() => remove(entry.id)}
                 disabled={busy}
               >
                 <Icon name="close" size={16} />

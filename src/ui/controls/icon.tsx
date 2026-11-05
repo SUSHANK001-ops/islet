@@ -41,7 +41,8 @@ export type IconName =
   | "grip"
   | "arrow-up"
   | "arrow-down"
-  | "image";
+  | "image"
+  | "edit";
 
 // Each glyph is the INNER markup of a 24x24 viewBox using stroke=currentColor.
 const PATHS: Record<IconName, JSX.Element> = {
@@ -248,6 +249,12 @@ const PATHS: Record<IconName, JSX.Element> = {
       <rect x="3.5" y="4" width="17" height="16" rx="2.5" />
       <circle cx="9" cy="9" r="1.5" />
       <path d="M5.5 17 L10 12.5 L13 15 L15.5 12.5 L18.5 16" />
+    </g>
+  ),
+  edit: (
+    <g>
+      <path d="M5 19 L6 14 L15.5 4.5 L19.5 8.5 L10 18 Z" />
+      <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
     </g>
   ),
 };

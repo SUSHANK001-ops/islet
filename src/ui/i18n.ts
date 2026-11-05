@@ -176,8 +176,11 @@ const en: Strings = {
   "media.openYtMusic": "Open YouTube Music",
   "media.openHint": "Play in your browser, control it here.",
 
-  "launcher.add": "Add an app…",
+  "launcher.add": "Add installed app",
   "launcher.remove": "Remove app",
+  "launcher.rename": "Rename app",
+  "launcher.renamePlaceholder": "App name",
+  "launcher.saveName": "Save name",
   "launcher.empty": "No apps yet. Add one to launch it from here.",
 
   "progress.streak": "Day streak",

@@ -3,6 +3,28 @@
 Anything not in `AGENTS.md` v2 scope lands here instead of being built.
 Each entry: what it is, why it is out of scope now, what it would need.
 
+## Promoted into v3 scope (proposed — see `AGENTS.v3.md`)
+
+These were parked under v2 and are the basis of the **v3 draft** (`AGENTS.v3.md`,
+pending review). Kept here as a record of the decision. They remain parked until
+v3 is approved AND v2's perf/hardware gate is green.
+
+- **On-device AI companion** (was "AI of any kind", forbidden in v2) — local-first
+  model so the character can chat/coach; cloud provider optional (Tier 1). Moved
+  in by amending the "no AI / nothing leaves the PC" rules with opt-in tiers and
+  an egress ledger (reviewed edit in `AGENTS.v3.md`).
+- **Coding-agent session companion** — read-only, schema-validated event stream
+  from supported local agents; approvals require a human click on the notch. The
+  cloud command-center half stays trimmed to opt-in, least-privilege pieces.
+- **Optional account + E2E-encrypted sync** (was "no account / no servers") — Tier
+  2, fully optional; server sees ciphertext only; offline-first preserved.
+
+Still parked / NOT promoted: the **general "run any command" launcher** (sandbox
+violation — stays "not planned"), **click injection / terminal scraping / auto-
+approving agent requests** (explicit v3 non-goals), and the **embedded YouTube
+Music webview** (still a second heavy webview + remote-content budget problem;
+revisit only with a measured cost).
+
 ## Promoted into v2 scope (no longer parked)
 
 These were parked under v1 and are now first-class v2 features. Kept here as a

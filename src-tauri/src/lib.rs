@@ -5,6 +5,7 @@
 //! frontend command allow-list. Rust owns all state and storage.
 
 mod app_config;
+mod ai;
 mod characters;
 mod commands;
 mod launcher;
@@ -133,7 +134,10 @@ pub fn run() {
             commands::net_set_host_enabled,
             commands::net_remove_host,
             commands::net_get_ledger,
-            commands::net_clear_ledger
+            commands::net_clear_ledger,
+            commands::ai_get_config,
+            commands::ai_set_config,
+            commands::ai_chat
         ])
         // A DPI change invalidates the window hit region, because a region is
         // stored in PHYSICAL pixels while the frontend sends logical ones.

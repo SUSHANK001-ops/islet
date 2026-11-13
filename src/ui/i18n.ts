@@ -16,6 +16,7 @@ const en: Strings = {
   "tab.media": "Media",
   "tab.launcher": "Apps",
   "tab.progress": "Progress",
+  "tab.ai": "Companion",
   "tab.settings": "Settings",
   "tab.clock": "Clock",
   "tab.sound": "Sound",
@@ -226,6 +227,35 @@ const en: Strings = {
   "net.result.rejected": "Blocked",
   "net.result.error": "Failed",
   "net.bytes": "{out} sent · {in} received",
+
+  "ai.notConfigured": "Your companion is resting.",
+  "ai.notConfiguredHint":
+    "Add an AI key in Settings → AI companion to let Pip chat and coach. Islet never sends anything until you turn it on.",
+  "ai.greeting": "Hi! I'm Pip. Ask me anything, or tell me what you're working on.",
+  "ai.placeholder": "Message your companion…",
+  "ai.send": "Send",
+  "ai.thinking": "Thinking",
+  "ai.error": "Couldn't reach the AI. Check your key and network settings.",
+  "ai.consent.title": "Let the companion go online?",
+  "ai.consent.body":
+    "Islet will send your messages to {host}. Nothing else leaves your PC. You can turn this off any time in Network settings.",
+  "ai.consent.declined": "No problem — the companion stays offline.",
+
+  "settings.ai": "AI companion",
+  "settings.ai.intro":
+    "Bring your own API key for an OpenAI-compatible provider (Groq, OpenAI, OpenRouter…). The key is stored only on this PC and is sent only to the provider you choose.",
+  "settings.ai.enabled": "Enable AI companion",
+  "settings.ai.baseUrl": "Provider base URL",
+  "settings.ai.model": "Model",
+  "settings.ai.key": "API key",
+  "settings.ai.keySet": "A key is saved. Type to replace it.",
+  "settings.ai.keyPlaceholder": "Paste your API key",
+  "settings.ai.shareContext": "Share my tasks & focus with the companion",
+  "settings.ai.shareContextHint":
+    "When on, Islet adds a short summary of your own open tasks and focus rounds to the prompt. Never your files or other apps.",
+  "settings.ai.save": "Save",
+  "settings.ai.saved": "Saved.",
+  "settings.ai.saveFailed": "Could not save. Check the base URL is https.",
 };
 
 const locales: Record<Locale, Strings> = { en };

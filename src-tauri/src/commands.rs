@@ -814,3 +814,87 @@ pub fn net_get_ledger(app: AppHandle) -> net::ledger::Ledger {
 pub fn net_clear_ledger(app: AppHandle) {
     net::ledger::clear(&app);
 }
+
+// ---- Spec 15: BYOK AI companion ----
+
+use crate::ai;
+
+/// Read the AI config for the settings form. The API key is NEVER returned;
+/// only a `hasKey` boolean so the UI can show "key set" without exposing it.
+#[tauri::command]
+pub fn ai_get_config(app: AppHandle) -> ai::config::AiConfigPublic {
+    (&ai::config::load(&app)).into()
+}
+
+/// Update the AI config. The key is optional on update: pass `null` to keep the
+/// existing key, "" to clear it, or a new value to replace it. Saving a usable
+/// config also adds the provider host to the network allow-list (enabled only
+/// when the feature is enabled), so the net/ floor permits the request. The
+/// first actual request is still gated by on-notch consent on the frontend.
+#[tauri::command]
+pub fn ai_set_config(
+    app: AppHandle,
+    base_url: String,
+    model: String,
+    api_key: Option<String>,
+    enabled: bool,
+    share_context: bool,
+) -> Result<ai::config::AiConfigPublic, String> {
+    let mut cfg = ai::config::load(&app);
+    cfg.base_url = base_url.trim().to_string();
+    cfg.model = model.trim().to_string();
+    if let Some(key) = api_key {
+        cfg.api_key = key.trim().to_string();
+    }
+    cfg.enabled = enabled;
+    cfg.share_context = share_context;
+    ai::config::save(&app, &cfg).map_err(|e| e.to_string())?;
+
+    // Keep the network allow-list in step with the provider host. We add the
+    // host (feature "ai"); enabled tracks whether the feature is on. The user
+    // can still flip it off in Network settings or via airplane mode.
+    if let Some(host) = cfg.host() {
+        let mut net_cfg = crate::net::config::load(&app);
+        net_cfg.upsert(&host, "ai", cfg.enabled);
+        crate::net::config::save(&app, &net_cfg).map_err(|e| e.to_string())?;
+    }
+
+    Ok((&cfg).into())
+}
+
+/// Send a chat turn to the AI companion. `messages` is the running conversation
+/// (user/assistant turns); Rust prepends the system prompt and, if the user
+/// opted into sharing context, a short summary of their OWN hub state. Runs the
+/// blocking HTTP off the async runtime. Returns the assistant's reply text.
+#[tauri::command]
+pub async fn ai_chat(
+    app: AppHandle,
+    hub: tauri::State<'_, Hub>,
+    messages: Vec<ai::ChatMessage>,
+) -> Result<String, String> {
+    // Build the optional context string from the hub snapshot (the user's own
+    // data only). Only used if share_context is on (checked inside ai::chat).
+    let snapshot = hub.snapshot();
+    let context = summarize_hub(&snapshot);
+
+    tauri::async_runtime::spawn_blocking(move || {
+        ai::chat(&app, messages, Some(context)).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Turn the hub snapshot into a short, plain-language context note. Only the
+/// user's own focus/task facts — nothing from other apps or the filesystem.
+fn summarize_hub(s: &HubSnapshot) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    parts.push(format!("Open tasks: {}.", s.open_tasks));
+    parts.push(format!("Focus rounds finished today: {}.", s.focus_rounds_today));
+    if let Some(secs) = s.focus_remaining_secs {
+        parts.push(format!("A focus round is running with {} seconds left.", secs));
+    }
+    if let Some(ref next) = s.next_event {
+        parts.push(format!("Next event: {next}."));
+    }
+    parts.join(" ")
+}

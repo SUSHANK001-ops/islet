@@ -42,7 +42,8 @@ export type IconName =
   | "arrow-up"
   | "arrow-down"
   | "image"
-  | "edit";
+  | "edit"
+  | "sparkle";
 
 // Each glyph is the INNER markup of a 24x24 viewBox using stroke=currentColor.
 const PATHS: Record<IconName, JSX.Element> = {
@@ -255,6 +256,13 @@ const PATHS: Record<IconName, JSX.Element> = {
     <g>
       <path d="M5 19 L6 14 L15.5 4.5 L19.5 8.5 L10 18 Z" />
       <line x1="13.5" y1="6.5" x2="17.5" y2="10.5" />
+    </g>
+  ),
+  // A 4-point sparkle for the AI companion (Spec 15), plus a small accent star.
+  sparkle: (
+    <g>
+      <path d="M12 3 C12.6 8 13.5 9.4 19 10 C13.5 10.6 12.6 12 12 17 C11.4 12 10.5 10.6 5 10 C10.5 9.4 11.4 8 12 3 Z" />
+      <path d="M18 15 C18.2 16.6 18.5 17 20 17.2 C18.5 17.4 18.2 17.8 18 19.4 C17.8 17.8 17.5 17.4 16 17.2 C17.5 17 17.8 16.6 18 15 Z" />
     </g>
   ),
 };

@@ -18,6 +18,7 @@ import { setHiddenFromCapture } from "../../app/window-bridge";
 import type { NotchPosition } from "../../app/settings-store";
 import { CharacterSettings } from "./character-settings";
 import { NetworkSettings } from "./network-settings";
+import { AiSettings } from "./ai-settings";
 
 // Settings tab. Covers Spec 1: theme, monitor choice, launch-at-startup,
 // tabs on/off + reorder, and the (fixed for now) toggle shortcut.
@@ -248,6 +249,11 @@ export default function SettingsPanel() {
       </div>
 
       <CharacterSettings />
+
+      <div class="islet-field islet-browse-head">
+        <span>{t("settings.ai")}</span>
+      </div>
+      <AiSettings />
 
       <div class="islet-field islet-browse-head">
         <span>{t("net.title")}</span>

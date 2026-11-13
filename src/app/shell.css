@@ -2271,3 +2271,176 @@ body {
   line-height: 1.35;
   word-break: break-word;
 }
+
+/* ---- AI companion (Spec 15) ---- */
+.islet-ai {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+}
+.islet-ai-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 2px;
+}
+.islet-ai-setup-icon {
+  color: var(--islet-accent, #8ab4ff);
+}
+.islet-ai-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px;
+}
+.islet-ai-greeting {
+  color: var(--islet-fg-dim);
+  line-height: 1.4;
+  margin: 4px 0;
+}
+.islet-ai-msg {
+  display: flex;
+  max-width: 100%;
+}
+.islet-ai-msg.user {
+  justify-content: flex-end;
+}
+.islet-ai-msg.assistant {
+  justify-content: flex-start;
+}
+.islet-ai-bubble {
+  display: inline-block;
+  padding: 8px 11px;
+  border-radius: 14px;
+  line-height: 1.4;
+  max-width: 85%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  /* Transform/opacity-only entrance; honors reduced motion below. */
+  animation: islet-ai-pop 160ms var(--islet-ease, ease-out);
+}
+.islet-ai-msg.user .islet-ai-bubble {
+  background: var(--islet-accent, #3a6df0);
+  color: #fff;
+  border-bottom-right-radius: 5px;
+}
+.islet-ai-msg.assistant .islet-ai-bubble {
+  background: var(--islet-control);
+  border-bottom-left-radius: 5px;
+}
+@keyframes islet-ai-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.islet-ai-typing {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.islet-ai-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--islet-fg-dim);
+  animation: islet-ai-blink 1s infinite ease-in-out;
+}
+.islet-ai-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.islet-ai-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes islet-ai-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.islet-ai-error {
+  color: #e08a7a;
+  font-size: 12px;
+  margin: 0 2px;
+}
+.islet-ai-compose {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.islet-ai-input {
+  flex: 1 1 auto;
+  resize: none;
+  max-height: 120px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  border: 1px solid var(--islet-border, #3a3a3a);
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  font: inherit;
+  line-height: 1.35;
+}
+.islet-ai-input:focus-visible {
+  outline: 2px solid var(--islet-accent, #8ab4ff);
+  outline-offset: 1px;
+}
+.islet-ai-send {
+  flex: 0 0 auto;
+  padding: 9px;
+  border-radius: 12px;
+}
+
+/* ---- AI settings section (Spec 15) ---- */
+.islet-ai-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.islet-field-col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.islet-text-input {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--islet-border, #3a3a3a);
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  font: inherit;
+  box-sizing: border-box;
+}
+.islet-text-input:focus-visible {
+  outline: 2px solid var(--islet-accent, #8ab4ff);
+  outline-offset: 1px;
+}
+.islet-ai-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  margin: 0 2px 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .islet-ai-bubble {
+    animation: none;
+  }
+  .islet-ai-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}

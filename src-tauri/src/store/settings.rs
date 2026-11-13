@@ -103,7 +103,7 @@ impl Default for Settings {
             theme: "dark".into(),
             monitor_name: None,
             launch_at_startup: false,
-            tabs: ["focus", "tasks", "notes", "media", "launcher", "progress"]
+            tabs: ["focus", "tasks", "notes", "media", "launcher", "progress", "ai"]
                 .iter()
                 .map(|id| TabConfig {
                     id: (*id).into(),
@@ -188,7 +188,7 @@ mod tests {
     fn defaults_are_current_version_with_all_tabs() {
         let s = Settings::default();
         assert_eq!(s.schema_version, SETTINGS_VERSION);
-        assert_eq!(s.tabs.len(), 6);
+        assert_eq!(s.tabs.len(), 7);
         assert_eq!(s.theme, "dark");
         assert!(!s.launch_at_startup);
     }

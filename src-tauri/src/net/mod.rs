@@ -14,12 +14,6 @@
 //! ledger and toggle entries via `commands.rs`; actual requests are made by
 //! Rust features (AI, sync) through `request()`.
 
-// The request choke point + its helpers are the stable surface that Spec 15
-// (BYOK AI) and Spec 18 (sync) call into. They are intentionally present ahead
-// of their first caller so the safety floor lands and is reviewed on its own.
-// This allow is removed as soon as the AI client calls `net::request`.
-#![allow(dead_code)]
-
 pub mod config;
 pub mod ledger;
 
@@ -81,6 +75,9 @@ pub struct NetRequest {
 }
 
 impl NetRequest {
+    /// GET constructor. Not yet used by a shipping feature (sync/catalog
+    /// migration will use it); kept so the request surface is complete.
+    #[allow(dead_code)]
     pub fn get(feature: &str, url: &str) -> Self {
         NetRequest {
             feature: feature.to_string(),
@@ -268,3 +265,4 @@ mod tests {
             .contains("x"));
     }
 }
+

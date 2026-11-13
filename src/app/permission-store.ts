@@ -1,4 +1,5 @@
 import { signal } from "@preact/signals";
+import { effect } from "@preact/signals";
 
 // A permission request that Islet itself needs (e.g. "show notifications",
 // "run at startup"). AGENTS.md: "Ask for a permission only when the feature
@@ -10,7 +11,7 @@ import { signal } from "@preact/signals";
 export interface PermissionRequest {
   id: string;
   // Stable key so the same capability is not asked twice. Also the i18n key.
-  capability: "notifications" | "runAtStartup" | "hideFromCapture";
+  capability: "notifications" | "runAtStartup" | "hideFromCapture" | "aiNetwork";
   // Human-readable, translatable text. In v1 these come from a strings map.
   title: string;
   body: string;
@@ -47,3 +48,29 @@ export function decidePermission(id: string, decision: PermissionDecision): void
 export function hasPendingPermission(): boolean {
   return pendingPermissions.value.length > 0;
 }
+
+/**
+ * Ask for a capability and resolve once the user decides (or immediately if
+ * they already decided this session). Returns true when granted. Used by
+ * features that must gate an action on consent, e.g. the AI's first network
+ * request. The on-notch PermissionPrompt renders the pending request.
+ */
+export function ensurePermission(
+  req: PermissionRequest
+): Promise<boolean> {
+  const prior = permissionDecisions.value[req.capability];
+  if (prior) return Promise.resolve(prior === "granted");
+
+  requestPermission(req);
+  return new Promise((resolve) => {
+    const stop = effect(() => {
+      const decision = permissionDecisions.value[req.capability];
+      if (decision) {
+        // Defer dispose so we are not disposing the effect while it runs.
+        queueMicrotask(() => stop());
+        resolve(decision === "granted");
+      }
+    });
+  });
+}
+

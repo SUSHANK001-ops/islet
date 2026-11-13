@@ -157,6 +157,28 @@ export function DevGallery() {
           </ul>
         </div>
       </Frame>
+
+      <Frame title="AI companion (Spec 15)">
+        <div class="islet-flyout-card">
+          <div class="islet-ai-log" style={{ maxHeight: "180px" }}>
+            <div class="islet-ai-msg user">
+              <span class="islet-ai-bubble">Help me start a focus round.</span>
+            </div>
+            <div class="islet-ai-msg assistant">
+              <span class="islet-ai-bubble">
+                Let's do 25 minutes. I'll cheer you on — ready when you are!
+              </span>
+            </div>
+            <div class="islet-ai-msg assistant">
+              <span class="islet-ai-bubble islet-ai-typing">
+                <span class="islet-ai-dot" />
+                <span class="islet-ai-dot" />
+                <span class="islet-ai-dot" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </Frame>
     </div>
   );
 }

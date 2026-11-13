@@ -18,14 +18,17 @@ v2 shipped the product's soul (living character, notch UX, launcher, catalog) as
 a fully local, private app. Users now want the things v2 deliberately parked in
 `docs/ideas.md`:
 
-1. **An on-device AI study companion** — the character can actually talk, answer
-   questions about your own notes/tasks, and coach a focus session. No cloud by
-   default.
+1. **An AI study companion** — the character can actually talk, answer questions
+   about your own notes/tasks, and coach a focus session. v3 ships this as
+   **bring-your-own-key (BYOK)**: the user pastes an API key for an
+   OpenAI-compatible provider (Groq, OpenAI, OpenRouter, etc.). A later,
+   optional "download your own local model" path can be added without changing
+   this contract (same chat interface, a different backend).
 2. **A coding-agent session companion** — see what local coding agents (Claude
    Code, Codex, Cursor, Gemini CLI, Antigravity) are reading/editing/running and
    surface their approval requests on the notch.
-3. **Optional cloud + account** — opt-in sync of settings/characters/progress
-   across the user's own machines, and optional stronger (cloud) AI models.
+3. **Optional account + cloud** — opt-in sync of settings/characters/progress
+   across the user's own machines. (AI itself is BYOK and needs no account.)
 
 These were blocked in v2 for good reasons (privacy posture, one-webview budget,
 sandbox rule, no accounts/servers). v3 does not throw those reasons away — it
@@ -37,11 +40,11 @@ These v2 hard rules are **amended** for v3. Each amendment is scoped and opt-in.
 
 | v2 rule | v3 amendment | Guard rails |
 |---|---|---|
-| "No AI in v2." | AI allowed. **Local-first:** a small on-device model is the default. | Local model bundled/optional-download; no prompt leaves the PC unless the user turns on a cloud provider. |
-| "No account." | Optional account for sync + cloud AI only. | App is 100% usable with NO account, exactly like v2. Account is a settings toggle, never required. |
-| "Nothing leaves the PC" (one catalog-host exception). | Narrow, named network egress: (a) cloud AI provider the user picked, (b) the user's own sync endpoint, (c) the v2 catalog host. | Each endpoint is allow-listed, shown on the notch before first use, and listed in `docs/network.md`. Still no telemetry, no analytics, no ads, no third-party trackers. |
+| "No AI in v2." | AI allowed, **BYOK (bring-your-own-key)**. The user pastes a key for an OpenAI-compatible provider (Groq etc.). | No key = no AI; the app is fully usable without it. Only the prompts the user sends go out, only to the one provider host they chose. |
+| "No account." | Optional account for sync only. | App is 100% usable with NO account, exactly like v2. Account is a settings toggle, never required. The AI key is NOT an account — it is stored locally. |
+| "Nothing leaves the PC" (one catalog-host exception). | Narrow, named network egress: (a) the AI provider host the user picked, (b) the user's own sync endpoint, (c) the v2 catalog host. | Each endpoint is allow-listed, shown on the notch before first use, and listed in `docs/network.md`. Still no telemetry, no analytics, no ads, no third-party trackers. |
 | "No reading the active app's content / no IPC with other apps." | Coding-agent companion may read a **structured event stream** from supported agents over a trusted local channel. | Per-agent opt-in, validated message schema, read-only by default, approvals require a human click on the notch. Never scrapes terminals or injects clicks. |
-| "One webview window." | A second webview is allowed **only** for an embedded web surface (if built) with a written, measured cost. | Still prefer one webview; the AI chat lives in the existing webview (DOM, not canvas). |
+| "One webview window." | Unchanged — the AI chat lives in the existing webview (DOM, not canvas). A local-model runtime, if ever added, runs in Rust, not a second webview. | Still one webview. |
 
 These v2 rules are **unchanged and still hard**:
 
@@ -60,12 +63,14 @@ These v2 rules are **unchanged and still hard**:
 Three trust tiers. The app always boots in Tier 0 and never leaves it without an
 explicit, per-feature click.
 
-- **Tier 0 — Fully local (default, = v2 promise).** On-device AI only. No
-  account, no network except the user-triggered catalog. This is the baseline;
-  everything must work here.
-- **Tier 1 — Local + one named cloud AI provider.** User enters/picks a provider
-  and key. Only prompts the user sends are transmitted, only to that host. Shown
-  on the notch, logged in a visible "what left the PC" ledger.
+- **Tier 0 — Fully local (default, = v2 promise).** No AI, no account, no network
+  except the user-triggered catalog. The whole app works here; AI is simply off
+  until a key is added.
+- **Tier 1 — BYOK cloud AI.** The user pastes an API key for one OpenAI-compatible
+  provider (Groq by default suggestion, but any compatible base URL). Only the
+  prompts the user sends are transmitted, only to that host. Shown on the notch,
+  logged in a visible "what left the PC" ledger. The key is stored locally and
+  can be removed any time.
 - **Tier 2 — Account + sync.** Optional. Syncs settings/characters/progress to
   the user's own endpoint. End-to-end encrypted; the server sees ciphertext.
 
@@ -74,25 +79,23 @@ request: host, feature, bytes, time) is mandatory for Tiers 1–2. No silent cal
 
 ## Performance budgets (v3 additions)
 
-v2 budgets still hold for the non-AI app. AI gets its own budget table because it
-is the heaviest thing we have ever added. Spec measures real numbers; change the
-table in a reviewed edit if a target is wrong.
+v2 budgets still hold for the whole app. AI is a network call (BYOK), so it costs
+almost nothing at rest — the budget is about not blocking the UI and not leaking.
 
 | Item | Target |
 |---|---|
-| Installer size (no local model) | ≤ 20 MB |
-| Local model (separate optional download) | not counted in installer; shown before download |
-| Memory, pill closed, AI idle/unloaded | ≤ 90 MB (same as v2 — model unloaded at rest) |
-| Memory, AI model loaded (local) | bounded, reported, freed after N minutes idle |
-| CPU, pill closed, no inference | unchanged v2 budgets (AI must be fully asleep) |
-| First local token latency | measured; show a spinner/streaming, never a frozen UI |
-| Inference threads | capped; must not starve the focus timer or notch animation |
+| Installer size | ≤ 16 MB (BYOK adds no model; just HTTP + UI) |
+| Memory, pill closed, AI idle | unchanged v2 budgets (no model loaded, ever) |
+| CPU, pill closed, no request in flight | unchanged v2 budgets (AI fully asleep) |
+| First token latency | network-bound; stream tokens, never freeze the UI; cancelable |
+| In-flight request | off the UI thread (spawn_blocking in Rust); timeout + cap |
+| Egress per prompt | only the user's messages + chosen context; shown in the ledger |
 | Coding-agent companion idle CPU | < 0.3% (event-driven; no polling of agent logs) |
 | Disk writes | unchanged: ≤ 1 per 5 s, debounced; chat history in daily files/ring buffer |
 
-Hard stop: the local model is **unloaded** (not just idle) on lock, sleep,
-battery saver, and after an idle timeout. Inference never runs while the pill is
-closed unless the user explicitly started a background task.
+Hard rule: no request is ever sent while the pill is closed unless the user
+explicitly started a background task. An optional local-model path (future) would
+get its own load/unload + memory budget in a reviewed edit before it is built.
 
 ## Architecture (v3 additions)
 
@@ -101,12 +104,12 @@ module).
 
 ```
 src-tauri/src/
-  ai/            model runtime (local), provider abstraction, prompt ledger,
+  net/           single choke point for ALL outbound requests + egress ledger
+  ai/            BYOK provider client (OpenAI-compatible), key storage,
                  context builder (reads ONLY the user's own hub/log/notes)
   agents/        coding-agent companion: per-agent adapters, trusted local
                  channel, validated event schema, read-only event store
   account/       optional: auth, E2E-encrypted sync client (Tier 2)
-  net/           single choke point for ALL outbound requests + egress ledger
   commands.rs    + ai_*, agents_*, account_*, net_* commands (the only surface)
 src/
   modules/ai/        chat/coach panel (DOM, lazy loaded); character speaks
@@ -139,11 +142,10 @@ Everything in v2 scope, fully local, with no account and no network — Tier 0 m
 remain a complete product.
 
 ### New in v3 (build these)
-- **On-device AI companion.** Local model runtime; the character can chat, answer
+- **BYOK AI companion.** The user pastes an API key + picks a provider (an
+  OpenAI-compatible base URL; Groq suggested). The character can chat, answer
   questions about the user's own notes/tasks/focus history, and run a guided
-  focus/coaching session. Streaming output, cancelable, unloaded at rest.
-- **Optional cloud AI provider.** One user-chosen provider + key (Tier 1). Prompt
-  ledger, on-notch consent, per-request host shown. Switchable/removable.
+  focus/coaching session. Streaming output, cancelable. No key = feature off.
 - **Coding-agent session companion.** Per-agent opt-in adapters that ingest a
   structured, validated event stream (files read/edited, commands proposed) and
   surface approval requests on the notch for a human click. Read-only default.
@@ -168,19 +170,20 @@ Tier 0. Remote code or remote images outside signed packs.
 14. **`net/` choke point + egress ledger + network settings.** No new user
     feature yet; this is the safety floor every later spec builds on. One place
     for outbound requests, the allow-list, and the visible ledger.
-15. **On-device AI runtime (Tier 0).** Local model load/unload, context builder
-    (hub/log/notes only), streaming chat, cancel, idle-unload, budgets. Character
-    speaks. Zero network.
+15. **BYOK AI runtime (Tier 1).** Provider client (OpenAI-compatible), key
+    storage (local), context builder (hub/log/notes only), streaming chat,
+    cancel, on-notch consent before first request, per-request ledger entries.
 16. **AI companion UX + coaching.** Chat/coach panel (DOM, lazy), character mood
     nuance, guided focus session, empty/loading/error states, reduced-motion.
-17. **Optional cloud AI provider (Tier 1).** Provider abstraction, key storage,
-    on-notch consent, per-request ledger entries, switch/remove.
-18. **Coding-agent companion.** Trusted local channel, per-agent adapter + schema,
+17. **Coding-agent companion.** Trusted local channel, per-agent adapter + schema,
     read-only event store, on-notch approval surface (human click only).
-19. **Optional account + E2E sync (Tier 2).** Auth, encrypted sync of
+18. **Optional account + E2E sync (Tier 2).** Auth, encrypted sync of
     settings/characters/progress, conflict handling, offline-first, revoke.
-20. **UI polish + packaging.** Motion/identity pass across new surfaces; installer
-    with/without bundled model; size report; code signing; update check.
+19. **(Optional, future) local-model backend.** Only if wanted: add a local
+    inference backend behind the same chat interface, with its own reviewed
+    load/unload + memory budget. Not required for v3 to ship.
+20. **UI polish + packaging.** Motion/identity pass across new surfaces; installer;
+    size report; code signing; update check.
 
 ## Definition of done (every v3 spec)
 Everything in the v2 definition of done, plus:
@@ -191,13 +194,14 @@ Everything in the v2 definition of done, plus:
   consent.
 - `scripts/perf-check` within the v3 budget table (AI idle AND AI loaded).
 
-## Open questions for review (decide before Spec 15)
-1. **Which local model runtime?** (e.g. a small GGUF model via a Rust binding.)
-   Affects installer/model size and the latency budget. Needs a dependency
-   justification per the "no new dependency without a reason" rule.
-2. **Bundle the local model or download it?** Download keeps the installer ≤ 20 MB
-   but needs a signed, hash-checked download path (reuse the catalog pattern).
+## Open questions for review (decide before Spec 16)
+1. **Default suggested provider + model?** Groq (`https://api.groq.com/openai/v1`)
+   is fast and free-tier friendly; the base URL is user-editable so any
+   OpenAI-compatible host works. Which model id to pre-fill?
+2. **Key storage:** plain in the versioned settings file is simplest but readable
+   on disk. Options: OS credential store (Windows Credential Manager) vs. a note
+   that the key lives locally in app data. Decide the bar for v3.
 3. **Which coding agents first?** Pick 1–2 with a real, documented local event
    source. If an agent has no safe read API, it waits.
 4. **Sync endpoint:** self-host spec vs. a provided host. Tier 2 can ship after
-   Tier 0/1 if it slips.
+   Tier 1 if it slips.

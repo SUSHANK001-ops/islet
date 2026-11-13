@@ -207,6 +207,25 @@ const en: Strings = {
   "browse.install": "Install",
   "browse.installing": "Installing…",
   "browse.installed": "Installed",
+
+  "net.title": "Network & privacy",
+  "net.intro":
+    "Islet works fully offline. Online features (like the AI companion) only reach the hosts listed here, and every request is logged below.",
+  "net.airplane": "Airplane mode (block all network)",
+  "net.airplaneOn":
+    "Airplane mode is on. Islet will not make any network request until you turn it off.",
+  "net.hostsTitle": "Allowed hosts",
+  "net.hostsEmpty":
+    "No hosts allowed yet. They appear here when you turn on an online feature.",
+  "net.feature": "Feature",
+  "net.remove": "Remove host",
+  "net.ledgerTitle": "What left this PC",
+  "net.ledgerEmpty": "Nothing has left this PC.",
+  "net.ledgerClear": "Clear log",
+  "net.result.ok": "Sent",
+  "net.result.rejected": "Blocked",
+  "net.result.error": "Failed",
+  "net.bytes": "{out} sent · {in} received",
 };
 
 const locales: Record<Locale, Strings> = { en };

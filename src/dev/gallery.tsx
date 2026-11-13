@@ -123,6 +123,40 @@ export function DevGallery() {
           </div>
         </div>
       </Frame>
+
+      <Frame title="Network & privacy (Spec 14)">
+        <div class="islet-flyout-card">
+          <ul class="islet-net-ledger">
+            <li class="islet-net-row result-ok">
+              <span class="islet-net-row-top">
+                <span class="islet-net-host-name">api.groq.com</span>
+                <span class="islet-net-result result-ok">Sent</span>
+              </span>
+              <span class="islet-dim islet-net-row-meta">
+                2026-11-12T19:30:00 · ai · POST · 1.2 KB sent · 3.4 KB received
+              </span>
+            </li>
+            <li class="islet-net-row result-rejected">
+              <span class="islet-net-row-top">
+                <span class="islet-net-host-name">evil.example.com</span>
+                <span class="islet-net-result result-rejected">Blocked</span>
+              </span>
+              <span class="islet-dim islet-net-row-meta">
+                2026-11-12T19:31:00 · ai · POST · 0 B sent · 0 B received
+              </span>
+            </li>
+            <li class="islet-net-row result-error">
+              <span class="islet-net-row-top">
+                <span class="islet-net-host-name">api.groq.com</span>
+                <span class="islet-net-result result-error">Failed</span>
+              </span>
+              <span class="islet-dim islet-net-row-meta">
+                2026-11-12T19:32:00 · ai · POST · 1.2 KB sent · 0 B received
+              </span>
+            </li>
+          </ul>
+        </div>
+      </Frame>
     </div>
   );
 }

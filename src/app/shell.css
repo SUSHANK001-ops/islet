@@ -2186,3 +2186,88 @@ body {
   width: 72px;
   height: 12px;
 }
+
+/* ---- Network & privacy settings (Spec 14) ---- */
+.islet-net-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.islet-net-intro {
+  margin: 2px 0 6px;
+  line-height: 1.4;
+}
+.islet-net-airplane-note {
+  margin: 2px 0 6px;
+  font-size: 12px;
+  color: var(--islet-accent, #8ab4ff);
+  line-height: 1.4;
+}
+.islet-net-hosts,
+.islet-net-ledger {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.islet-net-host {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--islet-control);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.islet-net-host-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.islet-net-host-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.islet-net-host-feature {
+  font-size: 11px;
+}
+.islet-net-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--islet-control);
+  border-radius: 10px;
+  padding: 6px 10px;
+  /* A thin left accent conveys the result without relying on color alone;
+     the text label (Sent/Blocked/Failed) is the primary signal. */
+  border-left: 3px solid var(--islet-border, #3a3a3a);
+}
+.islet-net-row.result-ok {
+  border-left-color: #4caf7d;
+}
+.islet-net-row.result-rejected {
+  border-left-color: #d08a3a;
+}
+.islet-net-row.result-error {
+  border-left-color: #d0564a;
+}
+.islet-net-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.islet-net-result {
+  font-size: 11px;
+  font-weight: 600;
+}
+.islet-net-row-meta {
+  font-size: 11px;
+  line-height: 1.35;
+  word-break: break-word;
+}

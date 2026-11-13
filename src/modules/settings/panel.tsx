@@ -17,6 +17,7 @@ import { getAutostart, setAutostart } from "../../app/autostart-bridge";
 import { setHiddenFromCapture } from "../../app/window-bridge";
 import type { NotchPosition } from "../../app/settings-store";
 import { CharacterSettings } from "./character-settings";
+import { NetworkSettings } from "./network-settings";
 
 // Settings tab. Covers Spec 1: theme, monitor choice, launch-at-startup,
 // tabs on/off + reorder, and the (fixed for now) toggle shortcut.
@@ -247,6 +248,11 @@ export default function SettingsPanel() {
       </div>
 
       <CharacterSettings />
+
+      <div class="islet-field islet-browse-head">
+        <span>{t("net.title")}</span>
+      </div>
+      <NetworkSettings />
 
       <div class="islet-tabs-editor">
         <span>{t("settings.tabs")}</span>

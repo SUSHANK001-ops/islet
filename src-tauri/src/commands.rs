@@ -11,11 +11,11 @@ use crate::modules::focus::engine::FocusState;
 use crate::modules::focus::FocusHandle;
 use crate::modules::hub::{Hub, HubSnapshot};
 use crate::modules::registry::{ModuleInfo, Registry};
+use crate::platform::media::{MediaAction, NowPlaying};
 use crate::store::activity::{self, ActivityDay};
 use crate::store::notes::{self, NoteList};
 use crate::store::settings::{self, Settings};
 use crate::store::tasks::{self, TaskList};
-use crate::platform::media::{MediaAction, NowPlaying};
 use crate::{platform, window};
 
 /// Snapshot the spike cares about: monitor/DPI/fullscreen state.
@@ -124,8 +124,7 @@ pub fn set_monitor(window: WebviewWindow, name: Option<String>) -> Result<(), St
 #[tauri::command]
 pub fn set_notch_position(window: WebviewWindow, position: String) -> Result<(), String> {
     let pos = window::NotchPosition::parse(&position);
-    window::set_free_position(&window, None)
-        .map_err(|e| format!("reset position failed: {e}"))?;
+    window::set_free_position(&window, None).map_err(|e| format!("reset position failed: {e}"))?;
     window::set_notch_position(&window, pos).map_err(|e| format!("set_notch_position failed: {e}"))
 }
 
@@ -134,7 +133,9 @@ pub fn set_notch_position(window: WebviewWindow, position: String) -> Result<(),
 /// `persist_notch_offset` when the drag ends to save the new spot.
 #[tauri::command]
 pub fn start_notch_drag(window: WebviewWindow) -> Result<(), String> {
-    window.start_dragging().map_err(|e| format!("start drag failed: {e}"))
+    window
+        .start_dragging()
+        .map_err(|e| format!("start drag failed: {e}"))
 }
 
 /// Read the current pill offset (logical px from the active monitor's origin).
@@ -157,8 +158,7 @@ pub fn set_notch_free_position(window: WebviewWindow, x: f64, y: f64) -> Result<
 /// the "reset position" action.
 #[tauri::command]
 pub fn clear_notch_free_position(window: WebviewWindow) -> Result<(), String> {
-    window::set_free_position(&window, None)
-        .map_err(|e| format!("clear free position failed: {e}"))
+    window::set_free_position(&window, None).map_err(|e| format!("clear free position failed: {e}"))
 }
 
 // ---- Spec 2: storage, settings, modules ----
@@ -356,8 +356,8 @@ pub fn open_youtube_music(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn open_ms_settings(app: AppHandle, link: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
-    let uri = platform::links::resolve(&link)
-        .ok_or_else(|| format!("unknown settings link: {link}"))?;
+    let uri =
+        platform::links::resolve(&link).ok_or_else(|| format!("unknown settings link: {link}"))?;
     app.opener()
         .open_url(uri, None::<&str>)
         .map_err(|e| format!("could not open settings: {e}"))
@@ -676,8 +676,7 @@ pub fn catalog_is_configured() -> bool {
 /// Browse (consent gated on the frontend). Returns verified, license-allowed,
 /// non-placeholder entries.
 #[tauri::command]
-pub async fn catalog_fetch(
-) -> Result<Vec<characters::catalog::CatalogEntry>, String> {
+pub async fn catalog_fetch() -> Result<Vec<characters::catalog::CatalogEntry>, String> {
     // Run the blocking HTTP+verify off the async runtime thread.
     tauri::async_runtime::spawn_blocking(|| {
         characters::catalog::fetch_index().map_err(|e| e.to_string())
@@ -715,8 +714,16 @@ fn base64_png(bytes: &[u8]) -> String {
         let n = (b0 << 16) | (b1 << 8) | b2;
         out.push(T[((n >> 18) & 63) as usize] as char);
         out.push(T[((n >> 12) & 63) as usize] as char);
-        out.push(if chunk.len() > 1 { T[((n >> 6) & 63) as usize] as char } else { '=' });
-        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 1 {
+            T[((n >> 6) & 63) as usize] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            T[(n & 63) as usize] as char
+        } else {
+            '='
+        });
     }
     out
 }
@@ -725,10 +732,7 @@ fn base64_png(bytes: &[u8]) -> String {
 /// full entry is re-fetched+verified so the frontend cannot inject a forged
 /// url/hash — it only passes an id.
 #[tauri::command]
-pub async fn catalog_install(
-    app: AppHandle,
-    id: String,
-) -> Result<CharacterSummary, String> {
+pub async fn catalog_install(app: AppHandle, id: String) -> Result<CharacterSummary, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let entries = characters::catalog::fetch_index().map_err(|e| e.to_string())?;
         let entry = entries
@@ -752,4 +756,61 @@ pub fn character_delete(app: AppHandle, id: String) -> Result<(), String> {
         characters::set_active(&app, &active).map_err(|e| e.to_string())?;
     }
     Ok(())
+}
+
+// ---- Spec 14: network floor (net/) ----
+
+use crate::net;
+
+/// Read the network config: airplane mode + the host allow-list. The frontend
+/// renders this in the Network settings screen. No network happens here.
+#[tauri::command]
+pub fn net_get_config(app: AppHandle) -> net::config::NetConfig {
+    net::config::load(&app)
+}
+
+/// Toggle airplane mode (master off). When on, ALL egress is refused while the
+/// rest of the app keeps working fully offline. Persists immediately.
+#[tauri::command]
+pub fn net_set_airplane_mode(app: AppHandle, on: bool) -> Result<net::config::NetConfig, String> {
+    let mut cfg = net::config::load(&app);
+    cfg.airplane_mode = on;
+    net::config::save(&app, &cfg).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Enable/disable a single allow-list entry by host. Future requests to a
+/// disabled host are rejected and logged. Persists immediately.
+#[tauri::command]
+pub fn net_set_host_enabled(
+    app: AppHandle,
+    host: String,
+    enabled: bool,
+) -> Result<net::config::NetConfig, String> {
+    let mut cfg = net::config::load(&app);
+    cfg.set_enabled(&host, enabled);
+    net::config::save(&app, &cfg).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Remove an allow-list entry by host entirely. Does not affect airplane mode.
+#[tauri::command]
+pub fn net_remove_host(app: AppHandle, host: String) -> Result<net::config::NetConfig, String> {
+    let mut cfg = net::config::load(&app);
+    cfg.remove(&host);
+    net::config::save(&app, &cfg).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Read the egress ledger newest-first (what left this PC). Metadata only; the
+/// ledger never stores headers or request bodies.
+#[tauri::command]
+pub fn net_get_ledger(app: AppHandle) -> net::ledger::Ledger {
+    net::ledger::read_newest_first(&app)
+}
+
+/// Clear the egress ledger (user action).
+#[tauri::command]
+pub fn net_clear_ledger(app: AppHandle) {
+    net::ledger::clear(&app);
 }

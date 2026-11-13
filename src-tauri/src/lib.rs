@@ -9,6 +9,7 @@ mod characters;
 mod commands;
 mod launcher;
 mod modules;
+mod net;
 mod platform;
 mod scheduler;
 mod shortcut;
@@ -57,6 +58,7 @@ pub fn run() {
         .manage(Hub::default())
         .manage(Registry::default())
         .manage(Scheduler::default())
+        .manage(net::ledger::LedgerLock::default())
         .invoke_handler(tauri::generate_handler![
             commands::set_panel_open,
             commands::show_island_ready,
@@ -125,7 +127,13 @@ pub fn run() {
             commands::catalog_is_configured,
             commands::catalog_fetch,
             commands::catalog_preview,
-            commands::catalog_install
+            commands::catalog_install,
+            commands::net_get_config,
+            commands::net_set_airplane_mode,
+            commands::net_set_host_enabled,
+            commands::net_remove_host,
+            commands::net_get_ledger,
+            commands::net_clear_ledger
         ])
         // A DPI change invalidates the window hit region, because a region is
         // stored in PHYSICAL pixels while the frontend sends logical ones.

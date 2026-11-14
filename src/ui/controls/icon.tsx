@@ -43,7 +43,8 @@ export type IconName =
   | "arrow-down"
   | "image"
   | "edit"
-  | "sparkle";
+  | "sparkle"
+  | "terminal";
 
 // Each glyph is the INNER markup of a 24x24 viewBox using stroke=currentColor.
 const PATHS: Record<IconName, JSX.Element> = {
@@ -263,6 +264,14 @@ const PATHS: Record<IconName, JSX.Element> = {
     <g>
       <path d="M12 3 C12.6 8 13.5 9.4 19 10 C13.5 10.6 12.6 12 12 17 C11.4 12 10.5 10.6 5 10 C10.5 9.4 11.4 8 12 3 Z" />
       <path d="M18 15 C18.2 16.6 18.5 17 20 17.2 C18.5 17.4 18.2 17.8 18 19.4 C17.8 17.8 17.5 17.4 16 17.2 C17.5 17 17.8 16.6 18 15 Z" />
+    </g>
+  ),
+  // A terminal/prompt glyph for the coding-agent companion (Spec 17).
+  terminal: (
+    <g>
+      <rect x="3.5" y="5" width="17" height="14" rx="2.5" />
+      <polyline points="7 10 10 12.5 7 15" />
+      <line x1="12.5" y1="15" x2="16.5" y2="15" />
     </g>
   ),
 };

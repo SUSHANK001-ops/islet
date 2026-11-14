@@ -898,3 +898,40 @@ fn summarize_hub(s: &HubSnapshot) -> String {
     }
     parts.join(" ")
 }
+
+// ---- Spec 17: coding-agent session companion ----
+
+use crate::agents;
+
+/// Drain the agent inbox (validate + store new events) and return the current
+/// log newest-first. The frontend calls this on a slow interval ONLY while the
+/// Agents panel is open (poll only while needed; see docs/windows-notes.md).
+/// Read-only: Islet never runs anything an agent proposes.
+#[tauri::command]
+pub fn agents_poll(app: AppHandle) -> Result<agents::AgentLog, String> {
+    agents::drain_inbox(&app).map_err(|e| e.to_string())?;
+    let mut log = agents::load(&app);
+    log.events.reverse(); // newest first for the UI
+    Ok(log)
+}
+
+/// Record the user's decision on a command-proposal event. Islet only WRITES
+/// the decision (Approved/Declined) for the agent to read back; it executes
+/// nothing. `approve` must come from a distinct human click on the notch/panel.
+#[tauri::command]
+pub fn agents_decide(
+    app: AppHandle,
+    id: String,
+    approve: bool,
+) -> Result<agents::AgentLog, String> {
+    let mut log = agents::decide(&app, &id, approve).map_err(|e| e.to_string())?;
+    log.events.reverse();
+    Ok(log)
+}
+
+/// Clear the stored agent event log (user action). Does not touch the inbox.
+#[tauri::command]
+pub fn agents_clear(app: AppHandle) -> Result<(), String> {
+    agents::clear(&app).map_err(|e| e.to_string())
+}
+

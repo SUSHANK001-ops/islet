@@ -189,6 +189,38 @@ export function DevGallery() {
           </div>
         </div>
       </Frame>
+
+      <Frame title="Coding-agent companion (Spec 17)">
+        <div class="islet-flyout-card">
+          <ul class="islet-agents-list">
+            <li class="islet-agent-row kind-file_edit">
+              <span class="islet-agent-icon">
+                <Icon name="edit" size={16} />
+              </span>
+              <span class="islet-agent-main">
+                <span class="islet-agent-title">Edit src/main.rs</span>
+                <span class="islet-dim islet-agent-meta">
+                  claude-code · 19:40:02 · src/main.rs
+                </span>
+              </span>
+            </li>
+            <li class="islet-agent-row kind-command_proposed">
+              <span class="islet-agent-icon">
+                <Icon name="sparkle" size={16} />
+              </span>
+              <span class="islet-agent-main">
+                <span class="islet-agent-title">Run a command?</span>
+                <span class="islet-dim islet-agent-meta">codex · 19:41:10</span>
+                <code class="islet-agent-detail">cargo test --all</code>
+              </span>
+              <span class="islet-agent-actions">
+                <button class="islet-btn danger">Decline</button>
+                <button class="islet-btn primary">Approve</button>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </Frame>
     </div>
   );
 }

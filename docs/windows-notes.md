@@ -531,3 +531,25 @@ be confirmed visually on Windows hardware before marking it PASS:
 - Exercise auto-hide, hidden mode, the thin handle, status-bar flyouts, a toast,
   and the permission surface. Only each visible surface should receive input.
 - Repeat at 100%, 125%, 150%, and 200% scale and on a second monitor.
+
+## Spec 17 — coding-agent companion inbox (documented poll)
+
+There is no Windows event for "a coding agent did something", so the agent
+companion uses a **watched folder** channel: a supported agent writes one JSON
+event per file into `<app-data>/agents/inbox/`, and Islet drains it (validate →
+store → delete the file) and writes decisions to
+`<app-data>/agents/decisions/<id>.json`.
+
+**Poll, and why (AGENTS.md rule 2):** the inbox is drained by the frontend
+Agents panel on a slow `setInterval` of 2500 ms, and **only while that panel is
+mounted**. Rationale: no OS event exists; the rate is slow; it runs only while
+the user is actually looking at the panel; and the drain is cheap (a directory
+read, size-capped file reads, bounded to 50 files per pass). When the panel is
+closed, nothing polls. If a future design needs background ingest, it must move
+to the single Rust scheduler and document the new rate here.
+
+**Safety:** events are untrusted and validated/sanitized in Rust before storage.
+Islet never executes a proposed command, opens a path, scrapes a terminal, or
+injects a click — approving a request only WRITES a decision file for the agent
+to read back.
+

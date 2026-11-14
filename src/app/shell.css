@@ -2488,3 +2488,99 @@ body {
     transform: none;
   }
 }
+
+/* ---- Coding-agent companion (Spec 17) ---- */
+.islet-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+.islet-agents-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.islet-agents-intro {
+  margin: 0 2px 4px;
+  line-height: 1.4;
+}
+.islet-agents-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 2px;
+}
+.islet-agents-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  min-height: 0;
+}
+.islet-agent-row {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: var(--islet-control);
+  border-radius: 12px;
+  padding: 9px 11px;
+  border-left: 3px solid var(--islet-border, #3a3a3a);
+}
+/* A command proposal awaiting a decision stands out (plus the Approve/Decline
+   buttons and text label — never color-only). */
+.islet-agent-row.kind-command_proposed {
+  border-left-color: #d08a3a;
+}
+.islet-agent-icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--islet-fg-dim);
+}
+.islet-agent-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.islet-agent-title {
+  font-weight: 600;
+  word-break: break-word;
+}
+.islet-agent-meta {
+  font-size: 11px;
+  word-break: break-word;
+}
+.islet-agent-detail {
+  display: block;
+  font-family: var(--islet-mono, ui-monospace, monospace);
+  font-size: 11.5px;
+  background: var(--islet-bg-elev, #1e1e1e);
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.islet-agent-verdict {
+  font-size: 11px;
+  font-weight: 600;
+}
+.islet-agent-verdict.approved {
+  color: #4caf7d;
+}
+.islet-agent-verdict.declined {
+  color: #d0564a;
+}
+.islet-agent-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+

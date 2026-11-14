@@ -17,6 +17,7 @@ const en: Strings = {
   "tab.launcher": "Apps",
   "tab.progress": "Progress",
   "tab.ai": "Companion",
+  "tab.agents": "Agents",
   "tab.settings": "Settings",
   "tab.clock": "Clock",
   "tab.sound": "Sound",
@@ -265,6 +266,17 @@ const en: Strings = {
   "settings.ai.save": "Save",
   "settings.ai.saved": "Saved.",
   "settings.ai.saveFailed": "Could not save. Check the base URL is https.",
+
+  "agents.intro":
+    "See what a supported local coding agent is doing and approve its requests here. Islet only watches and records your decision — it never runs anything itself.",
+  "agents.empty": "No agent activity.",
+  "agents.emptyHint":
+    "When a supported agent writes to Islet's inbox, its actions and approval requests show up here.",
+  "agents.clear": "Clear",
+  "agents.approve": "Approve",
+  "agents.decline": "Decline",
+  "agents.approved": "Approved",
+  "agents.declined": "Declined",
 };
 
 const locales: Record<Locale, Strings> = { en };

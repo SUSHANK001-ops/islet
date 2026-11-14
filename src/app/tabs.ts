@@ -33,6 +33,7 @@ export const TAB_LOADERS: Record<TabId, Loader> = {
   launcher: () => import("../modules/launcher/panel"),
   progress: () => import("../modules/progress/panel"),
   ai: () => import("../modules/ai/panel"),
+  agents: () => import("../modules/agents/panel"),
   settings: () => import("../modules/settings/panel"),
   "sys-clock": () => import("../system/clock/flyout"),
   "sys-sound": () => import("../system/sound/flyout"),

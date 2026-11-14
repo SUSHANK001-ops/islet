@@ -103,13 +103,24 @@ impl Default for Settings {
             theme: "dark".into(),
             monitor_name: None,
             launch_at_startup: false,
-            tabs: ["focus", "tasks", "notes", "media", "launcher", "progress", "ai"]
-                .iter()
-                .map(|id| TabConfig {
-                    id: (*id).into(),
-                    enabled: true,
-                })
-                .collect(),
+            // (id, enabled). Most tabs ship on; the coding-agent companion is
+            // an advanced, opt-in feature so it ships OFF (Spec 17).
+            tabs: [
+                ("focus", true),
+                ("tasks", true),
+                ("notes", true),
+                ("media", true),
+                ("launcher", true),
+                ("progress", true),
+                ("ai", true),
+                ("agents", false),
+            ]
+            .iter()
+            .map(|(id, enabled)| TabConfig {
+                id: (*id).into(),
+                enabled: *enabled,
+            })
+            .collect(),
             active_character: None,
             notch_position: default_notch_position(),
             notch_opacity: default_notch_opacity(),
@@ -188,7 +199,7 @@ mod tests {
     fn defaults_are_current_version_with_all_tabs() {
         let s = Settings::default();
         assert_eq!(s.schema_version, SETTINGS_VERSION);
-        assert_eq!(s.tabs.len(), 7);
+        assert_eq!(s.tabs.len(), 8);
         assert_eq!(s.theme, "dark");
         assert!(!s.launch_at_startup);
     }

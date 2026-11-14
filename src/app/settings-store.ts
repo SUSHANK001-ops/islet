@@ -11,7 +11,7 @@ export type NotchPosition = "left" | "center" | "right";
 
 export interface TabConfig {
   // Stable id; also the i18n key suffix (tab.<id>).
-  id: "focus" | "tasks" | "notes" | "media" | "launcher" | "progress" | "ai";
+  id: "focus" | "tasks" | "notes" | "media" | "launcher" | "progress" | "ai" | "agents";
   enabled: boolean;
 }
 
@@ -62,6 +62,7 @@ const DEFAULTS: Settings = {
     { id: "launcher", enabled: true },
     { id: "progress", enabled: true },
     { id: "ai", enabled: true },
+    { id: "agents", enabled: false },
   ],
   notchPosition: "center",
   notchOpacity: 1,
@@ -180,7 +181,7 @@ export async function initSettings(): Promise<void> {
       tabs: mergeTabs(
         disk.tabs
           .filter((t): t is { id: TabConfig["id"]; enabled: boolean } =>
-            ["focus", "tasks", "notes", "media", "launcher", "progress", "ai"].includes(
+            ["focus", "tasks", "notes", "media", "launcher", "progress", "ai", "agents"].includes(
             t.id
           )
           )

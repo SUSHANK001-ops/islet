@@ -25,6 +25,7 @@ const TAB_ICON: Record<string, IconName> = {
   launcher: "grid",
   progress: "chart",
   ai: "sparkle",
+  agents: "terminal",
   settings: "gear",
   "sys-clock": "calendar",
   "sys-sound": "speaker",

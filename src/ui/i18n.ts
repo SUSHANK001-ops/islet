@@ -240,6 +240,15 @@ const en: Strings = {
   "ai.consent.body":
     "Islet will send your messages to {host}. Nothing else leaves your PC. You can turn this off any time in Network settings.",
   "ai.consent.declined": "No problem — the companion stays offline.",
+  "ai.coach.focus25": "Start a 25-min focus",
+  "ai.coach.plan": "Help me plan",
+  "ai.coach.stuck": "I'm stuck",
+  "ai.coach.planPrompt":
+    "Help me plan my next hour. Ask me what I'm working on, then suggest 2-3 short steps.",
+  "ai.coach.stuckPrompt":
+    "I feel stuck and can't start. Give me one tiny first step and a short pep talk.",
+  "ai.coach.startedPrompt":
+    "I just started a {minutes}-minute focus round. Give me a short, upbeat send-off.",
 
   "settings.ai": "AI companion",
   "settings.ai.intro":

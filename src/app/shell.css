@@ -2304,6 +2304,43 @@ body {
   line-height: 1.4;
   margin: 4px 0;
 }
+.islet-ai-start {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.islet-ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.islet-ai-chip {
+  border: 1px solid var(--islet-border, #3a3a3a);
+  background: var(--islet-control);
+  color: var(--islet-fg);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 120ms var(--islet-ease, ease-out),
+    background 120ms var(--islet-ease, ease-out);
+}
+.islet-ai-chip:hover:not(:disabled) {
+  background: var(--islet-bg-elev, #2a2a2a);
+  transform: translateY(-1px);
+}
+.islet-ai-chip:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+.islet-ai-chip:focus-visible {
+  outline: 2px solid var(--islet-accent, #8ab4ff);
+  outline-offset: 1px;
+}
+.islet-ai-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .islet-ai-msg {
   display: flex;
   max-width: 100%;
@@ -2442,5 +2479,12 @@ body {
   .islet-ai-dot {
     animation: none;
     opacity: 0.6;
+  }
+  .islet-ai-chip {
+    transition: none;
+  }
+  .islet-ai-chip:hover:not(:disabled),
+  .islet-ai-chip:active:not(:disabled) {
+    transform: none;
   }
 }

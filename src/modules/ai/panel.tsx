@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../ui/i18n";
 import { Icon } from "../../ui/controls/icon";
 import { ensurePermission } from "../../app/permission-store";
+import { setAiThinking } from "../../characters/signals-store";
+import { focusStart } from "../focus/bridge";
 import {
   aiGetConfig,
   aiChat,
@@ -49,8 +51,9 @@ export default function AiPanel() {
 
   const usable = !!cfg && cfg.enabled && cfg.hasKey && cfg.baseUrl.length > 0;
 
-  async function send() {
-    const text = draft.trim();
+  // Send either the typed draft or an explicit prompt (from a coaching chip).
+  async function send(explicit?: string) {
+    const text = (explicit ?? draft).trim();
     if (!text || busy || !usable) return;
 
     // Consent on the notch before the first request leaves this PC.
@@ -67,9 +70,11 @@ export default function AiPanel() {
 
     const next: ChatMessage[] = [...messages, { role: "user", content: text }];
     setMessages(next);
-    setDraft("");
+    if (!explicit) setDraft("");
     setBusy(true);
     setError(null);
+    // Let the character visibly "work" while the companion thinks (Spec 16).
+    setAiThinking(true);
     try {
       const reply = await aiChat(next);
       setMessages([...next, { role: "assistant", content: reply }]);
@@ -77,7 +82,20 @@ export default function AiPanel() {
       setError(typeof e === "string" ? e : t("ai.error"));
     } finally {
       setBusy(false);
+      setAiThinking(false);
     }
+  }
+
+  // Coaching action: ask the companion to kick off a focus round AND actually
+  // start it. The chat gives encouragement; the Rust engine runs the timer.
+  async function startCoachedFocus(minutes: number) {
+    if (busy || !usable) return;
+    try {
+      await focusStart(minutes);
+    } catch {
+      /* non-fatal: still send the encouragement message */
+    }
+    void send(t("ai.coach.startedPrompt", { minutes: String(minutes) }));
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -114,7 +132,33 @@ export default function AiPanel() {
 
       <div class="islet-ai-log" ref={listRef} role="log" aria-live="polite">
         {messages.length === 0 ? (
-          <p class="islet-ai-greeting">{t("ai.greeting")}</p>
+          <div class="islet-ai-start">
+            <p class="islet-ai-greeting">{t("ai.greeting")}</p>
+            {/* Coaching quick-starts: one tap sends a useful prompt. */}
+            <div class="islet-ai-chips">
+              <button
+                class="islet-ai-chip"
+                disabled={busy}
+                onClick={() => void startCoachedFocus(25)}
+              >
+                {t("ai.coach.focus25")}
+              </button>
+              <button
+                class="islet-ai-chip"
+                disabled={busy}
+                onClick={() => void send(t("ai.coach.planPrompt"))}
+              >
+                {t("ai.coach.plan")}
+              </button>
+              <button
+                class="islet-ai-chip"
+                disabled={busy}
+                onClick={() => void send(t("ai.coach.stuckPrompt"))}
+              >
+                {t("ai.coach.stuck")}
+              </button>
+            </div>
+          </div>
         ) : (
           messages.map((m, i) => (
             <div key={i} class={`islet-ai-msg ${m.role}`}>

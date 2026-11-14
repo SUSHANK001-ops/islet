@@ -18,6 +18,8 @@ export interface CharacterSignals {
   hour: number;
   /** True while the panel is closed (notch mode). */
   closed: boolean;
+  /** The AI companion is generating a reply right now (Spec 16). */
+  aiThinking?: boolean;
   /** Focus rounds finished today (mood input). */
   roundsToday?: number;
   /** Breaks skipped today (mood input). */
@@ -54,6 +56,10 @@ export function resolveState(
 
   // Completion celebration wins briefly, even over mood.
   if (signals.justCompleted) return pick("celebrating");
+
+  // The companion is thinking: show "working" so the character visibly engages
+  // with the chat (Spec 16). Falls back to idle if the pack lacks "working".
+  if (signals.aiThinking) return pick("working");
 
   // Actively focusing -> working.
   if (signals.focusing) return pick("working");

@@ -158,9 +158,19 @@ export function DevGallery() {
         </div>
       </Frame>
 
-      <Frame title="AI companion (Spec 15)">
+      <Frame title="AI companion (Spec 15/16)">
         <div class="islet-flyout-card">
-          <div class="islet-ai-log" style={{ maxHeight: "180px" }}>
+          <div class="islet-ai-log" style={{ maxHeight: "200px" }}>
+            <div class="islet-ai-start">
+              <p class="islet-ai-greeting">
+                Hi! I'm Pip. Ask me anything, or tell me what you're working on.
+              </p>
+              <div class="islet-ai-chips">
+                <button class="islet-ai-chip">Start a 25-min focus</button>
+                <button class="islet-ai-chip">Help me plan</button>
+                <button class="islet-ai-chip">I'm stuck</button>
+              </div>
+            </div>
             <div class="islet-ai-msg user">
               <span class="islet-ai-bubble">Help me start a focus round.</span>
             </div>

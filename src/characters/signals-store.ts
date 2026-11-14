@@ -15,6 +15,9 @@ const hour = signal(new Date().getHours());
 const roundsToday = signal(0);
 const skippedBreaks = signal(0);
 const idleMinutes = signal(0);
+// The AI companion is generating a reply (Spec 16). Set by the AI panel so the
+// character visibly "works" while it thinks. Not tied to any Windows event.
+const aiThinking = signal(false);
 
 /** Combined signals object for the renderer (recomputed reactively). */
 export function characterSignals(closed: boolean): CharacterSignals {
@@ -23,10 +26,16 @@ export function characterSignals(closed: boolean): CharacterSignals {
     justCompleted: justCompleted.value,
     hour: hour.value,
     closed,
+    aiThinking: aiThinking.value,
     roundsToday: roundsToday.value,
     skippedBreaks: skippedBreaks.value,
     idleMinutes: idleMinutes.value,
   };
+}
+
+/** Let the AI panel flag when the companion is thinking (Spec 16). */
+export function setAiThinking(on: boolean): void {
+  aiThinking.value = on;
 }
 
 // Expose the reactive pieces so components can subscribe (reading .value).
@@ -109,5 +118,6 @@ export function stopCharacterSignals(): void {
   if (hourTimer) clearInterval(hourTimer);
   completeTimer = null;
   hourTimer = null;
+  aiThinking.value = false;
   wired = false;
 }

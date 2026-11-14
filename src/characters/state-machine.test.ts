@@ -43,6 +43,21 @@ describe("resolveState (panel)", () => {
     expect(resolveState(m, signals({ focusing: true }))).toBe("working");
   });
 
+  it("works while the AI companion is thinking (Spec 16)", () => {
+    expect(resolveState(m, signals({ aiThinking: true }))).toBe("working");
+  });
+
+  it("celebration still wins over AI thinking", () => {
+    expect(
+      resolveState(m, signals({ aiThinking: true, justCompleted: true }))
+    ).toBe("celebrating");
+  });
+
+  it("falls back to idle when thinking but 'working' is missing", () => {
+    const noWorking = manifest(["idle", "celebrating", "sleeping", "sad"]);
+    expect(resolveState(noWorking, signals({ aiThinking: true }))).toBe("idle");
+  });
+
   it("rests via the mood map when not focusing (idle with no mood map)", () => {
     // This manifest defines no mood map, so the mood-driven resting state
     // falls back to idle regardless of the computed mood.
